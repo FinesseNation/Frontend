@@ -317,31 +317,6 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
       ),
     );
 
-    Widget commentsHeaderSection = Padding(
-      padding: EdgeInsets.only(
-        left: 12,
-        bottom: 10,
-      ),
-      child: Row(
-        children: [
-          Text(
-            'Comments  ',
-            style: TextStyle(
-              fontSize: 16,
-              color: Styles.brightOrange,
-            ),
-          ),
-          Text(
-            '${mainComments.length}',
-            style: TextStyle(
-              fontSize: 15,
-              color: Styles.darkOrange,
-            ),
-          ),
-        ],
-      ),
-    );
-
     Widget addCommentSection = TextFormField(
       controller: _controller,
       autovalidate: true,
@@ -460,12 +435,57 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
       return commentView;
     }
 
-    List<Widget> commentsView =
-        mainComments.map((comment) => getCommentView(comment)).toList();
+    Stream<Comment> commentStream = (() async* {
+      while (true) {
+        List<Comment> tempComments = await Network.getComments(fin.eventId);
+        for (Comment c in tempComments) {
+          if (!mainComments.contains(c)) {
+            yield c;
+          }
+        }
+        await Future<void>.delayed(Duration(seconds: 1));
+      }
+    })();
 
-    Widget viewCommentSection = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: commentsView,
+    Widget viewCommentSection = StreamBuilder(
+      stream: commentStream,
+      builder: (BuildContext context, AsyncSnapshot<Comment> snapshot) {
+        if (snapshot.hasData &&
+            snapshot.connectionState == ConnectionState.active) {
+          mainComments.add(snapshot.data);
+        }
+        List<Widget> children =
+            mainComments.map((comment) => getCommentView(comment)).toList();
+        Widget commentsHeader = Padding(
+          padding: EdgeInsets.only(
+            left: 12,
+            bottom: 10,
+          ),
+          child: Row(
+            children: [
+              Text(
+                'Comments  ',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Styles.brightOrange,
+                ),
+              ),
+              Text(
+                '${mainComments.length}',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Styles.darkOrange,
+                ),
+              ),
+            ],
+          ),
+        );
+        children.insert(0, commentsHeader);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: children,
+        );
+      },
     );
 
     return ListView(
@@ -482,7 +502,6 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
               timeSection,
               userSection,
               votingSection,
-              commentsHeaderSection,
               viewCommentSection,
               addCommentSection,
             ],
