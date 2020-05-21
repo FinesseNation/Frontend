@@ -18,12 +18,12 @@ List<Comment> mainComments;
 /// Displays details about a specific [Finesse].
 class FinessePage extends StatelessWidget {
   final Finesse fin;
-
   FinessePage(this.fin);
 
   Widget build(BuildContext context) {
     _commentIsEmpty = true;
     voteAmount = 0;
+    mainComments = <Comment>[];
     final title = fin.eventTitle;
 
     return Scaffold(
@@ -70,6 +70,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
   Future<int> votes;
   Future<int> origVote;
   final TextEditingController _controller = TextEditingController();
+  bool active = true;
 
   _FinesseDetailsState(Finesse fin) {
     this.fin = fin;
@@ -80,22 +81,17 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return FutureBuilder(
-      initialData: [<Comment>[], 0, 0],
-      future: Future.wait([comments, votes, origVote]),
-      builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
-        return snapshot.data != null
-            ? mainCard(
-                snapshot.data[0], snapshot.data[1], snapshot.data[2], context)
-            : Center(child: CircularProgressIndicator());
-      },
-    );
+  void dispose() {
+    active = false;
+    super.dispose();
   }
 
-  Widget mainCard(
-      List<Comment> comments, int votes, int origVote, BuildContext context) {
-    mainComments = comments;
+  @override
+  Widget build(BuildContext context) {
+    return mainCard(context);
+  }
+
+  Widget mainCard(BuildContext context) {
     Widget imageSection = InkWell(
       onTap: () => Navigator.push(
         context,
@@ -193,7 +189,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
       ),
     );
 
-    Widget votingSection = Container(
+    Widget buildVotingSection(int votes, int origVote, BuildContext context) => Container(
         padding: const EdgeInsets.only(left: 20, bottom: 20),
         child: Row(
           children: [
@@ -249,6 +245,16 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
         ));
 
+    Widget votingSection = FutureBuilder(
+      initialData: [0, 0],
+      future: Future.wait([votes, origVote]),
+      builder: (context, snapshot) {
+        return snapshot.data != null
+            ? buildVotingSection(
+            snapshot.data[0], snapshot.data[1], context)
+            : Center(child: CircularProgressIndicator());
+      },
+    );
     Widget userSection = Container(
       padding: const EdgeInsets.only(left: 20, bottom: 20),
       child: Row(
@@ -435,24 +441,28 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
       return commentView;
     }
 
-    Stream<Comment> commentStream = (() async* {
-      while (true) {
+    Stream<List<Comment>> commentStream = (() async* {
+      while (active) {
         List<Comment> tempComments = await Network.getComments(fin.eventId);
-        for (Comment c in tempComments) {
-          if (!mainComments.contains(c)) {
-            yield c;
-          }
-        }
+        yield tempComments;
+//        for (Comment c in tempComments) {
+//          if (!mainComments.contains(c)) {
+//            yield c;
+//          }
+//        }
         await Future<void>.delayed(Duration(seconds: 1));
       }
     })();
 
     Widget viewCommentSection = StreamBuilder(
       stream: commentStream,
-      builder: (BuildContext context, AsyncSnapshot<Comment> snapshot) {
+      builder: (BuildContext context, AsyncSnapshot<List<Comment>> snapshot) {
         if (snapshot.hasData &&
             snapshot.connectionState == ConnectionState.active) {
-          mainComments.add(snapshot.data);
+          mainComments = (snapshot.data);
+        }
+        else {
+          return Center(child: CircularProgressIndicator());
         }
         List<Widget> children =
             mainComments.map((comment) => getCommentView(comment)).toList();
