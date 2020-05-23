@@ -71,8 +71,15 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
   Future<int> origVote;
   final TextEditingController _controller = TextEditingController();
   bool active = true;
+  Stream<List<Comment>> commentStream;
 
   _FinesseDetailsState(Finesse fin) {
+    commentStream = (() async* {
+      while (active) {
+        yield await Network.getComments(fin.eventId);
+        await Future<void>.delayed(Duration(seconds: 1));
+      }
+    })();
     this.fin = fin;
     this.comments = Network.getComments(fin.eventId);
     this.votes = Network.fetchVotes(fin.eventId);
@@ -189,72 +196,75 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
       ),
     );
 
-    Widget buildVotingSection(int votes, int origVote, BuildContext context) => Container(
-        padding: const EdgeInsets.only(left: 20, bottom: 20),
-        child: Row(
-          children: [
-            Row(children: [
-              Padding(
-                  padding: EdgeInsets.only(right: 10),
-                  child: Icon(
-                      ((getVoteCount(origVote, voteAmount, votes)) >= 0)
-                          ? Icons.arrow_upward
-                          : Icons.arrow_downward,
-                      color: Color(0xffc47600),
-                      size: 24.0)),
-              Text(
-                (getVoteCount(origVote, voteAmount, votes)).abs().toString() +
-                    ((getVoteCount(origVote, voteAmount, votes) >= 0)
-                        ? " upvotes"
-                        : " downvotes"),
-                style: TextStyle(fontSize: 16, color: Color(0xffff9900)),
-              ),
-            ]),
-            Row(
-              children: <Widget>[
-                IconButton(
-                  icon: Icon(
-                    Icons.arrow_upward,
-                    color: Color(0xffc47600),
+    Widget buildVotingSection(int votes, int origVote, BuildContext context) =>
+        Container(
+            padding: const EdgeInsets.only(left: 20, bottom: 20),
+            child: Row(
+              children: [
+                Row(children: [
+                  Padding(
+                      padding: EdgeInsets.only(right: 10),
+                      child: Icon(
+                          ((getVoteCount(origVote, voteAmount, votes)) >= 0)
+                              ? Icons.arrow_upward
+                              : Icons.arrow_downward,
+                          color: Color(0xffc47600),
+                          size: 24.0)),
+                  Text(
+                    (getVoteCount(origVote, voteAmount, votes))
+                            .abs()
+                            .toString() +
+                        ((getVoteCount(origVote, voteAmount, votes) >= 0)
+                            ? " upvotes"
+                            : " downvotes"),
+                    style: TextStyle(fontSize: 16, color: Color(0xffff9900)),
                   ),
-                  onPressed: (!canUpVote(origVote, voteAmount))
-                      ? null
-                      : () {
-                          Network.postVote(
-                              fin.eventId, User.currentUser.email, 1);
-                          setState(() {
-                            voteAmount = 1;
-                          });
-                        },
-                ),
-                IconButton(
-                    icon: Icon(Icons.arrow_downward, color: Color(0xffc47600)),
-                    color: Color(0xffc47600),
-                    onPressed: (!canDownVote(origVote, voteAmount))
-                        ? null
-                        : () {
-                            Network.postVote(
-                                fin.eventId, User.currentUser.email, -1);
-                            setState(() {
-                              voteAmount = -1;
-                            });
-                          })
+                ]),
+                Row(
+                  children: <Widget>[
+                    IconButton(
+                      icon: Icon(
+                        Icons.arrow_upward,
+                        color: Color(0xffc47600),
+                      ),
+                      onPressed: (!canUpVote(origVote, voteAmount))
+                          ? null
+                          : () {
+                              Network.postVote(
+                                  fin.eventId, User.currentUser.email, 1);
+                              setState(() {
+                                voteAmount = 1;
+                              });
+                            },
+                    ),
+                    IconButton(
+                        icon: Icon(Icons.arrow_downward,
+                            color: Color(0xffc47600)),
+                        color: Color(0xffc47600),
+                        onPressed: (!canDownVote(origVote, voteAmount))
+                            ? null
+                            : () {
+                                Network.postVote(
+                                    fin.eventId, User.currentUser.email, -1);
+                                setState(() {
+                                  voteAmount = -1;
+                                });
+                              })
+                  ],
+                )
               ],
-            )
-          ],
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        ));
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            ));
 
     Widget votingSection = FutureBuilder(
-      initialData: [0, 0],
       future: Future.wait([votes, origVote]),
       builder: (context, snapshot) {
         return snapshot.data != null
-            ? buildVotingSection(
-            snapshot.data[0], snapshot.data[1], context)
-            : Center(child: CircularProgressIndicator());
+            ? buildVotingSection(snapshot.data[0], snapshot.data[1], context)
+            : Container();
       },
     );
+
     Widget userSection = Container(
       padding: const EdgeInsets.only(left: 20, bottom: 20),
       child: Row(
@@ -441,27 +451,13 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
       return commentView;
     }
 
-    Stream<List<Comment>> commentStream = (() async* {
-      while (active) {
-        List<Comment> tempComments = await Network.getComments(fin.eventId);
-        yield tempComments;
-//        for (Comment c in tempComments) {
-//          if (!mainComments.contains(c)) {
-//            yield c;
-//          }
-//        }
-        await Future<void>.delayed(Duration(seconds: 1));
-      }
-    })();
-
     Widget viewCommentSection = StreamBuilder(
       stream: commentStream,
       builder: (BuildContext context, AsyncSnapshot<List<Comment>> snapshot) {
         if (snapshot.hasData &&
             snapshot.connectionState == ConnectionState.active) {
           mainComments = (snapshot.data);
-        }
-        else {
+        } else {
           return Center(child: CircularProgressIndicator());
         }
         List<Widget> children =
