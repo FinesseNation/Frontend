@@ -198,31 +198,36 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
 
     Widget buildVotingSection(int votes, int origVote, BuildContext context) =>
         Container(
-            padding: const EdgeInsets.only(left: 20, bottom: 20),
-            child: Row(
-              children: [
-                Row(children: [
-                  Padding(
-                      padding: EdgeInsets.only(right: 10),
-                      child: Icon(
-                          ((getVoteCount(origVote, voteAmount, votes)) >= 0)
-                              ? Icons.arrow_upward
-                              : Icons.arrow_downward,
-                          color: Color(0xffc47600),
-                          size: 24.0)),
-                  Text(
-                    (getVoteCount(origVote, voteAmount, votes))
-                            .abs()
-                            .toString() +
-                        ((getVoteCount(origVote, voteAmount, votes) >= 0)
-                            ? " upvotes"
-                            : " downvotes"),
-                    style: TextStyle(fontSize: 16, color: Color(0xffff9900)),
+          padding: const EdgeInsets.only(left: 20, bottom: 20),
+          child: Row(
+            children: [
+              Row(children: [
+                Padding(
+                  padding: EdgeInsets.only(right: 10),
+                  child: Icon(
+                      ((getVoteCount(origVote, voteAmount, votes)) >= 0)
+                          ? Icons.arrow_upward
+                          : Icons.arrow_downward,
+                      color: Color(0xffc47600),
+                      size: 24.0),
+                ),
+                Text(
+                  (getVoteCount(origVote, voteAmount, votes)).abs().toString() +
+                      ((getVoteCount(origVote, voteAmount, votes) >= 0)
+                          ? " upvotes"
+                          : " downvotes"),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Color(0xffff9900),
                   ),
-                ]),
-                Row(
-                  children: <Widget>[
-                    IconButton(
+                ),
+              ]),
+              Row(
+                children: <Widget>[
+                  SizedBox(
+                    height: 24,
+                    child: IconButton(
+                      padding: EdgeInsets.symmetric(vertical: 0),
                       icon: Icon(
                         Icons.arrow_upward,
                         color: Color(0xffc47600),
@@ -237,10 +242,15 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
                               });
                             },
                     ),
-                    IconButton(
-                        icon: Icon(Icons.arrow_downward,
-                            color: Color(0xffc47600)),
-                        color: Color(0xffc47600),
+                  ),
+                  SizedBox(
+                    height: 24,
+                    child: IconButton(
+                        padding: EdgeInsets.symmetric(vertical: 0),
+                        icon: Icon(
+                          Icons.arrow_downward,
+                          color: Color(0xffc47600),
+                        ),
                         onPressed: (!canDownVote(origVote, voteAmount))
                             ? null
                             : () {
@@ -249,12 +259,14 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
                                 setState(() {
                                   voteAmount = -1;
                                 });
-                              })
-                  ],
-                )
-              ],
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            ));
+                              }),
+                  )
+                ],
+              )
+            ],
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          ),
+        );
 
     Widget votingSection = FutureBuilder(
       future: Future.wait([votes, origVote]),
