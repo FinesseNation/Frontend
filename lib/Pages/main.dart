@@ -18,7 +18,11 @@ void main() async {
   SharedPreferences _prefs = await SharedPreferences.getInstance();
   _prefs.getBool('activeFilter') ?? _prefs.setBool('activeFilter', true);
   _prefs.getBool('typeFilter') ?? _prefs.setBool('typeFilter', true);
-  runApp(_MyApp());
+  String _currentUser = _prefs.get('currentUser');
+  if (_currentUser != null) {
+    Network.updateCurrentUser(email: _currentUser);
+  }
+  runApp(_MyApp(_currentUser));
 }
 
 // This is the type used by the popup menu below.
@@ -28,6 +32,10 @@ GlobalKey<ScaffoldState> _scaffoldKey;
 
 class _MyApp extends StatelessWidget {
 // This widget is the root of your application.
+  final String _currentUser;
+
+  _MyApp(this._currentUser);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -37,7 +45,7 @@ class _MyApp extends StatelessWidget {
         canvasColor: Styles.darkGrey,
         accentColor: Styles.brightOrange,
       ),
-      home: LoginScreen(),
+      home: _currentUser != null ? MyHomePage() : LoginScreen(),
     );
   }
 }
@@ -55,6 +63,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
 
   Future<bool> _activeFilter;
   Future<bool> _typeFilter;
@@ -116,8 +125,6 @@ class _MyHomePageState extends State<MyHomePage> {
       });
     });
   }
-
-  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
 
   Future<void> reload() async {
     Fluttertoast.showToast(

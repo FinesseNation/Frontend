@@ -5,6 +5,7 @@ import 'package:finesse_nation/User.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:finesse_nation/Pages/LoginScreen.dart';
 import 'package:finesse_nation/Styles.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Contains functionality that allows the user to
 /// logout and change their notification preferences.
@@ -26,7 +27,7 @@ class Settings extends StatelessWidget {
 /// Class to subscribe and unsubscribe from notifications.
 class Notifications {
   ///Set the notifications for the current user
-  static Future<void> notificationsSet(toggle) async {
+  static Future<void> notificationsSet(toggle, {updateUser: true}) async {
     final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
     if (User.currentUser.email.contains('@test.com') ||
         User.currentUser.email.contains('@test.edu')) {
@@ -37,7 +38,9 @@ class Notifications {
     } else {
       _firebaseMessaging.unsubscribeFromTopic(Network.ALL_TOPIC);
     }
-    await Network.changeNotifications(toggle);
+    if (updateUser) {
+      Network.changeNotifications(toggle);
+    }
   }
 }
 
@@ -133,6 +136,10 @@ class _SettingsPageState extends State<SettingsPage> {
                           style: TextStyle(color: Styles.darkGrey),
                         ),
                         onPressed: () {
+                          Notifications.notificationsSet(false, updateUser: false);
+                          SharedPreferences.getInstance().then((prefs) {
+                            prefs.remove('currentUser');
+                          });
                           Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(

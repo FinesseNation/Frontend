@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 /// @nodoc
 class LoginThemeHelper {
   /// used by the next screen after login to style the after-hero text

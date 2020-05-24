@@ -18,12 +18,12 @@ List<Comment> mainComments;
 /// Displays details about a specific [Finesse].
 class FinessePage extends StatelessWidget {
   final Finesse fin;
-
   FinessePage(this.fin);
 
   Widget build(BuildContext context) {
     _commentIsEmpty = true;
     voteAmount = 0;
+    mainComments = <Comment>[];
     final title = fin.eventTitle;
 
     return Scaffold(
@@ -70,8 +70,16 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
   Future<int> votes;
   Future<int> origVote;
   final TextEditingController _controller = TextEditingController();
+  bool active = true;
+  Stream<List<Comment>> commentStream;
 
   _FinesseDetailsState(Finesse fin) {
+    commentStream = (() async* {
+      while (active) {
+        yield await Network.getComments(fin.eventId);
+        await Future<void>.delayed(Duration(seconds: 1));
+      }
+    })();
     this.fin = fin;
     this.comments = Network.getComments(fin.eventId);
     this.votes = Network.fetchVotes(fin.eventId);
@@ -80,22 +88,17 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return FutureBuilder(
-      initialData: [<Comment>[], 0, 0],
-      future: Future.wait([comments, votes, origVote]),
-      builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
-        return snapshot.data != null
-            ? mainCard(
-                snapshot.data[0], snapshot.data[1], snapshot.data[2], context)
-            : Center(child: CircularProgressIndicator());
-      },
-    );
+  void dispose() {
+    active = false;
+    super.dispose();
   }
 
-  Widget mainCard(
-      List<Comment> comments, int votes, int origVote, BuildContext context) {
-    mainComments = comments;
+  @override
+  Widget build(BuildContext context) {
+    return mainCard(context);
+  }
+
+  Widget mainCard(BuildContext context) {
     Widget imageSection = InkWell(
       onTap: () => Navigator.push(
         context,
@@ -193,61 +196,86 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
       ),
     );
 
-    Widget votingSection = Container(
-        padding: const EdgeInsets.only(left: 20, bottom: 20),
-        child: Row(
-          children: [
-            Row(children: [
-              Padding(
+    Widget buildVotingSection(int votes, int origVote, BuildContext context) =>
+        Container(
+          padding: const EdgeInsets.only(left: 20, bottom: 20),
+          child: Row(
+            children: [
+              Row(children: [
+                Padding(
                   padding: EdgeInsets.only(right: 10),
                   child: Icon(
                       ((getVoteCount(origVote, voteAmount, votes)) >= 0)
                           ? Icons.arrow_upward
                           : Icons.arrow_downward,
                       color: Color(0xffc47600),
-                      size: 24.0)),
-              Text(
-                (getVoteCount(origVote, voteAmount, votes)).abs().toString() +
-                    ((getVoteCount(origVote, voteAmount, votes) >= 0)
-                        ? " upvotes"
-                        : " downvotes"),
-                style: TextStyle(fontSize: 16, color: Color(0xffff9900)),
-              ),
-            ]),
-            Row(
-              children: <Widget>[
-                IconButton(
-                  icon: Icon(
-                    Icons.arrow_upward,
-                    color: Color(0xffc47600),
-                  ),
-                  onPressed: (!canUpVote(origVote, voteAmount))
-                      ? null
-                      : () {
-                          Network.postVote(
-                              fin.eventId, User.currentUser.email, 1);
-                          setState(() {
-                            voteAmount = 1;
-                          });
-                        },
+                      size: 24.0),
                 ),
-                IconButton(
-                    icon: Icon(Icons.arrow_downward, color: Color(0xffc47600)),
-                    color: Color(0xffc47600),
-                    onPressed: (!canDownVote(origVote, voteAmount))
-                        ? null
-                        : () {
-                            Network.postVote(
-                                fin.eventId, User.currentUser.email, -1);
-                            setState(() {
-                              voteAmount = -1;
-                            });
-                          })
-              ],
-            )
-          ],
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        ));
+                Text(
+                  (getVoteCount(origVote, voteAmount, votes)).abs().toString() +
+                      ((getVoteCount(origVote, voteAmount, votes) >= 0)
+                          ? " upvotes"
+                          : " downvotes"),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Color(0xffff9900),
+                  ),
+                ),
+              ]),
+              Row(
+                children: <Widget>[
+                  SizedBox(
+                    height: 24,
+                    child: IconButton(
+                      padding: EdgeInsets.symmetric(vertical: 0),
+                      icon: Icon(
+                        Icons.arrow_upward,
+                        color: Color(0xffc47600),
+                      ),
+                      onPressed: (!canUpVote(origVote, voteAmount))
+                          ? null
+                          : () {
+                              Network.postVote(
+                                  fin.eventId, User.currentUser.email, 1);
+                              setState(() {
+                                voteAmount = 1;
+                              });
+                            },
+                    ),
+                  ),
+                  SizedBox(
+                    height: 24,
+                    child: IconButton(
+                        padding: EdgeInsets.symmetric(vertical: 0),
+                        icon: Icon(
+                          Icons.arrow_downward,
+                          color: Color(0xffc47600),
+                        ),
+                        onPressed: (!canDownVote(origVote, voteAmount))
+                            ? null
+                            : () {
+                                Network.postVote(
+                                    fin.eventId, User.currentUser.email, -1);
+                                setState(() {
+                                  voteAmount = -1;
+                                });
+                              }),
+                  )
+                ],
+              )
+            ],
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          ),
+        );
+
+    Widget votingSection = FutureBuilder(
+      future: Future.wait([votes, origVote]),
+      builder: (context, snapshot) {
+        return snapshot.data != null
+            ? buildVotingSection(snapshot.data[0], snapshot.data[1], context)
+            : Container();
+      },
+    );
 
     Widget userSection = Container(
       padding: const EdgeInsets.only(left: 20, bottom: 20),
@@ -312,31 +340,6 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
                     'https://www.google.com/maps/search/${fin.location}'),
               ),
             ],
-          ),
-        ],
-      ),
-    );
-
-    Widget commentsHeaderSection = Padding(
-      padding: EdgeInsets.only(
-        left: 12,
-        bottom: 10,
-      ),
-      child: Row(
-        children: [
-          Text(
-            'Comments  ',
-            style: TextStyle(
-              fontSize: 16,
-              color: Styles.brightOrange,
-            ),
-          ),
-          Text(
-            '${mainComments.length}',
-            style: TextStyle(
-              fontSize: 15,
-              color: Styles.darkOrange,
-            ),
           ),
         ],
       ),
@@ -460,12 +463,47 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
       return commentView;
     }
 
-    List<Widget> commentsView =
-        mainComments.map((comment) => getCommentView(comment)).toList();
-
-    Widget viewCommentSection = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: commentsView,
+    Widget viewCommentSection = StreamBuilder(
+      stream: commentStream,
+      builder: (BuildContext context, AsyncSnapshot<List<Comment>> snapshot) {
+        if (snapshot.hasData &&
+            snapshot.connectionState == ConnectionState.active) {
+          mainComments = (snapshot.data);
+        } else {
+          return Center(child: CircularProgressIndicator());
+        }
+        List<Widget> children =
+            mainComments.map((comment) => getCommentView(comment)).toList();
+        Widget commentsHeader = Padding(
+          padding: EdgeInsets.only(
+            left: 12,
+            bottom: 10,
+          ),
+          child: Row(
+            children: [
+              Text(
+                'Comments  ',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Styles.brightOrange,
+                ),
+              ),
+              Text(
+                '${mainComments.length}',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Styles.darkOrange,
+                ),
+              ),
+            ],
+          ),
+        );
+        children.insert(0, commentsHeader);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: children,
+        );
+      },
     );
 
     return ListView(
@@ -482,7 +520,6 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
               timeSection,
               userSection,
               votingSection,
-              commentsHeaderSection,
               viewCommentSection,
               addCommentSection,
             ],

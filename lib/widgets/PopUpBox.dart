@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:finesse_nation/Styles.dart';
 
-/// Displays a [Dialog] containing filtering options.
+/// Contains helper function to display a popup
 class PopUpBox {
+  /// Displays a [Dialog] containing filtering options.
   static Future showPopupBox(
       {BuildContext context,
       Widget willDisplayWidget,
