@@ -158,7 +158,7 @@ class Network {
         'click_action': 'FLUTTER_NOTIFICATION_CLICK',
         'status': 'done',
       },
-      'to': '/topics/$topic',
+      'to': '/topics/null', // $topic
     };
     return http.post(
       SEND_NOTIFICATION_URL,
@@ -271,6 +271,9 @@ class Network {
       var data = json.decode(response.body);
       User.currentUser = User.fromJson(data);
       await Notifications.notificationsSet(User.currentUser.notifications);
+      SharedPreferences.getInstance().then((prefs) {
+        prefs.setString('currentUser', email);
+      });
     } else {
       throw Exception('Failed to get current user');
     }
