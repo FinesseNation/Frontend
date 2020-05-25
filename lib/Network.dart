@@ -11,7 +11,7 @@ import 'package:finesse_nation/Comment.dart';
 /// Contains functions used to interact with the API.
 class Network {
   /// The root domain for the Finesse Nation API.
-  static const DOMAIN = 'https://finesse-nation.herokuapp.com/api/';
+  static const DOMAIN = 'http://10.0.0.135:8080/api/';
 
   /// Deleting a Finesse.
   static const DELETE_URL = DOMAIN + 'food/deleteEvent';
@@ -57,6 +57,8 @@ class Network {
 
   /// Add a vote to a Finesse.
   static const POST_EVENT_VOTING_URL = DOMAIN + 'vote';
+
+  static const SET_VOTES_URL = DOMAIN + 'user/setVotes';
 
   /// The topic used to send notifications about new Finesses.
   static const ALL_TOPIC = 'new_finesse';
@@ -251,13 +253,34 @@ class Network {
   }
 
   /// Changes the current user's notification preferences to [toggle].
-  static Future<void> changeNotifications(toggle) async {
+  static Future<void> changeNotifications(bool toggle) async {
     var payload = {"emailId": User.currentUser.email, 'notifications': toggle};
     http.Response response = await postData(NOTIFICATION_TOGGLE_URL, payload);
     if (response.statusCode == 200) {
       User.currentUser.notifications = toggle;
     } else {
       throw Exception('Notification change request failed');
+    }
+  }
+
+  static Future<void> setVotes(String vote, List<String> newVotes) async {
+    print('setting $vote = $newVotes');
+    var payload = {
+      "emailId": User.currentUser.email,
+      'vote': vote,
+      'newVotes': newVotes,
+    };
+    http.Response response = await postData(SET_VOTES_URL, payload);
+    if (response.statusCode == 200) {
+      if (vote == 'upvote') {
+        User.currentUser.upvoted = newVotes;
+      } else {
+        User.currentUser.downvoted = newVotes;
+      }
+    } else {
+      print(response.statusCode);
+      print(response.body);
+      throw Exception('set votes request failed');
     }
   }
 

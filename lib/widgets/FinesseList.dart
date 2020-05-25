@@ -3,6 +3,7 @@ import 'package:finesse_nation/Network.dart';
 import 'package:finesse_nation/widgets/FinesseCard.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:flutter/material.dart';
+import 'package:finesse_nation/User.dart';
 
 /// Returns a [ListView] containing a [Card] for each [Finesse].
 class FinesseList extends StatefulWidget {
@@ -61,7 +62,12 @@ class _FinesseListState extends State<FinesseList> {
                 _finesses = _finesses.reversed.toList();
                 if (i.isOdd) return Divider();
                 final index = i ~/ 2;
-                return buildFinesseCard(_finesses[index], context);
+                Finesse fin = _finesses[index];
+                List<bool> votes = [
+                  User.currentUser.upvoted.contains(fin.eventId),
+                  User.currentUser.downvoted.contains(fin.eventId)
+                ];
+                return FinesseCard(fin, votes);
               }),
         ),
       ),

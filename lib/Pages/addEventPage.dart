@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:finesse_nation/Network.dart';
 import 'package:finesse_nation/Finesse.dart';
-import 'package:finesse_nation/Pages/main.dart';
+import 'package:finesse_nation/main.dart';
 import 'package:finesse_nation/User.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:image_picker/image_picker.dart';

@@ -11,6 +11,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:finesse_nation/Network.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:finesse_nation/Styles.dart';
+import 'package:flutter_statusbarcolor/flutter_statusbarcolor.dart';
 
 /// The entrypoint for the app.
 void main() async {
@@ -36,8 +37,33 @@ class _MyApp extends StatelessWidget {
 
   _MyApp(this._currentUser);
 
+  static changeStatusColor(Color color) async {
+    try {
+      await FlutterStatusbarcolor.setStatusBarColor(color, animate: true);
+      if (useWhiteForeground(color)) {
+        FlutterStatusbarcolor.setStatusBarWhiteForeground(true);
+        FlutterStatusbarcolor.setNavigationBarWhiteForeground(true);
+      } else {
+        FlutterStatusbarcolor.setStatusBarWhiteForeground(false);
+        FlutterStatusbarcolor.setNavigationBarWhiteForeground(false);
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
+  static changeNavigationColor(Color color) async {
+    try {
+      await FlutterStatusbarcolor.setNavigationBarColor(color, animate: true);
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    changeStatusColor(Colors.black);
+    changeNavigationColor(Colors.black);
     return MaterialApp(
       title: 'Finesse Nation',
       theme: ThemeData(

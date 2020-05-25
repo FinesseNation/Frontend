@@ -21,12 +21,16 @@ class User {
   /// This user's notification preferences.
   bool notifications;
 
+  List<String> upvoted;
+
+  List<String> downvoted;
+
   /// The current logged in user.
-  static User currentUser = User(null, null, null, null, 0, true);
+  static User currentUser = User(null, null, null, null, 0, true, [], []);
 
   /// Creates a new user.
   User(this.email, this.password, this.userName, this.school, this.points,
-      this.notifications);
+      this.notifications, this.upvoted, this.downvoted);
 
   /// Creates a new user from the given [json] object.
   factory User.fromJson(Map<String, dynamic> json) {
@@ -37,6 +41,8 @@ class User {
       json['school'] ?? "",
       json['points'] ?? 0,
       json['notifications'] ?? true,
+      List<String>.from(json['upvoted']) ?? [],
+      List<String>.from(json['downvoted']) ?? [],
     );
     return user;
   }
