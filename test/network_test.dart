@@ -310,7 +310,7 @@ void main() {
   /// Get the current user data for test1@test.com and verify
   test('Getting Current User Data', () async {
     User.currentUser =
-        User(CURRENT_USER_EMAIL, "none", "none", "none", 0, false);
+        User(CURRENT_USER_EMAIL, "none", "none", "none", 0, false, [], []);
     await Network.updateCurrentUser();
     expect(User.currentUser.points, 0);
     expect(User.currentUser.email, CURRENT_USER_EMAIL);

@@ -22,6 +22,56 @@ class _FinesseCardState extends State<FinesseCard> {
 
   _FinesseCardState(this.fin, this.isSelected);
 
+  void handleVote(int index, List<String> upvoted, List<String> downvoted) {
+    for (int buttonIndex = 0; buttonIndex < isSelected.length; buttonIndex++) {
+      if (buttonIndex == index) {
+        // button that was pressed
+        if (index == 0) {
+          // upvote
+          if (isSelected[buttonIndex]) {
+            upvoted.remove(fin.eventId);
+            fin.downvote();
+          } else {
+            upvoted.add(fin.eventId);
+            fin.upvote();
+          }
+        } else {
+          // downvote
+          if (isSelected[buttonIndex]) {
+            downvoted.remove(fin.eventId);
+            fin.upvote();
+          } else {
+            downvoted.add(fin.eventId);
+            fin.downvote();
+          }
+        }
+        setState(() {
+          isSelected[buttonIndex] = !isSelected[buttonIndex];
+        });
+      } else {
+        // button that wasn't pressed
+        if (index == 0) {
+          // upvote
+          if (isSelected[buttonIndex]) {
+            downvoted.remove(fin.eventId);
+            fin.upvote();
+          }
+        } else {
+          // downvote
+          if (isSelected[buttonIndex]) {
+            upvoted.remove(fin.eventId);
+            fin.downvote();
+          }
+        }
+        setState(() {
+          isSelected[buttonIndex] = false;
+        });
+      }
+    }
+    Network.setVotes(upvoted, downvoted);
+    Network.updateFinesse(fin);
+  }
+
   Widget build(BuildContext context) {
     List<String> upvoted = User.currentUser.upvoted;
     List<String> downvoted = User.currentUser.downvoted;
@@ -76,7 +126,8 @@ class _FinesseCardState extends State<FinesseCard> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
                       Text(
-                        "3 points\n4 comments",
+                        "${fin.points} points\n"
+                        "4 comments",
                         style: TextStyle(
                           fontSize: 14,
                           color: Styles.darkOrange,
@@ -95,70 +146,8 @@ class _FinesseCardState extends State<FinesseCard> {
                             Icons.arrow_downward,
                           ),
                         ],
-                        onPressed: (int index) {
-                          for (int buttonIndex = 0;
-                              buttonIndex < isSelected.length;
-                              buttonIndex++) {
-                            if (buttonIndex == index) {
-                              // button that was pressed
-                              if (index == 0) {
-                                // upvote
-                                if (isSelected[buttonIndex]) {
-                                  Network.setVotes(
-                                      'upvote',
-                                      upvoted
-                                        ..remove(fin.eventId));
-                                } else {
-                                  Network.setVotes(
-                                      'upvote',
-                                      upvoted
-                                        ..add(fin.eventId));
-                                }
-                              } else {
-                                // downvote
-                                if (isSelected[buttonIndex]) {
-                                  Network.setVotes(
-                                      'downvote',
-                                      downvoted
-                                        ..remove(fin.eventId));
-                                } else {
-                                  Network.setVotes(
-                                      'upvote',
-                                      downvoted
-                                        ..add(fin.eventId));
-                                }
-                              }
-                              setState(() {
-                                isSelected[buttonIndex] =
-                                    !isSelected[buttonIndex];
-                              });
-                              print('selected button $buttonIndex');
-                            } else {
-                              // button that wasn't pressed
-                              if (index == 0) {
-                                // upvote
-                                if (isSelected[buttonIndex]) {
-                                  Network.setVotes(
-                                      'upvote',
-                                      upvoted
-                                        ..remove(fin.eventId));
-                                }
-                              } else {
-                                // downvote
-                                if (isSelected[buttonIndex]) {
-                                  Network.setVotes(
-                                      'downvote',
-                                      downvoted
-                                        ..remove(fin.eventId));
-                                }
-                              }
-                              setState(() {
-                                isSelected[buttonIndex] = false;
-                              });
-                              print('deselected button $buttonIndex');
-                            }
-                          }
-                        },
+                        onPressed: (index) =>
+                            handleVote(index, upvoted, downvoted),
                         isSelected: isSelected,
                       ),
                     ],

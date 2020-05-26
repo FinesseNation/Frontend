@@ -29,7 +29,7 @@ class Finesse {
   DateTime postedTime;
 
   /// The list of emailIds of [User]s who have marked this Finesse as inactive.
-  List isActive;
+  List<String> isActive;
 
   /// The base64-encoded image of this Finesse.
   Uint8List convertedImage;
@@ -40,19 +40,23 @@ class Finesse {
   /// The school of the [User] who posted this Finesse.
   String school;
 
+  /// The number of points for this Finesse.
+  int points;
+
   /// Creates a Finesse.
   Finesse(
-      var eventId,
-      var title,
-      var description,
-      var image,
-      var location,
-      var duration,
-      var category,
-      var postedTime,
-      var isActive,
-      var school,
-      var emailId) {
+      String eventId,
+      String title,
+      String description,
+      String image,
+      String location,
+      String duration,
+      String category,
+      DateTime postedTime,
+      List<String> isActive,
+      String school,
+      String emailId,
+      int points) {
     this.eventId = eventId;
     this.eventTitle = title;
     this.description = description;
@@ -65,24 +69,37 @@ class Finesse {
     this.isActive = isActive;
     this.school = school;
     this.emailId = emailId;
+    this.points = points;
   }
 
   /// Creates a Finesse with an empty event id.
   static Finesse finesseAdd(
-      title, description, image, location, duration, category, timePosted,
-      {List isActive, String school, String email}) {
+    String title,
+    String description,
+    String image,
+    String location,
+    String duration,
+    String category,
+    DateTime timePosted, {
+    List<String> isActive: const [],
+    String school,
+    String email,
+    int points: 1,
+  }) {
     return Finesse(
-        null,
-        title,
-        description,
-        image,
-        location,
-        duration,
-        category,
-        timePosted,
-        isActive,
-        User.currentUser?.school ?? 'test',
-        User.currentUser?.email ?? 'test');
+      null,
+      title,
+      description,
+      image,
+      location,
+      duration,
+      category,
+      timePosted,
+      isActive,
+      User.currentUser?.school ?? 'test',
+      User.currentUser?.email ?? 'test',
+      points,
+    );
   }
 
   /// Attempts to convert the [time] from a [String] to a [DateTime].
@@ -112,9 +129,10 @@ class Finesse {
       json['duration'] ?? "",
       json['category'] ?? "",
       parse(json['postedTime']) ?? DateTime.now(),
-      json['isActive'] ?? [],
+      List<String>.from(json['isActive']) ?? [],
       json['school'] ?? "",
       json['emailId'] ?? "",
+      json['points'] ?? 0,
     );
     return fin;
   }
@@ -132,6 +150,11 @@ class Finesse {
     map['isActive'] = isActive;
     map['school'] = school;
     map['emailId'] = emailId;
+    map['points'] = points;
     return map;
   }
+
+  int upvote() => ++points;
+
+  int downvote() => --points;
 }

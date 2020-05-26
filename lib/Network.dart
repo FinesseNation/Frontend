@@ -263,20 +263,17 @@ class Network {
     }
   }
 
-  static Future<void> setVotes(String vote, List<String> newVotes) async {
-    print('setting $vote = $newVotes');
+  static Future<void> setVotes(
+      List<String> upvoted, List<String> downvoted) async {
     var payload = {
       "emailId": User.currentUser.email,
-      'vote': vote,
-      'newVotes': newVotes,
+      'upvoted': upvoted,
+      'downvoted': downvoted,
     };
     http.Response response = await postData(SET_VOTES_URL, payload);
     if (response.statusCode == 200) {
-      if (vote == 'upvote') {
-        User.currentUser.upvoted = newVotes;
-      } else {
-        User.currentUser.downvoted = newVotes;
-      }
+      User.currentUser.upvoted = upvoted;
+      User.currentUser.downvoted = downvoted;
     } else {
       print(response.statusCode);
       print(response.body);
