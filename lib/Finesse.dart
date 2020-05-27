@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'dart:convert';
+import 'package:finesse_nation/Comment.dart';
 import 'package:finesse_nation/User.dart';
 
 /// An event involving free food/items.
@@ -43,20 +44,28 @@ class Finesse {
   /// The number of points for this Finesse.
   int points;
 
+  /// The number of comments for this Finesse.
+  int numComments;
+
+  /// The comments on this Finesse.
+  List<Comment> comments;
+
   /// Creates a Finesse.
   Finesse(
-      String eventId,
-      String title,
-      String description,
-      String image,
-      String location,
-      String duration,
-      String category,
-      DateTime postedTime,
-      List<String> isActive,
-      String school,
-      String emailId,
-      int points) {
+    String eventId,
+    String title,
+    String description,
+    String image,
+    String location,
+    String duration,
+    String category,
+    DateTime postedTime,
+    List<String> isActive,
+    String school,
+    String emailId,
+    int points,
+    int numComments,
+  ) {
     this.eventId = eventId;
     this.eventTitle = title;
     this.description = description;
@@ -70,6 +79,8 @@ class Finesse {
     this.school = school;
     this.emailId = emailId;
     this.points = points;
+    this.numComments = numComments;
+    this.comments = [];
   }
 
   /// Creates a Finesse with an empty event id.
@@ -85,6 +96,7 @@ class Finesse {
     String school,
     String email,
     int points: 1,
+    int numComments: 0,
   }) {
     return Finesse(
       null,
@@ -99,6 +111,7 @@ class Finesse {
       User.currentUser?.school ?? 'test',
       User.currentUser?.email ?? 'test',
       points,
+      numComments,
     );
   }
 
@@ -133,6 +146,7 @@ class Finesse {
       json['school'] ?? "",
       json['emailId'] ?? "",
       json['points'] ?? 0,
+      json['numComments'] ?? 0,
     );
     return fin;
   }
@@ -151,6 +165,7 @@ class Finesse {
     map['school'] = school;
     map['emailId'] = emailId;
     map['points'] = points;
+    map['numComments'] = numComments;
     return map;
   }
 

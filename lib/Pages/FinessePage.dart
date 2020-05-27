@@ -12,18 +12,16 @@ import 'package:finesse_nation/Styles.dart';
 enum DotMenu { markEnded }
 
 bool _commentIsEmpty;
-int voteAmount;
-List<Comment> mainComments;
 
 /// Displays details about a specific [Finesse].
 class FinessePage extends StatelessWidget {
   final Finesse fin;
-  FinessePage(this.fin);
+  final List<bool> isSelected;
+
+  FinessePage(this.fin, this.isSelected);
 
   Widget build(BuildContext context) {
     _commentIsEmpty = true;
-    voteAmount = 0;
-    mainComments = <Comment>[];
     final title = fin.eventTitle;
 
     return Scaffold(
@@ -45,7 +43,7 @@ class FinessePage extends StatelessWidget {
           )
         ],
       ),
-      body: Container(child: _FinesseDetails(fin)),
+      body: Container(child: _FinesseDetails(fin, isSelected)),
       backgroundColor: Colors.black,
     );
   }
@@ -54,37 +52,41 @@ class FinessePage extends StatelessWidget {
 // Create the details widget.
 class _FinesseDetails extends StatefulWidget {
   final Finesse fin;
+  final List<bool> isSelected;
 
-  _FinesseDetails(this.fin);
+  _FinesseDetails(this.fin, this.isSelected);
 
   @override
   _FinesseDetailsState createState() {
-    return _FinesseDetailsState(fin);
+    return _FinesseDetailsState(fin, isSelected);
   }
 }
 
 // Create a corresponding State class.
 class _FinesseDetailsState extends State<_FinesseDetails> {
   Finesse fin;
-  Future<List<Comment>> comments;
-  Future<int> votes;
-  Future<int> origVote;
-  final TextEditingController _controller = TextEditingController();
-  bool active = true;
+  List<bool> isSelected;
+
+  bool active;
   Stream<List<Comment>> commentStream;
 
-  _FinesseDetailsState(Finesse fin) {
+  final TextEditingController _controller = TextEditingController();
+
+  _FinesseDetailsState(Finesse fin, List<bool> isSelected) {
+    this.fin = fin;
+    this.isSelected = isSelected;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    active = true;
     commentStream = (() async* {
       while (active) {
         yield await Network.getComments(fin.eventId);
         await Future<void>.delayed(Duration(seconds: 1));
       }
     })();
-    this.fin = fin;
-    this.comments = Network.getComments(fin.eventId);
-    this.votes = Network.fetchVotes(fin.eventId);
-    this.origVote =
-        Network.fetchUserVoteOnEvent(fin.eventId, User.currentUser.email);
   }
 
   @override
@@ -141,7 +143,6 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
             child: Icon(
               Icons.info,
               color: Styles.darkOrange,
-              size: 24.0,
             ),
           ),
           Flexible(
@@ -166,7 +167,6 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
             child: Icon(
               Icons.calendar_today,
               color: Styles.darkOrange,
-              size: 24.0,
             ),
           ),
           Column(
@@ -196,85 +196,52 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
       ),
     );
 
-    Widget buildVotingSection(int votes, int origVote, BuildContext context) =>
-        Container(
-          padding: const EdgeInsets.only(left: 20, bottom: 20),
-          child: Row(
-            children: [
-              Row(children: [
-                Padding(
-                  padding: EdgeInsets.only(right: 10),
-                  child: Icon(
-                      ((getVoteCount(origVote, voteAmount, votes)) >= 0)
-                          ? Icons.arrow_upward
-                          : Icons.arrow_downward,
-                      color: Color(0xffc47600),
-                      size: 24.0),
+    Widget votingSection = Container(
+      padding: const EdgeInsets.only(left: 20, bottom: 20),
+      child: Row(
+        children: [
+          Row(children: [
+            Padding(
+              padding: EdgeInsets.only(right: 10),
+              child: Icon(
+                Icons.thumbs_up_down,
+                color: Styles.darkOrange,
+              ),
+            ),
+            Text(
+              '${fin.points} ${(fin.points == 1) ? "point" : "points"}',
+              style: TextStyle(
+                fontSize: 16,
+                color: Styles.brightOrange,
+              ),
+            ),
+          ]),
+          SizedBox(
+            height: 24,
+            child: ToggleButtons(
+              fillColor: Styles.darkGrey,
+              renderBorder: false,
+              selectedColor: Styles.brightOrange,
+              color: Styles.darkOrange,
+              children: <Widget>[
+                Icon(
+                  Icons.arrow_upward,
                 ),
-                Text(
-                  (getVoteCount(origVote, voteAmount, votes)).abs().toString() +
-                      ((getVoteCount(origVote, voteAmount, votes) >= 0)
-                          ? " upvotes"
-                          : " downvotes"),
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Color(0xffff9900),
-                  ),
+                Icon(
+                  Icons.arrow_downward,
                 ),
-              ]),
-              Row(
-                children: <Widget>[
-                  SizedBox(
-                    height: 24,
-                    child: IconButton(
-                      padding: EdgeInsets.symmetric(vertical: 0),
-                      icon: Icon(
-                        Icons.arrow_upward,
-                        color: Color(0xffc47600),
-                      ),
-                      onPressed: (!canUpVote(origVote, voteAmount))
-                          ? null
-                          : () {
-                              Network.postVote(
-                                  fin.eventId, User.currentUser.email, 1);
-                              setState(() {
-                                voteAmount = 1;
-                              });
-                            },
-                    ),
-                  ),
-                  SizedBox(
-                    height: 24,
-                    child: IconButton(
-                        padding: EdgeInsets.symmetric(vertical: 0),
-                        icon: Icon(
-                          Icons.arrow_downward,
-                          color: Color(0xffc47600),
-                        ),
-                        onPressed: (!canDownVote(origVote, voteAmount))
-                            ? null
-                            : () {
-                                Network.postVote(
-                                    fin.eventId, User.currentUser.email, -1);
-                                setState(() {
-                                  voteAmount = -1;
-                                });
-                              }),
-                  )
-                ],
-              )
-            ],
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              ],
+              onPressed: (index) {
+                setState(() {
+                  Util.handleVote(index, isSelected, fin);
+                });
+              },
+              isSelected: isSelected,
+            ),
           ),
-        );
-
-    Widget votingSection = FutureBuilder(
-      future: Future.wait([votes, origVote]),
-      builder: (context, snapshot) {
-        return snapshot.data != null
-            ? buildVotingSection(snapshot.data[0], snapshot.data[1], context)
-            : Container();
-      },
+        ],
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      ),
     );
 
     Widget userSection = Container(
@@ -285,28 +252,15 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
             padding: EdgeInsets.only(right: 10),
             child: Icon(
               Icons.account_circle,
-              color: Styles.darkOrange,
-              size: 24.0,
+              color: getColor(fin.emailId),
             ),
           ),
           Text(
-            "Posted by: ",
+            fin.emailId,
             style: TextStyle(
               fontSize: 16,
               color: Styles.brightOrange,
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                fin.emailId,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Styles.brightOrange,
-                ),
-              ),
-            ],
           ),
         ],
       ),
@@ -321,7 +275,6 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
             child: Icon(
               Icons.place,
               color: Styles.darkOrange,
-              size: 24.0,
             ),
           ),
           Column(
@@ -385,8 +338,9 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
                     }
                     String comment = _controller.value.text;
                     Comment newComment = Comment.post(comment);
-                    setState(() => mainComments.add(newComment));
+                    setState(() => fin.comments.add(newComment));
                     Network.addComment(newComment, fin.eventId);
+                    fin.numComments++;
                     _controller.clear();
                   }),
       ),
@@ -394,8 +348,9 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
       onFieldSubmitted: (comment) {
         if (comment.isNotEmpty) {
           Comment newComment = Comment.post(comment);
-          setState(() => mainComments.add(newComment));
+          setState(() => fin.comments.add(newComment));
           Network.addComment(newComment, fin.eventId);
+          fin.numComments++;
           _controller.clear();
         }
       },
@@ -464,16 +419,16 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
     }
 
     Widget viewCommentSection = StreamBuilder(
+      initialData: fin.comments,
       stream: commentStream,
       builder: (BuildContext context, AsyncSnapshot<List<Comment>> snapshot) {
         if (snapshot.hasData &&
             snapshot.connectionState == ConnectionState.active) {
-          mainComments = (snapshot.data);
-        } else {
-          return Center(child: CircularProgressIndicator());
+          fin.comments = snapshot.data;
+          fin.numComments = fin.comments.length;
         }
         List<Widget> children =
-            mainComments.map((comment) => getCommentView(comment)).toList();
+            fin.comments.map((comment) => getCommentView(comment)).toList();
         Widget commentsHeader = Padding(
           padding: EdgeInsets.only(
             left: 12,
@@ -489,7 +444,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
                 ),
               ),
               Text(
-                '${mainComments.length}',
+                '${fin.numComments}',
                 style: TextStyle(
                   fontSize: 15,
                   color: Styles.darkOrange,
@@ -535,85 +490,6 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
     int seed = email.codeUnits.fold(0, (i, j) => i + j);
     int val = min + Random(seed).nextInt(max - min + 1);
     return Color(val);
-  }
-
-  int getVoteCount(int origVote, int voteAmount, int votes) {
-    if (origVote == -1) {
-      if (voteAmount == 0) {
-        return votes;
-      } else if (voteAmount == 1) {
-        return votes + 2;
-      } else if (voteAmount == -1) {
-        return votes;
-      }
-    } else if (origVote == 0) {
-      if (voteAmount == 0) {
-        return votes;
-      } else if (voteAmount == 1) {
-        return votes + 1;
-      } else if (voteAmount == -1) {
-        return votes - 1;
-      }
-    } else if (origVote == 1) {
-      if (voteAmount == 0) {
-        return votes;
-      } else if (voteAmount == -1) {
-        return votes - 2;
-      } else if (voteAmount == 1) {
-        return votes;
-      }
-    }
-    throw Exception("Failure in getting vote count");
-  }
-
-  canUpVote(int origVote, int voteAmount) {
-    if (origVote == 0) {
-      if (voteAmount == 0) {
-        return true;
-      } else if (voteAmount == 1) {
-        return false;
-      } else if (voteAmount == -1) {
-        return true;
-      }
-    } else if (origVote == -1) {
-      if (voteAmount == 0 || voteAmount == -1) {
-        return true;
-      } else if (voteAmount == 1) {
-        return false;
-      }
-    } else if (origVote == 1) {
-      if (voteAmount == 0 || voteAmount == 1) {
-        return false;
-      } else if (voteAmount == -1) {
-        return true;
-      }
-    }
-    throw Exception("Failure to check upvoting");
-  }
-
-  canDownVote(int origVote, int voteAmount) {
-    if (origVote == 0) {
-      if (voteAmount == 0) {
-        return true;
-      } else if (voteAmount == 1) {
-        return true;
-      } else if (voteAmount == -1) {
-        return false;
-      }
-    } else if (origVote == -1) {
-      if (voteAmount == 0 || voteAmount == -1) {
-        return false;
-      } else if (voteAmount == 1) {
-        return true;
-      }
-    } else if (origVote == 1) {
-      if (voteAmount == 0 || voteAmount == 1) {
-        return true;
-      } else if (voteAmount == -1) {
-        return false;
-      }
-    }
-    throw Exception("Failure to check downvoting");
   }
 }
 

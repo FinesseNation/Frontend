@@ -11,7 +11,7 @@ import 'package:finesse_nation/Comment.dart';
 /// Contains functions used to interact with the API.
 class Network {
   /// The root domain for the Finesse Nation API.
-  static const DOMAIN = 'http://10.0.0.135:8080/api/';
+  static const DOMAIN = 'https://finesse-nation.herokuapp.com/api/';
 
   /// Deleting a Finesse.
   static const DELETE_URL = DOMAIN + 'food/deleteEvent';
@@ -263,18 +263,14 @@ class Network {
     }
   }
 
-  static Future<void> setVotes(
-      List<String> upvoted, List<String> downvoted) async {
+  static Future<void> setVotes() async {
     var payload = {
       "emailId": User.currentUser.email,
-      'upvoted': upvoted,
-      'downvoted': downvoted,
+      'upvoted': User.currentUser.upvoted,
+      'downvoted': User.currentUser.downvoted,
     };
     http.Response response = await postData(SET_VOTES_URL, payload);
-    if (response.statusCode == 200) {
-      User.currentUser.upvoted = upvoted;
-      User.currentUser.downvoted = downvoted;
-    } else {
+    if (response.statusCode != 200) {
       print(response.statusCode);
       print(response.body);
       throw Exception('set votes request failed');

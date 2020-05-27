@@ -14,8 +14,8 @@ void main() {
 
   ///Basic username getter test
   test('Get UserName test', () {
-    User testUser = User(
-        "this._email", "this._password", "UserName", "this._school", 0, false, [], []);
+    User testUser = User("this._email", "this._password", "UserName",
+        "this._school", 0, false, [], []);
     expect(testUser.userName, "UserName");
   });
 

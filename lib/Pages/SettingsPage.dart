@@ -136,7 +136,8 @@ class _SettingsPageState extends State<SettingsPage> {
                           style: TextStyle(color: Styles.darkGrey),
                         ),
                         onPressed: () {
-                          Notifications.notificationsSet(false, updateUser: false);
+                          Notifications.notificationsSet(false,
+                              updateUser: false);
                           SharedPreferences.getInstance().then((prefs) {
                             prefs.remove('currentUser');
                           });

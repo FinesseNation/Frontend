@@ -310,50 +310,69 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     return Scaffold(
       key: _scaffoldKey,
+      drawer: Drawer(
+        // Add a ListView to the drawer. This ensures the user can scroll
+        // through the options in the drawer if there isn't enough vertical
+        // space to fit everything.
+        child: ListView(
+          // Important: Remove any padding from the ListView.
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            DrawerHeader(
+              child: Text('Drawer Header'),
+              decoration: BoxDecoration(
+                color: Colors.blue,
+              ),
+            ),
+            ListTile(
+              title: Text(
+                'Settings',
+                style: TextStyle(color: Styles.brightOrange),
+              ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => Settings()),
+                );
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              title: Text('Item 2'),
+              onTap: () {
+                // Update the state of the app
+                // ...
+                // Then close the drawer
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
       appBar: AppBar(
-          // Here we take the value from the MyHomePage object that was created by
-          // the App.build method, and use it to set our appbar title
-          title: Hero(
-            tag: 'logo',
-            child: Image.asset(
-              'images/logo.png',
-              height: 35,
-            ),
+        // Here we take the value from the MyHomePage object that was created by
+        // the App.build method, and use it to set our appbar title
+        title: Hero(
+          tag: 'logo',
+          child: Image.asset(
+            'images/logo.png',
+            height: 35,
           ),
-          centerTitle: true,
-          actions: <Widget>[
-            IconButton(
-              icon: Image.asset("images/baseline_filter_list_black_18dp.png",
-                  key: Key("Filter"), color: Colors.white),
-              onPressed: () async {
-                showFilterMenu();
-              },
+        ),
+        centerTitle: true,
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(
+              Icons.filter_list,
             ),
-            PopupMenuButton<DotMenu>(
-              key: Key("dropdownButton"),
-              onSelected: (DotMenu result) {
-                setState(() {
-                  switch (result) {
-                    case DotMenu.settings:
-                      {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => Settings()),
-                        );
-                      }
-                      break;
-                  }
-                });
-              },
-              itemBuilder: (BuildContext context) => <PopupMenuEntry<DotMenu>>[
-                const PopupMenuItem<DotMenu>(
-                  key: Key("settingsButton"),
-                  value: DotMenu.settings,
-                  child: Text('Settings'),
-                ),
-              ],
-            )
-          ]),
+            key: Key("Filter"),
+            color: Colors.white,
+            onPressed: () async {
+              showFilterMenu();
+            },
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(

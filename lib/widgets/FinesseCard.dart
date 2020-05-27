@@ -3,7 +3,6 @@ import 'package:finesse_nation/Pages/FinessePage.dart';
 import 'package:flutter/material.dart';
 import 'package:finesse_nation/Util.dart';
 import 'package:finesse_nation/Styles.dart';
-import 'package:finesse_nation/Network.dart';
 import 'package:finesse_nation/User.dart';
 
 class FinesseCard extends StatefulWidget {
@@ -22,67 +21,16 @@ class _FinesseCardState extends State<FinesseCard> {
 
   _FinesseCardState(this.fin, this.isSelected);
 
-  void handleVote(int index, List<String> upvoted, List<String> downvoted) {
-    for (int buttonIndex = 0; buttonIndex < isSelected.length; buttonIndex++) {
-      if (buttonIndex == index) {
-        // button that was pressed
-        if (index == 0) {
-          // upvote
-          if (isSelected[buttonIndex]) {
-            upvoted.remove(fin.eventId);
-            fin.downvote();
-          } else {
-            upvoted.add(fin.eventId);
-            fin.upvote();
-          }
-        } else {
-          // downvote
-          if (isSelected[buttonIndex]) {
-            downvoted.remove(fin.eventId);
-            fin.upvote();
-          } else {
-            downvoted.add(fin.eventId);
-            fin.downvote();
-          }
-        }
-        setState(() {
-          isSelected[buttonIndex] = !isSelected[buttonIndex];
-        });
-      } else {
-        // button that wasn't pressed
-        if (index == 0) {
-          // upvote
-          if (isSelected[buttonIndex]) {
-            downvoted.remove(fin.eventId);
-            fin.upvote();
-          }
-        } else {
-          // downvote
-          if (isSelected[buttonIndex]) {
-            upvoted.remove(fin.eventId);
-            fin.downvote();
-          }
-        }
-        setState(() {
-          isSelected[buttonIndex] = false;
-        });
-      }
-    }
-    Network.setVotes(upvoted, downvoted);
-    Network.updateFinesse(fin);
-  }
-
   Widget build(BuildContext context) {
-    List<String> upvoted = User.currentUser.upvoted;
-    List<String> downvoted = User.currentUser.downvoted;
     return Card(
       color: Styles.darkGrey,
       child: InkWell(
-        onTap: () => {
+        onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => FinessePage(fin)),
-          )
+            MaterialPageRoute(
+                builder: (context) => FinessePage(fin, isSelected)),
+          ).whenComplete(() => setState(() => {}));
         },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -126,8 +74,8 @@ class _FinesseCardState extends State<FinesseCard> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
                       Text(
-                        "${fin.points} points\n"
-                        "4 comments",
+                        "${fin.points} ${(fin.points == 1) ? "point" : "points"}\n"
+                        "${fin.numComments} ${(fin.numComments == 1) ? "comment" : "comments"}",
                         style: TextStyle(
                           fontSize: 14,
                           color: Styles.darkOrange,
@@ -146,8 +94,11 @@ class _FinesseCardState extends State<FinesseCard> {
                             Icons.arrow_downward,
                           ),
                         ],
-                        onPressed: (index) =>
-                            handleVote(index, upvoted, downvoted),
+                        onPressed: (index) {
+                          setState(() {
+                            Util.handleVote(index, isSelected, fin);
+                          });
+                        },
                         isSelected: isSelected,
                       ),
                     ],

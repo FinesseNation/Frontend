@@ -7,8 +7,6 @@ import 'package:finesse_nation/Styles.dart';
 
 /// Handles login and registration.
 class LoginScreen extends StatelessWidget {
-
-
   @override
   Widget build(BuildContext context) {
     return FlutterLogin(
