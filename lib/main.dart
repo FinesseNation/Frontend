@@ -32,7 +32,6 @@ bool _fcmAlreadySetup = false;
 GlobalKey<ScaffoldState> _scaffoldKey;
 
 class _MyApp extends StatelessWidget {
-// This widget is the root of your application.
   final String _currentUser;
 
   _MyApp(this._currentUser);
@@ -62,14 +61,14 @@ class _MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    changeStatusColor(Colors.black);
-    changeNavigationColor(Colors.black);
+    changeStatusColor(primaryBackground);
+    changeNavigationColor(primaryBackground);
     return MaterialApp(
       title: 'Finesse Nation',
       theme: ThemeData(
-        primaryColor: Colors.black,
-        canvasColor: Styles.darkGrey,
-        accentColor: Styles.brightOrange,
+        primaryColor: primaryBackground,
+        canvasColor: secondaryBackground,
+        accentColor: primaryHighlight,
       ),
       home: _currentUser != null ? MyHomePage() : LoginScreen(),
     );
@@ -107,7 +106,7 @@ class _MyHomePageState extends State<MyHomePage> {
             Text(
               message['notification']['title'],
               style: TextStyle(
-                color: Styles.brightOrange,
+                color: primaryHighlight,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -115,7 +114,7 @@ class _MyHomePageState extends State<MyHomePage> {
             Text(
               message['notification']['body'],
               style: TextStyle(
-                color: Styles.brightOrange,
+                color: primaryHighlight,
               ),
             ),
           ],
@@ -156,8 +155,8 @@ class _MyHomePageState extends State<MyHomePage> {
     Fluttertoast.showToast(
       msg: "Reloading...",
       toastLength: Toast.LENGTH_LONG,
-      backgroundColor: Styles.darkGrey,
-      textColor: Styles.brightOrange,
+      backgroundColor: secondaryBackground,
+      textColor: primaryHighlight,
     );
     setState(() {
       print('reloading');
@@ -193,7 +192,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Text(
           "OK",
           style: TextStyle(
-            color: Styles.brightOrange,
+            color: primaryHighlight,
           ),
         ),
       ),
@@ -239,7 +238,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         } else {
                           return CustomSwitch(
                             key: Key("activeFilter"),
-                            activeColor: Styles.brightOrange,
+                            activeColor: primaryHighlight,
                             value: snapshot.data,
                             onChanged: (value) {
                               localActive = value;
@@ -266,7 +265,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             } else {
                               return CustomSwitch(
                                   key: Key("typeFilter"),
-                                  activeColor: Styles.brightOrange,
+                                  activeColor: primaryHighlight,
                                   value: snapshot.data,
                                   onChanged: (value) {
                                     localType = value;
@@ -321,20 +320,24 @@ class _MyHomePageState extends State<MyHomePage> {
             DrawerHeader(
               child: Text('Drawer Header'),
               decoration: BoxDecoration(
-                color: Colors.blue,
+                color: secondaryHighlight,
               ),
             ),
             ListTile(
+              leading: Icon(
+                Icons.settings,
+                color: primaryHighlight,
+              ),
               title: Text(
                 'Settings',
-                style: TextStyle(color: Styles.brightOrange),
+                style: TextStyle(color: primaryHighlight),
               ),
               onTap: () {
+                Navigator.pop(context);
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => Settings()),
                 );
-                Navigator.pop(context);
               },
             ),
             ListTile(
@@ -377,18 +380,19 @@ class _MyHomePageState extends State<MyHomePage> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => AddEvent()),
+            MaterialPageRoute(
+              builder: (context) => AddEvent(),
+            ),
           );
         },
         key: Key('add event'),
         child: Icon(
           Icons.add,
-          color: Styles.darkGrey,
+          color: secondaryBackground,
         ),
-        backgroundColor: Styles.brightOrange,
+        backgroundColor: primaryHighlight,
       ),
       body: FinesseList(),
-      // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }

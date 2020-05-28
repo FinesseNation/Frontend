@@ -21,12 +21,14 @@ class User {
   /// This user's notification preferences.
   bool notifications;
 
+  /// This user's upvoted posts.
   List<String> upvoted;
 
+  /// This user's downvoted posts.
   List<String> downvoted;
 
   /// The current logged in user.
-  static User currentUser = User(null, null, null, null, 0, true, [], []);
+  static User currentUser;
 
   /// Creates a new user.
   User(this.email, this.password, this.userName, this.school, this.points,

@@ -13,9 +13,9 @@ class LoginScreen extends StatelessWidget {
       title: null,
       logo: 'images/logo.png',
       theme: LoginTheme(
-          primaryColor: Colors.black,
-          accentColor: Colors.black,
-          cardTheme: CardTheme(color: Styles.brightOrange),
+          primaryColor: primaryBackground,
+          accentColor: primaryBackground,
+          cardTheme: CardTheme(color: primaryHighlight),
           buttonTheme: LoginButtonTheme(
             splashColor: Colors.grey[800],
           )),

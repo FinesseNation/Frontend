@@ -145,19 +145,11 @@ class __HeaderState extends State<_Header> {
     final displayLogo = widget.logoPath != null && logoHeight >= kMinLogoHeight;
 
     Widget logo = displayLogo
-        ? GestureDetector(
-            child: Image.asset(
-              widget.logoPath,
-              filterQuality: FilterQuality.high,
-              height: logoHeight,
-            ),
-            onTap: () {
-              Network.updateCurrentUser(email: 'test@test.com');
-              Navigator.of(context).pushReplacement(MaterialPageRoute(
-                builder: (context) => MyHomePage(),
-              ));
-            },
-          )
+        ? Image.asset(
+          widget.logoPath,
+          filterQuality: FilterQuality.high,
+          height: logoHeight,
+        )
         : NullWidget();
 
     if (widget.logoTag != null) {

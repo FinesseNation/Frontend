@@ -24,8 +24,7 @@ class _FinesseListState extends State<FinesseList> {
     _finesses = Network.fetchFinesses();
     await Future.delayed(Duration(seconds: 1));
     _refreshController.refreshCompleted();
-    print('refreshed');
-    await Future.delayed(Duration(milliseconds: 1000));
+//    await Future.delayed(Duration(seconds: 1));
     setState(() {});
 
 //    _finesses.whenComplete(() {
@@ -43,7 +42,7 @@ class _FinesseListState extends State<FinesseList> {
 
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.black,
+      color: primaryBackground,
       child: FutureBuilder(
         initialData: localList,
         future: _finesses,
@@ -60,12 +59,9 @@ class _FinesseListState extends State<FinesseList> {
   }
 
   Widget listViewWidget(List<Finesse> finesses, BuildContext context) {
-    print('building list of length ${finesses.length}');
-    print(
-        '{${finesses[0].eventTitle}, ${finesses[1].eventTitle}, ${finesses[2].eventTitle}, ..., ${finesses.last.eventTitle}}');
     return SmartRefresher(
       enablePullDown: true,
-      enablePullUp: true,
+      enablePullUp: false,
       header: ClassicHeader(
         idleText: 'Pull down to refresh...',
         releaseText: 'Release to refresh...',
@@ -80,10 +76,7 @@ class _FinesseListState extends State<FinesseList> {
             User.currentUser.upvoted.contains(fin.eventId),
             User.currentUser.downvoted.contains(fin.eventId)
           ];
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
-            child: FinesseCard(fin, votes),
-          );
+          return FinesseCard(fin, votes);
         },
       ),
     );

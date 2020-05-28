@@ -14,6 +14,9 @@ class Comment {
   /// Creates a comment.
   Comment(this.comment, this.emailId, this.postedTime);
 
+  /// Returns this comment's author's username.
+  get username => emailId.split('@')[0];
+
   /// Creates a comment using the current user and time.
   static Comment post(String comment) {
     String emailId = User.currentUser.email;

@@ -44,7 +44,7 @@ class FinessePage extends StatelessWidget {
         ],
       ),
       body: Container(child: _FinesseDetails(fin, isSelected)),
-      backgroundColor: Colors.black,
+      backgroundColor: primaryBackground,
     );
   }
 }
@@ -128,7 +128,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
         style: TextStyle(
           fontWeight: FontWeight.bold,
           fontSize: 30,
-          color: Styles.brightOrange,
+          color: primaryHighlight,
         ),
       ),
     );
@@ -142,7 +142,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
             padding: EdgeInsets.only(right: 10),
             child: Icon(
               Icons.info,
-              color: Styles.darkOrange,
+              color: secondaryHighlight,
             ),
           ),
           Flexible(
@@ -150,7 +150,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
               fin.description,
               style: TextStyle(
                 fontSize: 16,
-                color: Styles.brightOrange,
+                color: primaryHighlight,
               ),
             ),
           ),
@@ -166,7 +166,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
             padding: EdgeInsets.only(right: 10),
             child: Icon(
               Icons.calendar_today,
-              color: Styles.darkOrange,
+              color: secondaryHighlight,
             ),
           ),
           Column(
@@ -178,7 +178,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
                     : 'Inactive',
                 style: TextStyle(
                   fontSize: 16,
-                  color: Styles.brightOrange,
+                  color: primaryHighlight,
                 ),
               ),
               fin.duration != "" &&
@@ -187,7 +187,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
                   ? Text("Duration: ${fin.duration}",
                       style: TextStyle(
                         fontSize: 15,
-                        color: Styles.darkOrange,
+                        color: secondaryHighlight,
                       ))
                   : Container(),
             ],
@@ -205,24 +205,25 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
               padding: EdgeInsets.only(right: 10),
               child: Icon(
                 Icons.thumbs_up_down,
-                color: Styles.darkOrange,
+                color: secondaryHighlight,
               ),
             ),
             Text(
               '${fin.points} ${(fin.points == 1) ? "point" : "points"}',
               style: TextStyle(
                 fontSize: 16,
-                color: Styles.brightOrange,
+                color: primaryHighlight,
               ),
             ),
           ]),
           SizedBox(
             height: 24,
             child: ToggleButtons(
-              fillColor: Styles.darkGrey,
               renderBorder: false,
-              selectedColor: Styles.brightOrange,
-              color: Styles.darkOrange,
+              fillColor: Colors.transparent,
+              splashColor: Colors.transparent,
+              selectedColor: primaryHighlight,
+              color: secondaryHighlight,
               children: <Widget>[
                 Icon(
                   Icons.arrow_upward,
@@ -259,7 +260,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
             fin.emailId,
             style: TextStyle(
               fontSize: 16,
-              color: Styles.brightOrange,
+              color: primaryHighlight,
             ),
           ),
         ],
@@ -274,7 +275,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
             padding: EdgeInsets.only(right: 10),
             child: Icon(
               Icons.place,
-              color: Styles.darkOrange,
+              color: secondaryHighlight,
             ),
           ),
           Column(
@@ -285,7 +286,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
                   fin.location,
                   style: TextStyle(
                     fontSize: 16,
-                    color: Styles.brightOrange,
+                    color: primaryHighlight,
                     decoration: TextDecoration.underline,
                   ),
                 ),
@@ -314,7 +315,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
       },
       decoration: InputDecoration(
         hintText: 'Add a comment...',
-        hintStyle: TextStyle(color: Styles.darkOrange),
+        hintStyle: TextStyle(color: secondaryHighlight),
         prefixIcon: Padding(
           padding: EdgeInsets.symmetric(horizontal: 8),
           child: Icon(
@@ -324,7 +325,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
           ),
         ),
         suffixIcon: IconButton(
-            color: Styles.brightOrange,
+            color: primaryHighlight,
             disabledColor: Colors.grey[500],
             icon: Icon(
               Icons.send,
@@ -379,15 +380,15 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
                       child: Row(
                         children: [
                           Text(
-                            comment.emailId,
+                            comment.username,
                             style: TextStyle(
-                              color: Styles.brightOrange,
+                              color: primaryHighlight,
                             ),
                           ),
                           Text(
                             " · ${Util.timeSince(comment.postedDateTime)}",
                             style: TextStyle(
-                              color: Styles.darkOrange,
+                              color: secondaryHighlight,
                             ),
                           ),
                         ],
@@ -404,7 +405,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
               ),
             ],
           ),
-//          Divider(thickness: 0.5,color: Colors.black,)
+//          Divider(thickness: 0.5,color: primaryBackground,)
         ],
       );
       commentView = Padding(
@@ -440,14 +441,14 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
                 'Comments  ',
                 style: TextStyle(
                   fontSize: 16,
-                  color: Styles.brightOrange,
+                  color: primaryHighlight,
                 ),
               ),
               Text(
                 '${fin.numComments}',
                 style: TextStyle(
                   fontSize: 15,
-                  color: Styles.darkOrange,
+                  color: secondaryHighlight,
                 ),
               ),
             ],
@@ -464,7 +465,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
     return ListView(
       children: [
         Card(
-          color: Styles.darkGrey,
+          color: secondaryBackground,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -501,7 +502,7 @@ class FullImage extends StatelessWidget {
 
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: primaryBackground,
       body: InkWell(
         onTap: () => Navigator.pop(context),
         child: Center(
@@ -524,8 +525,8 @@ _markAsEnded(Finesse fin) {
     Fluttertoast.showToast(
       msg: "Already marked as inactive",
       toastLength: Toast.LENGTH_SHORT,
-      backgroundColor: Styles.darkGrey,
-      textColor: Styles.brightOrange,
+      backgroundColor: secondaryBackground,
+      textColor: primaryHighlight,
     );
     return;
   }
@@ -535,7 +536,7 @@ _markAsEnded(Finesse fin) {
   Fluttertoast.showToast(
     msg: "Marked as inactive",
     toastLength: Toast.LENGTH_SHORT,
-    backgroundColor: Styles.darkGrey,
-    textColor: Styles.brightOrange,
+    backgroundColor: secondaryBackground,
+    textColor: primaryHighlight,
   );
 }
