@@ -299,124 +299,128 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
       ),
     );
 
-    Widget addCommentSection = TextFormField(
-      controller: _controller,
-      autovalidate: true,
-      validator: (comment) {
-        bool isEmpty = comment.isEmpty;
-        if (isEmpty != _commentIsEmpty) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            setState(() {
-              _commentIsEmpty = isEmpty;
+    Widget addCommentSection = Padding(
+      padding: EdgeInsets.symmetric(vertical: 4),
+      child: TextFormField(
+        keyboardAppearance: Brightness.dark,
+        textCapitalization: TextCapitalization.sentences,
+        controller: _controller,
+        autovalidate: true,
+        validator: (comment) {
+          bool isEmpty = comment.isEmpty;
+          if (isEmpty != _commentIsEmpty) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              setState(() {
+                _commentIsEmpty = isEmpty;
+              });
             });
-          });
-        }
-        return null;
-      },
-      decoration: InputDecoration(
-        hintText: 'Add a comment...',
-        hintStyle: TextStyle(color: secondaryHighlight),
-        prefixIcon: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8),
-          child: Icon(
-            Icons.account_circle,
-            color: getColor(User.currentUser.email),
-            size: 45,
-          ),
-        ),
-        suffixIcon: IconButton(
-            color: primaryHighlight,
-            disabledColor: Colors.grey[500],
-            icon: Icon(
-              Icons.send,
+          }
+          return null;
+        },
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          hintText: 'Add a comment...',
+          hintStyle: TextStyle(color: secondaryHighlight),
+          prefixIcon: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8),
+            child: Icon(
+              Icons.account_circle,
+              color: getColor(User.currentUser.email),
+              size: 45,
             ),
-            onPressed: (_commentIsEmpty)
-                ? null
-                : () {
-                    FocusScopeNode currentFocus = FocusScope.of(context);
-                    if (!currentFocus.hasPrimaryFocus) {
-                      currentFocus.unfocus();
-                    }
-                    String comment = _controller.value.text;
-                    Comment newComment = Comment.post(comment);
-                    setState(() => fin.comments.add(newComment));
-                    Network.addComment(newComment, fin.eventId);
-                    fin.numComments++;
-                    _controller.clear();
-                  }),
+          ),
+          suffixIcon: IconButton(
+              color: primaryHighlight,
+              disabledColor: Colors.grey[500],
+              icon: Icon(
+                Icons.send,
+              ),
+              onPressed: (_commentIsEmpty)
+                  ? null
+                  : () {
+                      FocusScopeNode currentFocus = FocusScope.of(context);
+                      if (!currentFocus.hasPrimaryFocus) {
+                        currentFocus.unfocus();
+                      }
+                      String comment = _controller.value.text;
+                      Comment newComment = Comment.post(comment);
+                      setState(() => fin.comments.add(newComment));
+                      Network.addComment(newComment, fin.eventId);
+                      fin.numComments++;
+                      _controller.clear();
+                    }),
+        ),
+        style: TextStyle(color: Colors.grey[100]),
+        onFieldSubmitted: (comment) {
+          if (comment.isNotEmpty) {
+            Comment newComment = Comment.post(comment);
+            setState(() => fin.comments.add(newComment));
+            Network.addComment(newComment, fin.eventId);
+            fin.numComments++;
+            _controller.clear();
+          }
+        },
       ),
-      style: TextStyle(color: Colors.grey[100]),
-      onFieldSubmitted: (comment) {
-        if (comment.isNotEmpty) {
-          Comment newComment = Comment.post(comment);
-          setState(() => fin.comments.add(newComment));
-          Network.addComment(newComment, fin.eventId);
-          fin.numComments++;
-          _controller.clear();
-        }
-      },
     );
 
     Widget getCommentView(Comment comment) {
-      Widget commentView = Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8),
-                child: Icon(
-                  Icons.account_circle,
-                  color: getColor(comment.emailId),
-                  size: 45,
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(top: 4, bottom: 1),
-                      child: Row(
-                        children: [
-                          Text(
-                            comment.username,
-                            style: TextStyle(
-                              color: primaryHighlight,
-                            ),
-                          ),
-                          Text(
-                            " · ${Util.timeSince(comment.postedDateTime)}",
-                            style: TextStyle(
-                              color: secondaryHighlight,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Text(
-                      comment.comment,
-                      style: TextStyle(
-                        color: Colors.grey[100],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-//          Divider(thickness: 0.5,color: primaryBackground,)
-        ],
-      );
-      commentView = Padding(
+      return Padding(
         padding: EdgeInsets.only(
           top: 5,
           bottom: 5,
           right: 10,
         ),
-        child: commentView,
+        child: Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8),
+                  child: Icon(
+                    Icons.account_circle,
+                    color: getColor(comment.emailId),
+                    size: 45,
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.only(top: 4, bottom: 1),
+                        child: Row(
+                          children: [
+                            Text(
+                              comment.username,
+                              style: TextStyle(
+                                color: primaryHighlight,
+                              ),
+                            ),
+                            Text(
+                              " · ${Util.timeSince(comment.postedDateTime)}",
+                              style: TextStyle(
+                                color: secondaryHighlight,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        comment.comment,
+                        style: TextStyle(
+                          color: Colors.grey[100],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+//          Divider(thickness: 0.5,color: primaryBackground,)
+          ],
+        ),
       );
-      return commentView;
     }
 
     Widget viewCommentSection = StreamBuilder(

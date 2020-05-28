@@ -14,4 +14,3 @@ const Color primaryHighlight = Color(0xffe2e2e2);
 
 /// The secondary highlight color.
 const Color secondaryHighlight = Color(0xff8c8c8c);
-

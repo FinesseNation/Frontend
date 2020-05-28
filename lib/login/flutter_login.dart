@@ -146,10 +146,10 @@ class __HeaderState extends State<_Header> {
 
     Widget logo = displayLogo
         ? Image.asset(
-          widget.logoPath,
-          filterQuality: FilterQuality.high,
-          height: logoHeight,
-        )
+            widget.logoPath,
+            filterQuality: FilterQuality.high,
+            height: logoHeight,
+          )
         : NullWidget();
 
     if (widget.logoTag != null) {
