@@ -58,6 +58,8 @@ class Network {
   /// Add a vote to a Finesse.
   static const POST_EVENT_VOTING_URL = DOMAIN + 'vote';
 
+  static const SET_VOTES_URL = DOMAIN + 'user/setVotes';
+
   /// The topic used to send notifications about new Finesses.
   static const ALL_TOPIC = 'new_finesse';
 
@@ -251,13 +253,27 @@ class Network {
   }
 
   /// Changes the current user's notification preferences to [toggle].
-  static Future<void> changeNotifications(toggle) async {
+  static Future<void> changeNotifications(bool toggle) async {
     var payload = {"emailId": User.currentUser.email, 'notifications': toggle};
     http.Response response = await postData(NOTIFICATION_TOGGLE_URL, payload);
     if (response.statusCode == 200) {
       User.currentUser.notifications = toggle;
     } else {
       throw Exception('Notification change request failed');
+    }
+  }
+
+  static Future<void> setVotes() async {
+    var payload = {
+      "emailId": User.currentUser.email,
+      'upvoted': User.currentUser.upvoted,
+      'downvoted': User.currentUser.downvoted,
+    };
+    http.Response response = await postData(SET_VOTES_URL, payload);
+    if (response.statusCode != 200) {
+      print(response.statusCode);
+      print(response.body);
+      throw Exception('set votes request failed');
     }
   }
 

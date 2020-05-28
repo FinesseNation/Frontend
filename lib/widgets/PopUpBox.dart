@@ -19,7 +19,7 @@ class PopUpBox {
                 color: Colors.white,
               ),
             ),
-            backgroundColor: Styles.darkGrey,
+            backgroundColor: secondaryBackground,
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[

@@ -18,7 +18,7 @@ class Settings extends StatelessWidget {
       appBar: AppBar(
         title: Text(appTitle),
       ),
-      backgroundColor: Styles.darkGrey,
+      backgroundColor: secondaryBackground,
       body: SettingsPage(),
     );
   }
@@ -90,7 +90,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           right: 15, bottom: 10, top: 10, left: 10),
                       child: CustomSwitch(
                           key: Key("Notification Toggle"),
-                          activeColor: Styles.brightOrange,
+                          activeColor: primaryHighlight,
                           value: toggle,
                           onChanged: (value) {
                             toggle = !toggle;
@@ -102,7 +102,7 @@ class _SettingsPageState extends State<SettingsPage> {
             )
           ],
         ),
-        Divider(color: Colors.black),
+        Divider(color: primaryBackground),
         Row(
           children: <Widget>[
             Padding(
@@ -130,13 +130,14 @@ class _SettingsPageState extends State<SettingsPage> {
                           right: 15, bottom: 10, top: 10, left: 10),
                       child: RaisedButton(
                         key: Key('logoutButton'),
-                        color: Styles.brightOrange,
+                        color: primaryHighlight,
                         child: Text(
                           'LOGOUT',
-                          style: TextStyle(color: Styles.darkGrey),
+                          style: TextStyle(color: secondaryBackground),
                         ),
                         onPressed: () {
-                          Notifications.notificationsSet(false, updateUser: false);
+                          Notifications.notificationsSet(false,
+                              updateUser: false);
                           SharedPreferences.getInstance().then((prefs) {
                             prefs.remove('currentUser');
                           });
@@ -156,7 +157,7 @@ class _SettingsPageState extends State<SettingsPage> {
             )
           ],
         ),
-        Divider(color: Colors.black),
+        Divider(color: primaryBackground),
       ],
     );
   }

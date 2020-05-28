@@ -11,6 +11,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:finesse_nation/Network.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:finesse_nation/Styles.dart';
+import 'package:flutter_statusbarcolor/flutter_statusbarcolor.dart';
 
 /// The entrypoint for the app.
 void main() async {
@@ -31,19 +32,43 @@ bool _fcmAlreadySetup = false;
 GlobalKey<ScaffoldState> _scaffoldKey;
 
 class _MyApp extends StatelessWidget {
-// This widget is the root of your application.
   final String _currentUser;
 
   _MyApp(this._currentUser);
 
+  static changeStatusColor(Color color) async {
+    try {
+      await FlutterStatusbarcolor.setStatusBarColor(color, animate: true);
+      if (useWhiteForeground(color)) {
+        FlutterStatusbarcolor.setStatusBarWhiteForeground(true);
+        FlutterStatusbarcolor.setNavigationBarWhiteForeground(true);
+      } else {
+        FlutterStatusbarcolor.setStatusBarWhiteForeground(false);
+        FlutterStatusbarcolor.setNavigationBarWhiteForeground(false);
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
+  static changeNavigationColor(Color color) async {
+    try {
+      await FlutterStatusbarcolor.setNavigationBarColor(color, animate: true);
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    changeStatusColor(primaryBackground);
+    changeNavigationColor(primaryBackground);
     return MaterialApp(
       title: 'Finesse Nation',
       theme: ThemeData(
-        primaryColor: Colors.black,
-        canvasColor: Styles.darkGrey,
-        accentColor: Styles.brightOrange,
+        primaryColor: primaryBackground,
+        canvasColor: secondaryBackground,
+        accentColor: primaryHighlight,
       ),
       home: _currentUser != null ? MyHomePage() : LoginScreen(),
     );
@@ -81,7 +106,7 @@ class _MyHomePageState extends State<MyHomePage> {
             Text(
               message['notification']['title'],
               style: TextStyle(
-                color: Styles.brightOrange,
+                color: primaryHighlight,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -89,7 +114,7 @@ class _MyHomePageState extends State<MyHomePage> {
             Text(
               message['notification']['body'],
               style: TextStyle(
-                color: Styles.brightOrange,
+                color: primaryHighlight,
               ),
             ),
           ],
@@ -130,8 +155,8 @@ class _MyHomePageState extends State<MyHomePage> {
     Fluttertoast.showToast(
       msg: "Reloading...",
       toastLength: Toast.LENGTH_LONG,
-      backgroundColor: Styles.darkGrey,
-      textColor: Styles.brightOrange,
+      backgroundColor: secondaryBackground,
+      textColor: primaryHighlight,
     );
     setState(() {
       print('reloading');
@@ -167,7 +192,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Text(
           "OK",
           style: TextStyle(
-            color: Styles.brightOrange,
+            color: primaryHighlight,
           ),
         ),
       ),
@@ -213,7 +238,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         } else {
                           return CustomSwitch(
                             key: Key("activeFilter"),
-                            activeColor: Styles.brightOrange,
+                            activeColor: primaryHighlight,
                             value: snapshot.data,
                             onChanged: (value) {
                               localActive = value;
@@ -240,7 +265,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             } else {
                               return CustomSwitch(
                                   key: Key("typeFilter"),
-                                  activeColor: Styles.brightOrange,
+                                  activeColor: primaryHighlight,
                                   value: snapshot.data,
                                   onChanged: (value) {
                                     localType = value;
@@ -284,66 +309,90 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     return Scaffold(
       key: _scaffoldKey,
+      drawer: Drawer(
+        // Add a ListView to the drawer. This ensures the user can scroll
+        // through the options in the drawer if there isn't enough vertical
+        // space to fit everything.
+        child: ListView(
+          // Important: Remove any padding from the ListView.
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            DrawerHeader(
+              child: Text('Drawer Header'),
+              decoration: BoxDecoration(
+                color: secondaryHighlight,
+              ),
+            ),
+            ListTile(
+              leading: Icon(
+                Icons.settings,
+                color: primaryHighlight,
+              ),
+              title: Text(
+                'Settings',
+                style: TextStyle(color: primaryHighlight),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => Settings()),
+                );
+              },
+            ),
+            ListTile(
+              title: Text('Item 2'),
+              onTap: () {
+                // Update the state of the app
+                // ...
+                // Then close the drawer
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
       appBar: AppBar(
-          // Here we take the value from the MyHomePage object that was created by
-          // the App.build method, and use it to set our appbar title
-          title: Hero(
-            tag: 'logo',
-            child: Image.asset(
-              'images/logo.png',
-              height: 35,
-            ),
+        // Here we take the value from the MyHomePage object that was created by
+        // the App.build method, and use it to set our appbar title
+        title: Hero(
+          tag: 'logo',
+          child: Image.asset(
+            'images/logo.png',
+            height: 35,
           ),
-          centerTitle: true,
-          actions: <Widget>[
-            IconButton(
-              icon: Image.asset("images/baseline_filter_list_black_18dp.png",
-                  key: Key("Filter"), color: Colors.white),
-              onPressed: () async {
-                showFilterMenu();
-              },
+        ),
+        centerTitle: true,
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(
+              Icons.filter_list,
             ),
-            PopupMenuButton<DotMenu>(
-              key: Key("dropdownButton"),
-              onSelected: (DotMenu result) {
-                setState(() {
-                  switch (result) {
-                    case DotMenu.settings:
-                      {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => Settings()),
-                        );
-                      }
-                      break;
-                  }
-                });
-              },
-              itemBuilder: (BuildContext context) => <PopupMenuEntry<DotMenu>>[
-                const PopupMenuItem<DotMenu>(
-                  key: Key("settingsButton"),
-                  value: DotMenu.settings,
-                  child: Text('Settings'),
-                ),
-              ],
-            )
-          ]),
+            key: Key("Filter"),
+            color: Colors.white,
+            onPressed: () async {
+              showFilterMenu();
+            },
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => AddEvent()),
+            MaterialPageRoute(
+              builder: (context) => AddEvent(),
+            ),
           );
         },
         key: Key('add event'),
         child: Icon(
           Icons.add,
-          color: Styles.darkGrey,
+          color: secondaryBackground,
         ),
-        backgroundColor: Styles.brightOrange,
+        backgroundColor: primaryHighlight,
       ),
       body: FinesseList(),
-      // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }

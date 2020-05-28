@@ -2,13 +2,16 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 /// Contains constant [Color] values
-class Styles {
-  /// The primary background color.
-  static const Color darkGrey = Color(4281348144);
 
-  /// The primary highlight color.
-  static const Color brightOrange = Color(0xffFF9900);
+/// The primary background color.
+const Color primaryBackground = Color(0xff232323);
 
-  /// The secondary highlight color.
-  static const Color darkOrange = Color(0xffc47600);
-}
+/// The secondary background color.
+const Color secondaryBackground = Color(0xff2a2a2a);
+
+/// The primary highlight color.
+const Color primaryHighlight = Color(0xffe2e2e2);
+
+/// The secondary highlight color.
+const Color secondaryHighlight = Color(0xff8c8c8c);
+

@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:finesse_nation/Network.dart';
 import 'package:finesse_nation/Finesse.dart';
-import 'package:finesse_nation/Pages/main.dart';
+import 'package:finesse_nation/main.dart';
 import 'package:finesse_nation/User.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:image_picker/image_picker.dart';
@@ -20,7 +20,7 @@ class AddEvent extends StatelessWidget {
       appBar: AppBar(
         title: Text(appTitle),
       ),
-      backgroundColor: Styles.darkGrey,
+      backgroundColor: secondaryBackground,
       body: _MyCustomForm(),
     );
   }
@@ -76,53 +76,70 @@ class _MyCustomFormState extends State<_MyCustomForm> {
 
   Future<void> uploadImagePopup() async {
     await PopUpBox.showPopupBox(
-        title: "Upload Image",
-        context: context,
-        button: FlatButton(
-          key: Key("UploadOK"),
-          onPressed: () {
-            Navigator.of(context, rootNavigator: true).pop('dialog');
-          },
-          child: Text(
-            "OK",
-            style: TextStyle(
-              color: Color(0xffff9900),
-            ),
+      title: "Upload Image",
+      context: context,
+      button: FlatButton(
+        key: Key("UploadOK"),
+        onPressed: () {
+          Navigator.of(context, rootNavigator: true).pop('dialog');
+        },
+        child: Text(
+          "CANCEL",
+          style: TextStyle(
+            color: primaryHighlight,
           ),
         ),
-        willDisplayWidget: Column(children: [
+      ),
+      willDisplayWidget: Column(
+        children: [
           FlatButton(
-              onPressed: () {
-                _onImageButtonPressed(ImageSource.gallery, context: context);
-                Navigator.of(context, rootNavigator: true).pop('dialog');
-              },
-              child: Row(children: [
+            onPressed: () {
+              _onImageButtonPressed(ImageSource.gallery, context: context);
+              Navigator.of(context, rootNavigator: true).pop('dialog');
+            },
+            child: Row(
+              children: [
                 Padding(
                   padding: EdgeInsets.only(top: 15, right: 15, bottom: 15),
-                  child:
-                      const Icon(Icons.photo_library, color: Color(0xffFF9900)),
+                  child: const Icon(
+                    Icons.photo_library,
+                    color: secondaryHighlight,
+                  ),
                 ),
                 Text(
-                  'Upload Image From Gallery',
-                  style: TextStyle(color: Color(0xffFF9900), fontSize: 14),
+                  'From Gallery',
+                  style: TextStyle(color: primaryHighlight, fontSize: 14),
                 ),
-              ])),
+              ],
+            ),
+          ),
           FlatButton(
-              onPressed: () {
-                _onImageButtonPressed(ImageSource.camera, context: context);
-                Navigator.of(context, rootNavigator: true).pop('dialog');
-              },
-              child: Row(children: [
+            onPressed: () {
+              _onImageButtonPressed(ImageSource.camera, context: context);
+              Navigator.of(context, rootNavigator: true).pop('dialog');
+            },
+            child: Row(
+              children: [
                 Padding(
                   padding: EdgeInsets.only(top: 15, right: 15, bottom: 15),
-                  child: const Icon(Icons.camera_alt, color: Color(0xffFF9900)),
+                  child: const Icon(
+                    Icons.camera_alt,
+                    color: secondaryHighlight,
+                  ),
                 ),
                 Text(
-                  'Upload Image From Camera',
-                  style: TextStyle(color: Color(0xffFF9900), fontSize: 14),
+                  'From Camera',
+                  style: TextStyle(
+                    color: primaryHighlight,
+                    fontSize: 14,
+                  ),
                 ),
-              ])),
-        ]));
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -130,7 +147,7 @@ class _MyCustomFormState extends State<_MyCustomForm> {
     // Build a Form widget using the _formKey created above.
     return SingleChildScrollView(
       child: Container(
-        color: Styles.darkGrey,
+        color: secondaryBackground,
         padding: const EdgeInsets.only(left: 20, right: 20),
         child: Form(
           key: _formKey,
@@ -146,7 +163,7 @@ class _MyCustomFormState extends State<_MyCustomForm> {
                 decoration: const InputDecoration(
                   labelText: "Title *",
                   labelStyle: TextStyle(
-                    color: Styles.brightOrange,
+                    color: primaryHighlight,
                   ),
                 ),
                 validator: (value) {
@@ -165,7 +182,7 @@ class _MyCustomFormState extends State<_MyCustomForm> {
                 decoration: const InputDecoration(
                   labelText: "Location *",
                   labelStyle: TextStyle(
-                    color: Styles.brightOrange,
+                    color: primaryHighlight,
                   ),
                 ),
                 validator: (value) {
@@ -184,7 +201,7 @@ class _MyCustomFormState extends State<_MyCustomForm> {
                 decoration: const InputDecoration(
                   labelText: "Description",
                   labelStyle: TextStyle(
-                    color: Styles.brightOrange,
+                    color: primaryHighlight,
                   ),
                 ),
                 validator: (value) {
@@ -200,7 +217,7 @@ class _MyCustomFormState extends State<_MyCustomForm> {
                 decoration: const InputDecoration(
                   labelText: "Duration",
                   labelStyle: TextStyle(
-                    color: Styles.brightOrange,
+                    color: primaryHighlight,
                   ),
                 ),
                 validator: (value) {
@@ -212,7 +229,7 @@ class _MyCustomFormState extends State<_MyCustomForm> {
                 child: Text(
                   "Type",
                   style: TextStyle(
-                    color: Styles.brightOrange,
+                    color: primaryHighlight,
                     fontSize: 16,
                   ),
                 ),
@@ -242,36 +259,26 @@ class _MyCustomFormState extends State<_MyCustomForm> {
                 child: Text(
                   "Image",
                   style: TextStyle(
-                    color: Styles.brightOrange,
+                    color: primaryHighlight,
                     fontSize: 16,
                   ),
                 ),
               ),
-              Material(
-                child: InkWell(
-                  onTap: () {},
-                  child: Container(
-                    color: Styles.darkGrey,
-                    child: _image == null
-                        ? Container()
-                        : Image.file(_image, width: 600, height: 240),
-                  ),
-                ),
-              ),
+              if (_image != null) Image.file(_image, height: 240),
               Padding(
                 padding: EdgeInsets.only(top: 15),
                 child: ButtonTheme(
                   minWidth: 100,
                   height: 50,
                   child: FlatButton(
-                    color: Styles.brightOrange,
+                    color: primaryHighlight,
                     key: Key("Upload"),
                     onPressed: () async {
                       await uploadImagePopup();
                     },
                     child: Text(
-                      'Upload Image',
-                      style: TextStyle(color: Styles.darkGrey),
+                      'ADD IMAGE',
+                      style: TextStyle(color: secondaryBackground),
                     ),
                   ),
                 ),
@@ -285,7 +292,7 @@ class _MyCustomFormState extends State<_MyCustomForm> {
                     height: 50,
                     child: RaisedButton(
                       key: Key('submit'),
-                      color: Styles.brightOrange,
+                      color: primaryHighlight,
                       onPressed: () async {
                         if (_formKey.currentState.validate()) {
                           Scaffold.of(context).showSnackBar(
@@ -293,7 +300,7 @@ class _MyCustomFormState extends State<_MyCustomForm> {
                               content: Text(
                                 'Sharing Finesse',
                                 style: TextStyle(
-                                  color: Styles.darkOrange,
+                                  color: secondaryHighlight,
                                 ),
                               ),
                             ),
@@ -322,7 +329,9 @@ class _MyCustomFormState extends State<_MyCustomForm> {
                             currTime,
                           );
                           await Network.addFinesse(newFinesse);
-
+                          // TODO: add finesse return event id
+//                          User.currentUser.upvoted.add(value)
+//                          Network.setVotes();
                           await FirebaseMessaging()
                               .unsubscribeFromTopic(Network.ALL_TOPIC);
                           await Network.sendToAll(
@@ -342,7 +351,7 @@ class _MyCustomFormState extends State<_MyCustomForm> {
                       },
                       child: Text(
                         'SUBMIT',
-                        style: TextStyle(color: Styles.darkGrey),
+                        style: TextStyle(color: secondaryBackground),
                       ),
                     ),
                   ),

@@ -24,7 +24,7 @@ export 'src/models/login_data.dart';
 export 'src/providers/login_messages.dart';
 export 'src/providers/login_theme.dart';
 import 'src/constants.dart';
-import 'package:finesse_nation/Pages/main.dart';
+import 'package:finesse_nation/main.dart';
 import 'package:finesse_nation/Network.dart';
 
 class _AnimationTimeDilationDropdown extends StatelessWidget {
@@ -145,19 +145,11 @@ class __HeaderState extends State<_Header> {
     final displayLogo = widget.logoPath != null && logoHeight >= kMinLogoHeight;
 
     Widget logo = displayLogo
-        ? GestureDetector(
-            child: Image.asset(
-              widget.logoPath,
-              filterQuality: FilterQuality.high,
-              height: logoHeight,
-            ),
-            onTap: () {
-              Network.updateCurrentUser(email: 'test@test.com');
-              Navigator.of(context).pushReplacement(MaterialPageRoute(
-                builder: (context) => MyHomePage(),
-              ));
-            },
-          )
+        ? Image.asset(
+          widget.logoPath,
+          filterQuality: FilterQuality.high,
+          height: logoHeight,
+        )
         : NullWidget();
 
     if (widget.logoTag != null) {
