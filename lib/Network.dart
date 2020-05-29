@@ -11,7 +11,7 @@ import 'package:finesse_nation/Comment.dart';
 /// Contains functions used to interact with the API.
 class Network {
   /// The root domain for the Finesse Nation API.
-  static const DOMAIN = 'https://finesse-nation.herokuapp.com/api/';
+  static const DOMAIN = 'http://10.0.0.135:8080/api/';
 
   /// Deleting a Finesse.
   static const DELETE_URL = DOMAIN + 'food/deleteEvent';
@@ -80,15 +80,15 @@ class Network {
   }
 
   /// Adds [newFinesse].
-  static Future<void> addFinesse(Finesse newFinesse,
+  static Future<String> addFinesse(Finesse newFinesse,
       {var url = ADD_URL}) async {
     Map bodyMap = newFinesse.toMap();
     http.Response response = await postData(url, bodyMap);
-
     final int statusCode = response.statusCode;
     if (statusCode != 200 && statusCode != 201) {
       throw Exception("Error while posting data");
     }
+    return response.body;
   }
 
   /// Gets Finesses.

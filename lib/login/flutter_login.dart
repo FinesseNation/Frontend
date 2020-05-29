@@ -24,8 +24,6 @@ export 'src/models/login_data.dart';
 export 'src/providers/login_messages.dart';
 export 'src/providers/login_theme.dart';
 import 'src/constants.dart';
-import 'package:finesse_nation/main.dart';
-import 'package:finesse_nation/Network.dart';
 
 class _AnimationTimeDilationDropdown extends StatelessWidget {
   _AnimationTimeDilationDropdown({

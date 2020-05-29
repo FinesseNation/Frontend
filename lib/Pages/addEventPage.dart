@@ -145,219 +145,231 @@ class _MyCustomFormState extends State<_MyCustomForm> {
   @override
   Widget build(BuildContext context) {
     // Build a Form widget using the _formKey created above.
-    return SingleChildScrollView(
-      child: Container(
-        color: secondaryBackground,
-        padding: const EdgeInsets.only(left: 20, right: 20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              TextFormField(
-                key: Key('name'),
-                style: TextStyle(
-                  color: Colors.white,
-                ),
-                controller: eventNameController,
-                decoration: const InputDecoration(
-                  labelText: "Title *",
-                  labelStyle: TextStyle(
-                    color: primaryHighlight,
-                  ),
-                ),
-                validator: (value) {
-                  if (value.isEmpty) {
-                    return 'Please enter an event name';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                key: Key('location'),
-                style: TextStyle(
-                  color: Colors.white,
-                ),
-                controller: locationController,
-                decoration: const InputDecoration(
-                  labelText: "Location *",
-                  labelStyle: TextStyle(
-                    color: primaryHighlight,
-                  ),
-                ),
-                validator: (value) {
-                  if (value.isEmpty) {
-                    return 'Please enter a location';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                key: Key('description'),
-                style: TextStyle(
-                  color: Colors.white,
-                ),
-                controller: descriptionController,
-                decoration: const InputDecoration(
-                  labelText: "Description",
-                  labelStyle: TextStyle(
-                    color: primaryHighlight,
-                  ),
-                ),
-                validator: (value) {
-                  return null;
-                },
-              ),
-              TextFormField(
-                key: Key('duration'),
-                style: TextStyle(
-                  color: Colors.white,
-                ),
-                controller: durationController,
-                decoration: const InputDecoration(
-                  labelText: "Duration",
-                  labelStyle: TextStyle(
-                    color: primaryHighlight,
-                  ),
-                ),
-                validator: (value) {
-                  return null;
-                },
-              ),
-              Container(
-                padding: const EdgeInsets.only(top: 20),
-                child: Text(
-                  "Type",
+    return GestureDetector(
+      onTap: () {
+        FocusScopeNode currentFocus = FocusScope.of(context);
+        if (!currentFocus.hasPrimaryFocus &&
+            currentFocus.focusedChild != null) {
+          currentFocus.focusedChild.unfocus();
+        }
+      },
+      child: SingleChildScrollView(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                TextFormField(
+                  key: Key('name'),
+                  textCapitalization: TextCapitalization.sentences,
                   style: TextStyle(
-                    color: primaryHighlight,
-                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                  controller: eventNameController,
+                  decoration: const InputDecoration(
+                    labelText: "Title *",
+                    labelStyle: TextStyle(
+                      color: primaryHighlight,
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value.isEmpty) {
+                      return 'Please enter an event name';
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  key: Key('location'),
+                  textCapitalization: TextCapitalization.sentences,
+                  style: TextStyle(
+                    color: Colors.white,
+                  ),
+                  controller: locationController,
+                  decoration: const InputDecoration(
+                    labelText: "Location *",
+                    labelStyle: TextStyle(
+                      color: primaryHighlight,
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value.isEmpty) {
+                      return 'Please enter a location';
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  key: Key('description'),
+                  textCapitalization: TextCapitalization.sentences,
+                  style: TextStyle(
+                    color: Colors.white,
+                  ),
+                  controller: descriptionController,
+                  decoration: const InputDecoration(
+                    labelText: "Description",
+                    labelStyle: TextStyle(
+                      color: primaryHighlight,
+                    ),
+                  ),
+                  validator: (value) {
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  key: Key('duration'),
+                  textCapitalization: TextCapitalization.sentences,
+                  style: TextStyle(
+                    color: Colors.white,
+                  ),
+                  controller: durationController,
+                  decoration: const InputDecoration(
+                    labelText: "Duration",
+                    labelStyle: TextStyle(
+                      color: primaryHighlight,
+                    ),
+                  ),
+                  validator: (value) {
+                    return null;
+                  },
+                ),
+                Container(
+                  padding: const EdgeInsets.only(top: 20),
+                  child: Text(
+                    "Type",
+                    style: TextStyle(
+                      color: primaryHighlight,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
-              ),
-              DropdownButton<String>(
-                style: TextStyle(color: Colors.red),
-                items: <String>['Food', 'Other'].map((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(
-                      value,
-                      style: TextStyle(
-                        color: Colors.white,
+                DropdownButton<String>(
+                  items: <String>['Food', 'Other'].map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(
+                        value,
+                        style: TextStyle(
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-                  );
-                }).toList(),
-                value: _type,
-                onChanged: (newValue) {
-                  setState(() {
-                    _type = newValue;
-                  });
-                },
-              ),
-              Container(
-                padding: const EdgeInsets.only(top: 15, bottom: 10),
-                child: Text(
-                  "Image",
-                  style: TextStyle(
-                    color: primaryHighlight,
-                    fontSize: 16,
-                  ),
+                    );
+                  }).toList(),
+                  value: _type,
+                  onChanged: (newValue) {
+                    setState(() {
+                      _type = newValue;
+                    });
+                  },
                 ),
-              ),
-              if (_image != null) Image.file(_image, height: 240),
-              Padding(
-                padding: EdgeInsets.only(top: 15),
-                child: ButtonTheme(
-                  minWidth: 100,
-                  height: 50,
-                  child: FlatButton(
-                    color: primaryHighlight,
-                    key: Key("Upload"),
-                    onPressed: () async {
-                      await uploadImagePopup();
-                    },
-                    child: Text(
-                      'ADD IMAGE',
-                      style: TextStyle(color: secondaryBackground),
+                Container(
+                  padding: const EdgeInsets.only(top: 15, bottom: 10),
+                  child: Text(
+                    "Image",
+                    style: TextStyle(
+                      color: primaryHighlight,
+                      fontSize: 16,
                     ),
                   ),
                 ),
-              ),
-              Container(
-                alignment: Alignment.bottomRight,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                if (_image != null) Image.file(_image, height: 240),
+                Padding(
+                  padding: EdgeInsets.only(top: 15),
                   child: ButtonTheme(
                     minWidth: 100,
                     height: 50,
-                    child: RaisedButton(
-                      key: Key('submit'),
+                    child: FlatButton(
                       color: primaryHighlight,
+                      key: Key("Upload"),
                       onPressed: () async {
-                        if (_formKey.currentState.validate()) {
-                          Scaffold.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Sharing Finesse',
-                                style: TextStyle(
-                                  color: secondaryHighlight,
-                                ),
-                              ),
-                            ),
-                          );
-                          Text eventName = Text(eventNameController.text);
-                          Text location = Text(locationController.text);
-                          Text description = Text(descriptionController.text);
-                          Text duration = Text(durationController.text);
-                          DateTime currTime = DateTime.now();
-
-                          String imageString;
-                          if (_image == null) {
-                            imageString = '';
-                          } else {
-                            imageString =
-                                base64Encode(_image.readAsBytesSync());
-                          }
-
-                          Finesse newFinesse = Finesse.finesseAdd(
-                            eventName.data,
-                            description.data,
-                            imageString,
-                            location.data,
-                            duration.data,
-                            _type,
-                            currTime,
-                          );
-                          await Network.addFinesse(newFinesse);
-                          // TODO: add finesse return event id
-//                          User.currentUser.upvoted.add(value)
-//                          Network.setVotes();
-                          await FirebaseMessaging()
-                              .unsubscribeFromTopic(Network.ALL_TOPIC);
-                          await Network.sendToAll(
-                              newFinesse.eventTitle, newFinesse.location);
-                          if (User.currentUser.notifications) {
-                            FirebaseMessaging()
-                                .subscribeToTopic(Network.ALL_TOPIC);
-                          }
-                          await Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                                builder: (BuildContext context) =>
-                                    MyHomePage()),
-                            (Route<dynamic> route) => false,
-                          );
-                        }
+                        await uploadImagePopup();
                       },
                       child: Text(
-                        'SUBMIT',
+                        'ADD IMAGE',
                         style: TextStyle(color: secondaryBackground),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
+                Container(
+                  alignment: Alignment.bottomRight,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                    child: ButtonTheme(
+                      minWidth: 100,
+                      height: 50,
+                      child: RaisedButton(
+                        key: Key('submit'),
+                        color: primaryHighlight,
+                        onPressed: () async {
+                          if (_formKey.currentState.validate()) {
+                            Scaffold.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Sharing Finesse',
+                                  style: TextStyle(
+                                    color: secondaryHighlight,
+                                  ),
+                                ),
+                              ),
+                            );
+                            Text eventName = Text(eventNameController.text);
+                            Text location = Text(locationController.text);
+                            Text description = Text(descriptionController.text);
+                            Text duration = Text(durationController.text);
+                            DateTime currTime = DateTime.now();
+
+                            String imageString;
+                            if (_image == null) {
+                              imageString = '';
+                            } else {
+                              imageString =
+                                  base64Encode(_image.readAsBytesSync());
+                            }
+
+                            Finesse newFinesse = Finesse.finesseAdd(
+                              eventName.data,
+                              description.data,
+                              imageString,
+                              location.data,
+                              duration.data,
+                              _type,
+                              currTime,
+                            );
+                            var res = await Network.addFinesse(newFinesse);
+                            // TODO: add finesse return event id
+                            print('NEW EVENT RES = ${jsonDecode(res)}');
+                            print('NEW EVENT ID = ${jsonDecode(res)['id']}');
+                            User.currentUser.upvoted.add(jsonDecode(res)['id']);
+                            await FirebaseMessaging()
+                                .unsubscribeFromTopic(Network.ALL_TOPIC);
+                            await Network.sendToAll(
+                                newFinesse.eventTitle, newFinesse.location);
+                            if (User.currentUser.notifications) {
+                              FirebaseMessaging()
+                                  .subscribeToTopic(Network.ALL_TOPIC);
+                            }
+                            await Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (BuildContext context) =>
+                                      MyHomePage()),
+                              (Route<dynamic> route) => false,
+                            );
+                          }
+                        },
+                        child: Text(
+                          'SUBMIT',
+                          style: TextStyle(color: secondaryBackground),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

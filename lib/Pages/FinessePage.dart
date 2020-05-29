@@ -8,6 +8,7 @@ import 'dart:math';
 import 'package:finesse_nation/Comment.dart';
 import 'package:finesse_nation/Util.dart';
 import 'package:finesse_nation/Styles.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 enum DotMenu { markEnded }
 
@@ -234,7 +235,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
               ],
               onPressed: (index) {
                 setState(() {
-                  Util.handleVote(index, isSelected, fin);
+                  handleVote(index, isSelected, fin);
                 });
               },
               isSelected: isSelected,
@@ -398,7 +399,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
                               ),
                             ),
                             Text(
-                              " · ${Util.timeSince(comment.postedDateTime)}",
+                              " · ${timeago.format(comment.postedDateTime)}",
                               style: TextStyle(
                                 color: secondaryHighlight,
                               ),
@@ -466,26 +467,24 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
       },
     );
 
-    return ListView(
-      children: [
-        Card(
-          color: secondaryBackground,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              fin.image != "" ? imageSection : Container(),
-              titleSection,
-              locationSection,
-              fin.description != "" ? descriptionSection : Container(),
-              timeSection,
-              userSection,
-              votingSection,
-              viewCommentSection,
-              addCommentSection,
-            ],
-          ),
+    return SingleChildScrollView(
+      child: Card(
+        color: secondaryBackground,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            fin.image != "" ? imageSection : Container(),
+            titleSection,
+            locationSection,
+            fin.description != "" ? descriptionSection : Container(),
+            timeSection,
+            userSection,
+            votingSection,
+            viewCommentSection,
+            addCommentSection,
+          ],
         ),
-      ],
+      ),
     );
   }
 

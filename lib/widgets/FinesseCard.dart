@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:finesse_nation/Util.dart';
 import 'package:finesse_nation/Styles.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 class FinesseCard extends StatefulWidget {
   final Finesse fin;
@@ -69,7 +70,7 @@ class _FinesseCardState extends State<FinesseCard> {
                       ),
                     ),
                     Text(
-                      fin.location + " · ${Util.timeSince(fin.postedTime)}",
+                      fin.location + " · ${timeago.format(fin.postedTime)}",
                       style: TextStyle(
                         fontSize: 11,
                         color: secondaryHighlight,
@@ -102,7 +103,7 @@ class _FinesseCardState extends State<FinesseCard> {
                           ],
                           onPressed: (index) {
                             setState(() {
-                              Util.handleVote(index, isSelected, fin);
+                              handleVote(index, isSelected, fin);
                             });
                           },
                           isSelected: isSelected,
