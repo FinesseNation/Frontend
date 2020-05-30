@@ -21,13 +21,13 @@ jobs:
         env:
           FINESSE_API_TOKEN: ${{ secrets.FINESSE_API_TOKEN }}
           FINESSE_SERVER_KEY: ${{ secrets.FINESSE_SERVER_KEY }}
-      - run: flutter build apk -t lib/Pages/main.dart --split-per-abi
+      - run: flutter build apk --split-per-abi
       - run: flutter config --enable-web
       - uses: ncipollo/release-action@v1
         with:
           artifacts: "build/app/outputs/apk/release/*.apk"
           token: ${{ secrets.TOKEN }}
-      - run: flutter build web -t lib/Pages/main.dart
+      - run: flutter build web
       - uses: JamesIves/github-pages-deploy-action@releases/v3
         with:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
