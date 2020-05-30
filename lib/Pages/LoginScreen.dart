@@ -1,9 +1,8 @@
-import 'package:flutter/material.dart';
-
-import 'package:finesse_nation/login/flutter_login.dart';
-import 'package:finesse_nation/main.dart';
 import 'package:finesse_nation/Network.dart';
 import 'package:finesse_nation/Styles.dart';
+import 'package:finesse_nation/login/flutter_login.dart';
+import 'package:finesse_nation/main.dart';
+import 'package:flutter/material.dart';
 
 /// Handles login and registration.
 class LoginScreen extends StatelessWidget {
@@ -19,16 +18,16 @@ class LoginScreen extends StatelessWidget {
           buttonTheme: LoginButtonTheme(
             splashColor: Colors.grey[800],
           )),
-      emailValidator: /*(_) => null  ,// */ Network.validateEmail,
-      passwordValidator: /*(_) => null  ,// */ Network.validatePassword,
-      onLogin: /*(_) => null  ,// */ Network.authUser,
-      onSignup: /*(_) => null  ,// */ Network.createUser,
+      emailValidator: /*(_) => null  ,// */ validateEmail,
+      passwordValidator: /*(_) => null  ,// */ validatePassword,
+      onLogin: /*(_) => null  ,// */ authUser,
+      onSignup: /*(_) => null  ,// */ createUser,
       onSubmitAnimationCompleted: () {
         Navigator.of(context).pushReplacement(MaterialPageRoute(
           builder: (context) => MyHomePage(),
         ));
       },
-      onRecoverPassword: Network.recoverPassword,
+      onRecoverPassword: recoverPassword,
       logoTag: 'logo',
       messages: LoginMessages(
           recoverPasswordDescription:

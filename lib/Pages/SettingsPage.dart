@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
 import 'package:custom_switch/custom_switch.dart';
 import 'package:finesse_nation/Network.dart';
-import 'package:finesse_nation/User.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:finesse_nation/Pages/LoginScreen.dart';
 import 'package:finesse_nation/Styles.dart';
+import 'package:finesse_nation/User.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Contains functionality that allows the user to
@@ -34,12 +34,12 @@ class Notifications {
       return;
     }
     if (toggle) {
-      _firebaseMessaging.subscribeToTopic(Network.ALL_TOPIC);
+      _firebaseMessaging.subscribeToTopic(ALL_TOPIC);
     } else {
-      _firebaseMessaging.unsubscribeFromTopic(Network.ALL_TOPIC);
+      _firebaseMessaging.unsubscribeFromTopic(ALL_TOPIC);
     }
     if (updateUser) {
-      Network.changeNotifications(toggle);
+      changeNotifications(toggle);
     }
   }
 }

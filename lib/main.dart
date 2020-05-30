@@ -1,17 +1,17 @@
-import 'package:flutter/material.dart';
-import 'package:finesse_nation/Pages/addEventPage.dart';
+import 'package:custom_switch/custom_switch.dart';
+import 'package:finesse_nation/Network.dart';
+import 'package:finesse_nation/Pages/LoginScreen.dart';
 import 'package:finesse_nation/Pages/SettingsPage.dart';
+import 'package:finesse_nation/Pages/addEventPage.dart';
+import 'package:finesse_nation/Styles.dart';
 import 'package:finesse_nation/widgets/FinesseList.dart';
 import 'package:finesse_nation/widgets/PopUpBox.dart';
-import 'package:custom_switch/custom_switch.dart';
-import 'package:finesse_nation/Pages/LoginScreen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:finesse_nation/Network.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:finesse_nation/Styles.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_statusbarcolor/flutter_statusbarcolor.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// The entrypoint for the app.
 void main() async {
@@ -21,7 +21,7 @@ void main() async {
   _prefs.getBool('typeFilter') ?? _prefs.setBool('typeFilter', true);
   String _currentUser = _prefs.get('currentUser');
   if (_currentUser != null) {
-    Network.updateCurrentUser(email: _currentUser);
+    updateCurrentUser(email: _currentUser);
   }
   runApp(_MyApp(_currentUser));
 }
@@ -283,7 +283,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     if (!_fcmAlreadySetup) {
-      _firebaseMessaging.subscribeToTopic(Network.ALL_TOPIC);
+      _firebaseMessaging.subscribeToTopic(ALL_TOPIC);
       _firebaseMessaging.configure(
         onMessage: (Map<String, dynamic> message) async {
           print("onMessage: $message");

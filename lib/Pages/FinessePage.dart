@@ -1,14 +1,15 @@
-import 'package:finesse_nation/Finesse.dart';
-import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:finesse_nation/User.dart';
-import 'package:finesse_nation/Network.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'dart:math';
+
 import 'package:finesse_nation/Comment.dart';
-import 'package:finesse_nation/Util.dart';
+import 'package:finesse_nation/Finesse.dart';
+import 'package:finesse_nation/Network.dart';
 import 'package:finesse_nation/Styles.dart';
+import 'package:finesse_nation/User.dart';
+import 'package:finesse_nation/Util.dart';
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:url_launcher/url_launcher.dart';
 
 enum DotMenu { markEnded }
 
@@ -84,7 +85,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
     active = true;
     commentStream = (() async* {
       while (active) {
-        yield await Network.getComments(fin.eventId);
+        yield await getComments(fin.eventId);
         await Future<void>.delayed(Duration(seconds: 1));
       }
     })();
@@ -346,7 +347,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
                       String comment = _controller.value.text;
                       Comment newComment = Comment.post(comment);
                       setState(() => fin.comments.add(newComment));
-                      Network.addComment(newComment, fin.eventId);
+                      addComment(newComment, fin.eventId);
                       fin.numComments++;
                       _controller.clear();
                     }),
@@ -356,7 +357,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
           if (comment.isNotEmpty) {
             Comment newComment = Comment.post(comment);
             setState(() => fin.comments.add(newComment));
-            Network.addComment(newComment, fin.eventId);
+            addComment(newComment, fin.eventId);
             fin.numComments++;
             _controller.clear();
           }
@@ -535,7 +536,7 @@ _markAsEnded(Finesse fin) {
   }
   activeList.add(User.currentUser.email);
   fin.isActive = activeList;
-  Network.updateFinesse(fin);
+  updateFinesse(fin);
   Fluttertoast.showToast(
     msg: "Marked as inactive",
     toastLength: Toast.LENGTH_SHORT,

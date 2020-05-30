@@ -1,14 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/material.dart';
-import 'package:finesse_nation/Network.dart';
+
 import 'package:finesse_nation/Finesse.dart';
-import 'package:finesse_nation/main.dart';
-import 'package:finesse_nation/User.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:finesse_nation/widgets/PopUpBox.dart';
+import 'package:finesse_nation/Network.dart';
 import 'package:finesse_nation/Styles.dart';
+import 'package:finesse_nation/User.dart';
+import 'package:finesse_nation/main.dart';
+import 'package:finesse_nation/widgets/PopUpBox.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 /// Allows the user to add a new [Finesse].
 class AddEvent extends StatelessWidget {
@@ -338,15 +339,15 @@ class _MyCustomFormState extends State<_MyCustomForm> {
                               _type,
                               currTime,
                             );
-                            var res = await Network.addFinesse(newFinesse);
+                            var res = await addFinesse(newFinesse);
                             User.currentUser.upvoted.add(jsonDecode(res)['id']);
                             await FirebaseMessaging()
-                                .unsubscribeFromTopic(Network.ALL_TOPIC);
-                            await Network.sendToAll(
+                                .unsubscribeFromTopic(ALL_TOPIC);
+                            await sendToAll(
                                 newFinesse.eventTitle, newFinesse.location);
                             if (User.currentUser.notifications) {
                               FirebaseMessaging()
-                                  .subscribeToTopic(Network.ALL_TOPIC);
+                                  .subscribeToTopic(ALL_TOPIC);
                             }
                             await Navigator.pushAndRemoveUntil(
                               context,

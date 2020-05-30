@@ -49,6 +49,6 @@ void handleVote(int index, List<bool> isSelected, Finesse fin) {
       isSelected[buttonIndex] = false;
     }
   }
-  Network.setVotes();
-  Network.updateFinesse(fin);
+  setVotes();
+  updateFinesse(fin);
 }

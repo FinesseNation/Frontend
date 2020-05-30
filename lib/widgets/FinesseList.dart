@@ -1,11 +1,11 @@
 import 'package:finesse_nation/Finesse.dart';
 import 'package:finesse_nation/Network.dart';
 import 'package:finesse_nation/Styles.dart';
+import 'package:finesse_nation/User.dart';
 import 'package:finesse_nation/widgets/FinesseCard.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:flutter/material.dart';
-import 'package:finesse_nation/User.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 /// Returns a [ListView] containing a [Card] for each [Finesse].
 class FinesseList extends StatefulWidget {
@@ -21,7 +21,7 @@ class _FinesseListState extends State<FinesseList> {
   List<Finesse> localList;
 
   void _onRefresh() async {
-    _finesses = Network.fetchFinesses();
+    _finesses = fetchFinesses();
     await Future.delayed(Duration(seconds: 1));
     _refreshController.refreshCompleted();
 //    await Future.delayed(Duration(seconds: 1));
@@ -36,7 +36,7 @@ class _FinesseListState extends State<FinesseList> {
   @override
   void initState() {
     super.initState();
-    _finesses = Network.fetchFinesses();
+    _finesses = fetchFinesses();
     _refreshController = RefreshController(initialRefresh: false);
   }
 
