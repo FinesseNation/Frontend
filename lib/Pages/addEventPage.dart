@@ -339,9 +339,6 @@ class _MyCustomFormState extends State<_MyCustomForm> {
                               currTime,
                             );
                             var res = await Network.addFinesse(newFinesse);
-                            // TODO: add finesse return event id
-                            print('NEW EVENT RES = ${jsonDecode(res)}');
-                            print('NEW EVENT ID = ${jsonDecode(res)['id']}');
                             User.currentUser.upvoted.add(jsonDecode(res)['id']);
                             await FirebaseMessaging()
                                 .unsubscribeFromTopic(Network.ALL_TOPIC);

@@ -92,7 +92,7 @@ class Finesse {
     String duration,
     String category,
     DateTime timePosted, {
-    List<String> isActive: const [],
+    List<String> isActive: const <String>[],
     String school,
     String email,
     int points: 1,

@@ -11,7 +11,7 @@ import 'package:finesse_nation/Comment.dart';
 /// Contains functions used to interact with the API.
 class Network {
   /// The root domain for the Finesse Nation API.
-  static const DOMAIN = 'http://10.0.0.135:8080/api/';
+  static const DOMAIN = 'https://finesse-nation.herokuapp.com/api/';
 
   /// Deleting a Finesse.
   static const DELETE_URL = DOMAIN + 'food/deleteEvent';
@@ -49,15 +49,7 @@ class Network {
   /// Sending a notification.
   static const SEND_NOTIFICATION_URL = 'https://fcm.googleapis.com/fcm/send';
 
-  /// Getting vote count for a Finesse.
-  static const GET_EVENT_VOTING_URL = DOMAIN + 'vote/eventPoints?eventId=';
-
-  /// Getting a user's vote status for a particular Finesse.
-  static const GET_USER_VOTE_ON_EVENT_URL = DOMAIN + 'vote/info?';
-
-  /// Add a vote to a Finesse.
-  static const POST_EVENT_VOTING_URL = DOMAIN + 'vote';
-
+  /// Updating the [currentUser]'s voted posts.
   static const SET_VOTES_URL = DOMAIN + 'user/setVotes';
 
   /// The topic used to send notifications about new Finesses.
@@ -293,62 +285,6 @@ class Network {
     } else {
       throw Exception('Failed to get current user');
     }
-  }
-
-  /// Gets the votes for a particular Finesse using [eventId].
-  static Future<int> fetchVotes(eventId) async {
-    final response = await http
-        .get(GET_EVENT_VOTING_URL + eventId, headers: {'api_token': token});
-    if (response.statusCode == 200) {
-      var data = json.decode(response.body);
-      int votes = data["upVote"] - data["downVote"];
-      return votes;
-    } else {
-      throw Exception("Failed to load votes");
-    }
-  }
-
-  /// Gets a user's vote status for a Finesse using the user's [emailId]
-  /// and the Finesse's [eventId].
-  static Future<int> fetchUserVoteOnEvent(eventId, emailId) async {
-    final response = await http.get(
-        GET_USER_VOTE_ON_EVENT_URL +
-            "eventId=" +
-            eventId +
-            "&emailId=" +
-            emailId,
-        headers: {'api_token': token});
-    if (response.statusCode == 200) {
-      var data = json.decode(response.body);
-      String vote = data["status"];
-      if (vote == "UPVOTE") {
-        return 1;
-      } else if (vote == "DOWNVOTE") {
-        return -1;
-      } else {
-        return 0;
-      }
-    } else {
-      throw Exception("Failed to load user vote");
-    }
-  }
-
-  /// Adds [vote] to a Finesse using the user's [emailId] and
-  /// the Finesses's [eventId].
-  static Future<http.Response> postVote(
-      String eventId, String emailId, int vote) async {
-    Map bodyMap = {};
-    bodyMap["eventId"] = eventId;
-    bodyMap["emailId"] = emailId;
-    bodyMap["vote"] = vote;
-
-    http.Response response = await postData(POST_EVENT_VOTING_URL, bodyMap);
-
-    final int statusCode = response.statusCode;
-    if (statusCode != 200) {
-      throw Exception("Error while voting");
-    }
-    return response;
   }
 
   /// Adds [comment] to the Finesse with the given [eventId].

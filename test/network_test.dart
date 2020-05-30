@@ -26,7 +26,7 @@ Future<Finesse> addFinesseHelper([name]) async {
 
 /// Creates a list of 4 finesses to mock the finesse list from the database
 /// Optional parameters to set the type and the state of active.
-List<Finesse> createFinesseList({String type = "Food", List isActive}) {
+List<Finesse> createFinesseList({String type = "Food", List<String> isActive}) {
   List<Finesse> finesseList = [];
 
   for (var i = 0; i < 4; i++) {
@@ -48,8 +48,7 @@ const INVALID_EMAIL = 'Finesse';
 const CURRENT_USER_EMAIL = "test1@test.edu";
 const VALID_PASSWORD = 'test123';
 const INVALID_LOGIN_MSG = 'Username or password is incorrect.';
-const TEST_EVENT_ID = '5e9fd7bbc318bf0017bf05a1';
-const NOT_VOTED_TEST_EVENT_ID = '5e953aef6f5e40002ecc9a60';
+const TEST_EVENT_ID = '5ece1abf1b3bbf0017bd5e3a';
 
 ///Login function to handle creating the login data and verify success
 Future<void> login(
@@ -84,6 +83,7 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SharedPreferences.setMockInitialValues(
       {"typeFilter": false, "activeFilter": false});
+  User.currentUser = User('test@test.com', 'test123', 'test', 'test', 0, true, [], []);
 
   ///Add a new finesse to the database and check that the database contains it
   test('Adding a new Finesse', () async {
@@ -182,7 +182,7 @@ void main() {
 
   /// Get a list of other finesses and filter them. Verify that they are removed.
   test('applyFilters Test Other', () async {
-    List<Finesse> finesseList = createFinesseList(type: "Other", isActive: []);
+    List<Finesse> finesseList = createFinesseList(type: "Other", isActive: <String>[]);
     List<Finesse> newList = await Network.applyFilters(finesseList);
     expect(newList.length, 0);
     expect(newList.length < finesseList.length, true);
@@ -190,7 +190,7 @@ void main() {
 
   /// Verify nothing was filtered
   test('applyFilters Test No Filter', () async {
-    List<Finesse> finesseList = createFinesseList(type: "Food", isActive: []);
+    List<Finesse> finesseList = createFinesseList(type: "Food", isActive: <String>[]);
     List<Finesse> newList = await Network.applyFilters(finesseList);
 
     expect(newList.length, 4);
@@ -369,56 +369,6 @@ void main() {
   test('Get Invalid Comments', () async {
     List<Comment> result = await Network.getComments('no_comments');
     expect(result.length, 0);
-  });
-
-  test('Get Votes', () async {
-    int result = await Network.fetchVotes(TEST_EVENT_ID);
-    expect((result == 0) || (result == -1) || (result == 1), true);
-  });
-
-  /// Check that an exception was thrown
-  test('Get invalid votes', () async {
-    try {
-      await Network.fetchVotes("");
-    } catch (e) {
-      String error = e.toString();
-      expect(error.contains("Failed to load votes"), true);
-      return;
-    }
-  });
-
-  test('Post vote', () async {
-    var response = await Network.postVote(TEST_EVENT_ID, CURRENT_USER_EMAIL, 1);
-    expect(response.statusCode, 200);
-  });
-
-  test('Post invalid vote', () async {
-    expectException(
-        Network.postVote("", CURRENT_USER_EMAIL, -1), "Error while voting");
-  });
-
-  test('Get previous upvote', () async {
-    int result =
-        await Network.fetchUserVoteOnEvent(TEST_EVENT_ID, CURRENT_USER_EMAIL);
-    expect(result, 1);
-  });
-
-  test('Get lack of previous vote', () async {
-    int result = await Network.fetchUserVoteOnEvent(
-        NOT_VOTED_TEST_EVENT_ID, CURRENT_USER_EMAIL);
-    expect(result, 0);
-  });
-
-  test('Get previous downvote', () async {
-    await Network.postVote(TEST_EVENT_ID, CURRENT_USER_EMAIL, -1);
-    int result =
-        await Network.fetchUserVoteOnEvent(TEST_EVENT_ID, CURRENT_USER_EMAIL);
-    expect(result, -1);
-  });
-
-  test('Get invalid previous vote', () async {
-    expectException(Network.fetchUserVoteOnEvent("eventId", "hello"),
-        "Failed to load user vote");
   });
 }
 
