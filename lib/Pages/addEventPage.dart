@@ -46,6 +46,8 @@ class _MyCustomFormState extends State<_MyCustomForm> {
   final locationController = TextEditingController();
   final descriptionController = TextEditingController();
   final durationController = TextEditingController();
+  final picker = ImagePicker();
+
   String _type = "Food";
 
   File _image;
@@ -62,17 +64,12 @@ class _MyCustomFormState extends State<_MyCustomForm> {
     super.dispose();
   }
 
-  void _onImageButtonPressed(ImageSource source, {BuildContext context}) async {
-    try {
-      _image = await ImagePicker.pickImage(
-          source: source,
-          maxWidth: width,
-          maxHeight: height,
-          imageQuality: 100);
-      setState(() {});
-    } catch (e) {
-      print(e.toString());
-    }
+  void _onImageButtonPressed(ImageSource source) async {
+    final pickedFile = await picker.getImage(source: source);
+
+    setState(() {
+      _image = File(pickedFile.path);
+    });
   }
 
   Future<void> uploadImagePopup() async {
@@ -82,7 +79,7 @@ class _MyCustomFormState extends State<_MyCustomForm> {
       button: FlatButton(
         key: Key("UploadOK"),
         onPressed: () {
-          Navigator.of(context, rootNavigator: true).pop('dialog');
+          Navigator.of(context, rootNavigator: true).pop();
         },
         child: Text(
           "CANCEL",
@@ -95,8 +92,8 @@ class _MyCustomFormState extends State<_MyCustomForm> {
         children: [
           FlatButton(
             onPressed: () {
-              _onImageButtonPressed(ImageSource.gallery, context: context);
-              Navigator.of(context, rootNavigator: true).pop('dialog');
+              _onImageButtonPressed(ImageSource.gallery);
+              Navigator.of(context, rootNavigator: true).pop();
             },
             child: Row(
               children: [
@@ -116,8 +113,8 @@ class _MyCustomFormState extends State<_MyCustomForm> {
           ),
           FlatButton(
             onPressed: () {
-              _onImageButtonPressed(ImageSource.camera, context: context);
-              Navigator.of(context, rootNavigator: true).pop('dialog');
+              _onImageButtonPressed(ImageSource.camera);
+              Navigator.of(context, rootNavigator: true).pop();
             },
             child: Row(
               children: [
