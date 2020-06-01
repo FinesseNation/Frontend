@@ -139,7 +139,7 @@ Future<void> updateFinesse(Finesse newFinesse) async {
 
 /// Sends a message containing [title] and [body] to [topic].
 Future<http.Response> sendToAll(String title, String body,
-    {String topic: ALL_TOPIC}) {
+    {String topic: ALL_TOPIC, String id: '-1', bool isNew: false}) {
   final content = {
     'notification': {
       'body': '$body',
@@ -149,6 +149,8 @@ Future<http.Response> sendToAll(String title, String body,
     'data': {
       'click_action': 'FLUTTER_NOTIFICATION_CLICK',
       'status': 'done',
+      'id': '$id',
+      'isNew': '$isNew',
     },
     'to': '/topics/$topic',
   };

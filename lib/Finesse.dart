@@ -50,6 +50,9 @@ class Finesse {
   /// The comments on this Finesse.
   List<Comment> comments;
 
+  /// The current list of Finesses.
+  static List<Finesse> finesseList = [];
+
   /// Creates a Finesse.
   Finesse(
     String eventId,

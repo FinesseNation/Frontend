@@ -1,9 +1,12 @@
 import 'package:custom_switch/custom_switch.dart';
+import 'package:finesse_nation/Finesse.dart';
 import 'package:finesse_nation/Network.dart';
+import 'package:finesse_nation/Pages/FinessePage.dart';
 import 'package:finesse_nation/Pages/LoginScreen.dart';
 import 'package:finesse_nation/Pages/SettingsPage.dart';
 import 'package:finesse_nation/Pages/addEventPage.dart';
 import 'package:finesse_nation/Styles.dart';
+import 'package:finesse_nation/User.dart';
 import 'package:finesse_nation/widgets/FinesseList.dart';
 import 'package:finesse_nation/widgets/PopUpBox.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -28,8 +31,6 @@ void main() async {
 
 // This is the type used by the popup menu below.
 enum DotMenu { settings }
-bool _fcmAlreadySetup = false;
-GlobalKey<ScaffoldState> _scaffoldKey;
 
 class _MyApp extends StatelessWidget {
   final String _currentUser;
@@ -81,51 +82,18 @@ class MyHomePage extends StatefulWidget {
 
   @override
   _MyHomePageState createState() {
-    _scaffoldKey = GlobalKey<ScaffoldState>();
     return _MyHomePageState();
   }
 }
 
 class _MyHomePageState extends State<MyHomePage> {
   Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
 
   Future<bool> _activeFilter;
   Future<bool> _typeFilter;
 
   bool localActive;
   bool localType;
-
-  void showSnackBar(var message) {
-    _scaffoldKey.currentState.showSnackBar(
-      SnackBar(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              message['notification']['title'],
-              style: TextStyle(
-                color: primaryHighlight,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(
-              message['notification']['body'],
-              style: TextStyle(
-                color: primaryHighlight,
-              ),
-            ),
-          ],
-        ),
-        action: SnackBarAction(
-          label: 'RELOAD',
-          onPressed: () => reload(),
-        ),
-      ),
-    );
-  }
 
   Future<void> _setActiveFilter(val) async {
     final SharedPreferences prefs = await _prefs;
@@ -282,43 +250,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    print(_fcmAlreadySetup);
-    if (!_fcmAlreadySetup) {
-      print('setting up fcm');
-      if (!kIsWeb) {
-        _firebaseMessaging.requestNotificationPermissions();
-        print('requested permission');
-      }
-      _firebaseMessaging.subscribeToTopic(ALL_TOPIC);
-      _firebaseMessaging.configure(
-        onMessage: (Map<String, dynamic> message) async {
-          print("onMessage: $message");
-          showSnackBar(message);
-        },
-        onLaunch: (Map<String, dynamic> message) async {
-          print("onLaunch: $message");
-          setState(() {
-            print('reloading');
-          });
-        },
-        onResume: (Map<String, dynamic> message) async {
-          print("onResume: $message");
-          setState(() {
-            print('reloading');
-          });
-        },
-      );
-      print('set up fcm');
-    }
-    _fcmAlreadySetup = true;
     return Scaffold(
-      key: _scaffoldKey,
       drawer: Drawer(
-        // Add a ListView to the drawer. This ensures the user can scroll
-        // through the options in the drawer if there isn't enough vertical
-        // space to fit everything.
         child: ListView(
-          // Important: Remove any padding from the ListView.
           padding: EdgeInsets.zero,
           children: <Widget>[
             DrawerHeader(
@@ -347,9 +281,6 @@ class _MyHomePageState extends State<MyHomePage> {
             ListTile(
               title: Text('Item 2'),
               onTap: () {
-                // Update the state of the app
-                // ...
-                // Then close the drawer
                 Navigator.pop(context);
               },
             ),

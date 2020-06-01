@@ -7,6 +7,7 @@ import 'package:finesse_nation/Network.dart';
 import 'package:finesse_nation/Styles.dart';
 import 'package:finesse_nation/User.dart';
 import 'package:finesse_nation/Util.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -128,8 +129,8 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
           width: 600,
           height: 240,
           fit: BoxFit.cover,
-          colorBlendMode: BlendMode.color,
-          color: fin.isActive ? Colors.transparent : Color(0xff000000),
+          colorBlendMode: BlendMode.saturation,
+          color: fin.isActive ? Colors.transparent : inactiveColor,
         ),
       ),
     );
@@ -314,6 +315,18 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
       ),
     );
 
+    Future<void> postComment(String comment) async {
+      Comment newComment = Comment.post(comment);
+      setState(() => fin.comments.add(newComment));
+      addComment(newComment, fin.eventId);
+      fin.numComments++;
+      _controller.clear();
+      FirebaseMessaging().unsubscribeFromTopic(fin.eventId);
+      await sendToAll(fin.eventTitle, '${User.currentUser.userName}: $comment',
+          topic: fin.eventId, id: fin.eventId);
+      FirebaseMessaging().subscribeToTopic(fin.eventId);
+    }
+
     Widget addCommentSection = Padding(
       padding: EdgeInsets.symmetric(vertical: 4),
       child: TextFormField(
@@ -353,32 +366,20 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
               ),
               onPressed: (_commentIsEmpty)
                   ? null
-                  : () {
+                  : () async {
                       FocusScopeNode currentFocus = FocusScope.of(context);
                       if (!currentFocus.hasPrimaryFocus) {
                         currentFocus.unfocus();
                       }
                       String comment = _controller.value.text;
-                      Comment newComment = Comment.post(comment);
-                      setState(() => fin.comments.add(newComment));
-                      addComment(newComment, fin.eventId);
-                      fin.numComments++;
-                      _controller.clear();
-                      sendToAll('new comment', comment, topic: fin.eventId);
+                      await postComment(comment);
                     }),
         ),
         style:
             TextStyle(color: fin.isActive ? primaryHighlight : inactiveColor),
-        onFieldSubmitted: (comment) {
+        onFieldSubmitted: (comment) async {
           if (comment.isNotEmpty) {
-            Comment newComment = Comment.post(comment);
-            setState(() => fin.comments.add(newComment));
-            addComment(newComment, fin.eventId);
-            fin.numComments++;
-            _controller.clear();
-            sendToAll('New comment on ${fin.eventTitle}',
-                '${User.currentUser.userName}: $comment',
-                topic: fin.eventId);
+            await postComment(comment);
           }
         },
       ),

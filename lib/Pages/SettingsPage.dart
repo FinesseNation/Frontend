@@ -35,8 +35,10 @@ class Notifications {
     }
     if (toggle) {
       _firebaseMessaging.subscribeToTopic(ALL_TOPIC);
+      print('subscribed user to $ALL_TOPIC');
     } else {
       _firebaseMessaging.unsubscribeFromTopic(ALL_TOPIC);
+      print('unsubscribed user from $ALL_TOPIC');
     }
     if (updateUser) {
       changeNotifications(toggle);

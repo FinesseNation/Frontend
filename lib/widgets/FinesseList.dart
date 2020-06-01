@@ -1,24 +1,33 @@
 import 'package:finesse_nation/Finesse.dart';
 import 'package:finesse_nation/Network.dart';
+import 'package:finesse_nation/Pages/FinessePage.dart';
 import 'package:finesse_nation/Styles.dart';
 import 'package:finesse_nation/User.dart';
 import 'package:finesse_nation/widgets/FinesseCard.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+
+bool _fcmAlreadySetup = false;
+GlobalKey<ScaffoldState> _scaffoldKey;
 
 /// Returns a [ListView] containing a [Card] for each [Finesse].
 class FinesseList extends StatefulWidget {
   FinesseList({Key key}) : super(key: key);
 
   @override
-  _FinesseListState createState() => _FinesseListState();
+  _FinesseListState createState() {
+    _scaffoldKey = GlobalKey<ScaffoldState>();
+    return _FinesseListState();
+  }
 }
 
 class _FinesseListState extends State<FinesseList> {
   Future<List<Finesse>> _finesses;
   RefreshController _refreshController;
-  List<Finesse> localList;
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
 
   void _onRefresh() async {
     _finesses = fetchFinesses();
@@ -41,16 +50,94 @@ class _FinesseListState extends State<FinesseList> {
   }
 
   Widget build(BuildContext context) {
+    if (!_fcmAlreadySetup) {
+      if (!kIsWeb) {
+        _firebaseMessaging.requestNotificationPermissions();
+      }
+      _firebaseMessaging.subscribeToTopic(ALL_TOPIC);
+      _firebaseMessaging.configure(
+        onMessage: (Map<String, dynamic> message) async {
+          print("onMessage: $message");
+          String id = message['data']['id'];
+          bool isNew = message['data']['isNew'] == 'true';
+          SnackBarAction action;
+          if (isNew) {
+            action = SnackBarAction(
+                label: 'RELOAD',
+                onPressed: () {
+                  setState(() {
+                    _finesses = fetchFinesses();
+                  });
+                });
+          } else {
+            Finesse target =
+                Finesse.finesseList.singleWhere((fin) => fin.eventId == id);
+            action = SnackBarAction(
+              label: 'VIEW',
+              onPressed: () {
+                List<bool> votes = [
+                  User.currentUser.upvoted.contains(target.eventId),
+                  User.currentUser.downvoted.contains(target.eventId)
+                ];
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => FinessePage(target, votes)),
+                ).whenComplete(() => setState(() => {}));
+              },
+            );
+          }
+          Scaffold.of(context).showSnackBar(
+            SnackBar(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    message['notification']['title'],
+                    style: TextStyle(
+                      color: primaryHighlight,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    message['notification']['body'],
+                    style: TextStyle(
+                      color: secondaryHighlight,
+                    ),
+                  ),
+                ],
+              ),
+              action: action,
+            ),
+          );
+        },
+        onLaunch: (Map<String, dynamic> message) async {
+          print("onLaunch: $message");
+          setState(() {
+            print('reloading');
+          });
+        },
+        onResume: (Map<String, dynamic> message) async {
+          print("onResume: $message");
+          setState(() {
+            print('reloading');
+          });
+        },
+      );
+      _fcmAlreadySetup = true;
+    }
     return Container(
       color: primaryBackground,
       child: FutureBuilder(
-        initialData: localList,
+        initialData: Finesse.finesseList,
         future: _finesses,
         builder: (context, snapshot) {
           if (snapshot.hasData &&
               snapshot.connectionState == ConnectionState.done) {
-            localList = snapshot.data.reversed.toList();
-            return listViewWidget(localList, context);
+            Finesse.finesseList = snapshot.data.reversed.toList();
+            return listViewWidget(Finesse.finesseList, context);
           }
           return Center(child: CircularProgressIndicator());
         },

@@ -51,10 +51,9 @@ class _FinesseCardState extends State<FinesseCard> {
                           width: 600,
                           height: 240,
                           fit: BoxFit.cover,
-                          colorBlendMode: BlendMode.color,
-                          color: fin.isActive
-                              ? Colors.transparent
-                              : Color(0xff000000),
+                          colorBlendMode: BlendMode.saturation,
+                          color:
+                              fin.isActive ? Colors.transparent : inactiveColor,
                         ),
                 ),
               Padding(
