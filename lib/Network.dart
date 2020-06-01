@@ -54,7 +54,7 @@ const _SEND_NOTIFICATION_URL = 'https://fcm.googleapis.com/fcm/send';
 const _SET_VOTES_URL = _DOMAIN + 'user/setVotes';
 
 /// The topic used to send notifications about new Finesses.
-const ALL_TOPIC = 'new_finesse';
+const ALL_TOPIC = 'NewFinesse';
 
 /// The authentication key for all API calls.
 final _token = environment['FINESSE_API_TOKEN'];
@@ -73,8 +73,7 @@ Future<http.Response> _postData(var url, var data) async {
 }
 
 /// Adds [newFinesse].
-Future<String> addFinesse(Finesse newFinesse,
-    {var url = _ADD_URL}) async {
+Future<String> addFinesse(Finesse newFinesse, {var url = _ADD_URL}) async {
   Map bodyMap = newFinesse.toMap();
   http.Response response = await _postData(url, bodyMap);
   final int statusCode = response.statusCode;
@@ -91,7 +90,7 @@ Future<List<Finesse>> fetchFinesses() async {
   if (response.statusCode == 200) {
     var data = json.decode(response.body);
     List<Finesse> responseJson =
-    data.map<Finesse>((json) => Finesse.fromJson(json)).toList();
+        data.map<Finesse>((json) => Finesse.fromJson(json)).toList();
     responseJson = await applyFilters(responseJson);
     return responseJson;
   } else {
@@ -107,13 +106,11 @@ Future<List<Finesse>> applyFilters(responseJson) async {
   List<Finesse> filteredFinesses = List<Finesse>.from(responseJson);
 
   if (activeFilter == false) {
-    filteredFinesses.removeWhere((fin) => fin.isActive.length > 2);
-    filteredFinesses
-        .removeWhere((fin) => fin.isActive.contains(User.currentUser.email));
-    filteredFinesses.removeWhere((fin) => fin.isActive.contains(fin.emailId));
+    filteredFinesses.removeWhere((fin) =>
+        !fin.isActive || fin.markedInactive.contains(User.currentUser.email));
   }
   if (typeFilter == false) {
-    filteredFinesses.removeWhere((value) => value.category == "Other");
+    filteredFinesses.removeWhere((fin) => fin.category == "Other");
   }
   return filteredFinesses;
 }
@@ -153,7 +150,7 @@ Future<http.Response> sendToAll(String title, String body,
       'click_action': 'FLUTTER_NOTIFICATION_CLICK',
       'status': 'done',
     },
-    'to': '/topics/null', // $topic
+    'to': '/topics/$topic',
   };
   return http.post(
     _SEND_NOTIFICATION_URL,
@@ -213,8 +210,7 @@ Future<String> createUser(LoginData data) async {
   };
   http.Response response = await _postData(_SIGNUP_URL, payload);
 
-  var status = response.statusCode,
-      respBody = json.decode(response.body);
+  var status = response.statusCode, respBody = json.decode(response.body);
   if (status == 400) {
     return respBody['msg'];
   }
@@ -228,10 +224,10 @@ String validateEmail(String email) {
     return 'Email can\'t be empty';
   }
   bool emailValid =
-  RegExp(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]"
-  r"{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]"
-  r"{0,253}[a-zA-Z0-9])?)*$")
-      .hasMatch(email);
+      RegExp(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]"
+              r"{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]"
+              r"{0,253}[a-zA-Z0-9])?)*$")
+          .hasMatch(email);
   if (emailValid) {
     return null;
   }
@@ -241,9 +237,7 @@ String validateEmail(String email) {
 
 /// Validates [password].
 String validatePassword(String password) {
-  return password.length < 6
-      ? 'Password must be at least 6 characters'
-      : null;
+  return password.length < 6 ? 'Password must be at least 6 characters' : null;
 }
 
 /// Changes the current user's notification preferences to [toggle].
@@ -300,7 +294,7 @@ Future<http.Response> addComment(Comment comment, String eventId) async {
   if (statusCode != 200) {
     throw Exception(
         "Error while adding comment, status = ${response.statusCode},"
-            " ${response.body}}");
+        " ${response.body}}");
   }
   return response;
 }
@@ -313,7 +307,7 @@ Future<List<Comment>> getComments(String eventId) async {
   if (response.statusCode == 200) {
     var data = json.decode(response.body);
     List<Comment> comments =
-    data.map<Comment>((json) => Comment.fromJson(json)).toList();
+        data.map<Comment>((json) => Comment.fromJson(json)).toList();
     return comments;
   } else {
     throw Exception("Error while getting comments");

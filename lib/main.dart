@@ -282,7 +282,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    print(_fcmAlreadySetup);
     if (!_fcmAlreadySetup) {
+      print('setting up fcm');
+      if (!kIsWeb) {
+        _firebaseMessaging.requestNotificationPermissions();
+        print('requested permission');
+      }
       _firebaseMessaging.subscribeToTopic(ALL_TOPIC);
       _firebaseMessaging.configure(
         onMessage: (Map<String, dynamic> message) async {
@@ -302,11 +308,9 @@ class _MyHomePageState extends State<MyHomePage> {
           });
         },
       );
+      print('set up fcm');
     }
     _fcmAlreadySetup = true;
-    if (!kIsWeb) {
-      _firebaseMessaging.requestNotificationPermissions();
-    }
     return Scaffold(
       key: _scaffoldKey,
       drawer: Drawer(

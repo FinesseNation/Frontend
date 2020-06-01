@@ -10,7 +10,8 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SharedPreferences.setMockInitialValues(
       {"typeFilter": false, "activeFilter": false});
-  User.currentUser = User('test@test.com', 'test123', 'test', 'test', 0, true, [], []);
+  User.currentUser =
+      User('test@test.com', 'test123', 'test', 'test', 0, true, [], []);
 
   ///Basic username getter test
   test('Get UserName test', () {
@@ -46,7 +47,7 @@ void main() {
         new DateTime.now());
     expect(newFinesse.isActive, []);
     List<String> activeList = ["person1", "person2"];
-    newFinesse.isActive = activeList;
+    newFinesse.markedInactive = activeList;
     expect(newFinesse.isActive, activeList);
   });
 

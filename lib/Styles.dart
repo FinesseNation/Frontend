@@ -14,3 +14,6 @@ const Color primaryHighlight = Color(0xffe2e2e2);
 
 /// The secondary highlight color.
 const Color secondaryHighlight = Color(0xff8c8c8c);
+
+/// The text color when the [Finesse] is inactive.
+const Color inactiveColor = Color(0xFF606060);

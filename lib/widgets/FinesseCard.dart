@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:finesse_nation/Util.dart';
 import 'package:finesse_nation/Styles.dart';
+import 'package:flutter/widgets.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class FinesseCard extends StatefulWidget {
@@ -50,6 +51,10 @@ class _FinesseCardState extends State<FinesseCard> {
                           width: 600,
                           height: 240,
                           fit: BoxFit.cover,
+                          colorBlendMode: BlendMode.color,
+                          color: fin.isActive
+                              ? Colors.transparent
+                              : Color(0xff000000),
                         ),
                 ),
               Padding(
@@ -65,7 +70,8 @@ class _FinesseCardState extends State<FinesseCard> {
                         style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w300,
-                          color: primaryHighlight,
+                          color:
+                              fin.isActive ? primaryHighlight : inactiveColor,
                         ),
                       ),
                     ),
@@ -73,7 +79,8 @@ class _FinesseCardState extends State<FinesseCard> {
                       fin.location + " · ${timeago.format(fin.postedTime)}",
                       style: TextStyle(
                         fontSize: 11,
-                        color: secondaryHighlight,
+                        color:
+                            fin.isActive ? secondaryHighlight : inactiveColor,
                       ),
                     ),
                     Row(
@@ -84,29 +91,37 @@ class _FinesseCardState extends State<FinesseCard> {
                           "${fin.numComments} ${(fin.numComments == 1) ? "comment" : "comments"}",
                           style: TextStyle(
                             fontSize: 11,
-                            color: secondaryHighlight,
+                            color: fin.isActive
+                                ? secondaryHighlight
+                                : inactiveColor,
                           ),
                         ),
-                        ToggleButtons(
-                          renderBorder: false,
-                          fillColor: Colors.transparent,
-                          splashColor: Colors.transparent,
-                          selectedColor: primaryHighlight,
-                          color: secondaryHighlight,
-                          children: <Widget>[
-                            Icon(
-                              Icons.arrow_upward,
-                            ),
-                            Icon(
-                              Icons.arrow_downward,
-                            ),
-                          ],
-                          onPressed: (index) {
-                            setState(() {
-                              handleVote(index, isSelected, fin);
-                            });
-                          },
-                          isSelected: isSelected,
+                        Visibility(
+                          visible: fin.isActive,
+                          maintainState: true,
+                          maintainAnimation: true,
+                          maintainSize: true,
+                          child: ToggleButtons(
+                            renderBorder: false,
+                            fillColor: Colors.transparent,
+                            splashColor: Colors.transparent,
+                            selectedColor: primaryHighlight,
+                            color: secondaryHighlight,
+                            children: <Widget>[
+                              Icon(
+                                Icons.arrow_upward,
+                              ),
+                              Icon(
+                                Icons.arrow_downward,
+                              ),
+                            ],
+                            onPressed: (index) {
+                              setState(() {
+                                handleVote(index, isSelected, fin);
+                              });
+                            },
+                            isSelected: isSelected,
+                          ),
                         ),
                       ],
                     ),

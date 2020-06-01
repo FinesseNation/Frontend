@@ -30,7 +30,7 @@ class Finesse {
   DateTime postedTime;
 
   /// The list of emailIds of [User]s who have marked this Finesse as inactive.
-  List<String> isActive;
+  List<String> markedInactive;
 
   /// The base64-encoded image of this Finesse.
   Uint8List convertedImage;
@@ -60,7 +60,7 @@ class Finesse {
     String duration,
     String category,
     DateTime postedTime,
-    List<String> isActive,
+    List<String> markedInactive,
     String school,
     String emailId,
     int points,
@@ -75,7 +75,7 @@ class Finesse {
     this.category = category;
     this.postedTime = postedTime;
     this.convertedImage = image == null ? null : base64.decode(image);
-    this.isActive = isActive;
+    this.markedInactive = markedInactive;
     this.school = school;
     this.emailId = emailId;
     this.points = points;
@@ -92,7 +92,7 @@ class Finesse {
     String duration,
     String category,
     DateTime timePosted, {
-    List<String> isActive: const <String>[],
+    List<String> markedInactive: const <String>[],
     String school,
     String email,
     int points: 1,
@@ -107,7 +107,7 @@ class Finesse {
       duration,
       category,
       timePosted,
-      isActive,
+      markedInactive,
       User.currentUser?.school ?? 'test',
       User.currentUser?.email ?? 'test',
       points,
@@ -151,6 +151,15 @@ class Finesse {
     return fin;
   }
 
+  bool get isActive =>
+      markedInactive.length < 3 && !markedInactive.contains(emailId);
+
+  /// Increases this Finesse's points.
+  int upvote() => ++points;
+
+  /// Decreases this Finesse's points.
+  int downvote() => --points;
+
   /// Returns a [Map] containing this Finesse's fields.
   Map toMap() {
     var map = Map<String, dynamic>();
@@ -161,15 +170,11 @@ class Finesse {
     map["duration"] = duration;
     map["category"] = category;
     map['postedTime'] = postedTime.toString();
-    map['isActive'] = isActive;
+    map['isActive'] = markedInactive;
     map['school'] = school;
     map['emailId'] = emailId;
     map['points'] = points;
     map['numComments'] = numComments;
     return map;
   }
-
-  int upvote() => ++points;
-
-  int downvote() => --points;
 }

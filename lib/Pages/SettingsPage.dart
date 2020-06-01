@@ -109,6 +109,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 padding:
                     EdgeInsets.only(right: 15, bottom: 10, top: 10, left: 10),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
                       'Account',

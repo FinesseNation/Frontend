@@ -336,15 +336,16 @@ class _MyCustomFormState extends State<_MyCustomForm> {
                               _type,
                               currTime,
                             );
-                            var res = await addFinesse(newFinesse);
-                            User.currentUser.upvoted.add(jsonDecode(res)['id']);
+                            String res = await addFinesse(newFinesse);
+                            String newId = jsonDecode(res)['id'];
+                            User.currentUser.upvoted.add(newId);
+                            FirebaseMessaging().subscribeToTopic(newId);
                             await FirebaseMessaging()
                                 .unsubscribeFromTopic(ALL_TOPIC);
                             await sendToAll(
                                 newFinesse.eventTitle, newFinesse.location);
                             if (User.currentUser.notifications) {
-                              FirebaseMessaging()
-                                  .subscribeToTopic(ALL_TOPIC);
+                              FirebaseMessaging().subscribeToTopic(ALL_TOPIC);
                             }
                             await Navigator.pushAndRemoveUntil(
                               context,

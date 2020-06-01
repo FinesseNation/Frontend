@@ -27,7 +27,8 @@ Future<Finesse> addFinesseHelper([name]) async {
 
 /// Creates a list of 4 finesses to mock the finesse list from the database
 /// Optional parameters to set the type and the state of active.
-List<Finesse> createFinesseList({String type = "Food", List<String> isActive}) {
+List<Finesse> createFinesseList(
+    {String type = "Food", List<String> markedInactive}) {
   List<Finesse> finesseList = [];
 
   for (var i = 0; i < 4; i++) {
@@ -39,7 +40,7 @@ List<Finesse> createFinesseList({String type = "Food", List<String> isActive}) {
         "60 hours",
         type,
         new DateTime.now(),
-        isActive: isActive));
+        markedInactive: markedInactive));
   }
   return finesseList;
 }
@@ -84,7 +85,8 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SharedPreferences.setMockInitialValues(
       {"typeFilter": false, "activeFilter": false});
-  User.currentUser = User('test@test.com', 'test123', 'test', 'test', 0, true, [], []);
+  User.currentUser =
+      User('test@test.com', 'test123', 'test', 'test', 0, true, [], []);
 
   ///Add a new finesse to the database and check that the database contains it
   test('Adding a new Finesse', () async {
@@ -183,7 +185,8 @@ void main() {
 
   /// Get a list of other finesses and filter them. Verify that they are removed.
   test('applyFilters Test Other', () async {
-    List<Finesse> finesseList = createFinesseList(type: "Other", isActive: <String>[]);
+    List<Finesse> finesseList =
+        createFinesseList(type: "Other", markedInactive: <String>[]);
     List<Finesse> newList = await applyFilters(finesseList);
     expect(newList.length, 0);
     expect(newList.length < finesseList.length, true);
@@ -191,7 +194,8 @@ void main() {
 
   /// Verify nothing was filtered
   test('applyFilters Test No Filter', () async {
-    List<Finesse> finesseList = createFinesseList(type: "Food", isActive: <String>[]);
+    List<Finesse> finesseList =
+        createFinesseList(type: "Food", markedInactive: <String>[]);
     List<Finesse> newList = await applyFilters(finesseList);
 
     expect(newList.length, 4);
@@ -201,7 +205,7 @@ void main() {
   /// Verify inactive posts were removed
   test('applyFilters Test Inactive', () async {
     List<Finesse> finesseList = createFinesseList(
-        type: "Food", isActive: ["username1", "username2", "username3"]);
+        type: "Food", markedInactive: ["username1", "username2", "username3"]);
     List<Finesse> newList = await applyFilters(finesseList);
 
     expect(newList.length, 0);
@@ -214,7 +218,7 @@ void main() {
         {"typeFilter": true, "activeFilter": true});
 
     List<Finesse> finesseList = createFinesseList(
-        type: "Other", isActive: ["username1", "username2", "username3"]);
+        type: "Other", markedInactive: ["username1", "username2", "username3"]);
     List<Finesse> newList = await applyFilters(finesseList);
 
     expect(newList.length, 4);
@@ -303,8 +307,8 @@ void main() {
   test('Changing Notifications Exception', () async {
     String temp = User.currentUser.email;
     User.currentUser.email = "invalid";
-    await expectException(changeNotifications(false),
-        "Notification change request failed");
+    await expectException(
+        changeNotifications(false), "Notification change request failed");
     User.currentUser.email = temp;
   });
 
@@ -319,8 +323,7 @@ void main() {
   });
 
   test('Send Garbage to the Update Current User Function', () async {
-    await expectException(
-        updateCurrentUser(email: "asdfasefwef@esaasef.edu"),
+    await expectException(updateCurrentUser(email: "asdfasefwef@esaasef.edu"),
         "Failed to get current user");
   });
 
@@ -333,7 +336,7 @@ void main() {
   /// Add a valid comment the database check that the api responds
   test('Add valid comment', () async {
     Comment comment =
-    Comment('test comment', 'test', DateTime.now().toString());
+        Comment('test comment', 'test', DateTime.now().toString());
     var response = await addComment(comment, TEST_EVENT_ID);
     expect(response.statusCode, 200);
   });
@@ -358,7 +361,7 @@ void main() {
   /// Get the comments for a specific event and verify that they are correct.
   test('Get Comments', () async {
     Comment testComment =
-    Comment('test comment', 'test', DateTime.now().toString());
+        Comment('test comment', 'test', DateTime.now().toString());
     await addComment(testComment, TEST_EVENT_ID);
     List<Comment> comments = await getComments(TEST_EVENT_ID);
     Comment last = comments.last;

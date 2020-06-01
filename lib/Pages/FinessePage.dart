@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:finesse_nation/Comment.dart';
 import 'package:finesse_nation/Finesse.dart';
@@ -16,36 +17,44 @@ enum DotMenu { markEnded }
 bool _commentIsEmpty;
 
 /// Displays details about a specific [Finesse].
-class FinessePage extends StatelessWidget {
+class FinessePage extends StatefulWidget {
   final Finesse fin;
   final List<bool> isSelected;
 
   FinessePage(this.fin, this.isSelected);
 
+  @override
+  _FinessePageState createState() => _FinessePageState();
+}
+
+class _FinessePageState extends State<FinessePage> {
   Widget build(BuildContext context) {
     _commentIsEmpty = true;
-    final title = fin.eventTitle;
+    final title = widget.fin.eventTitle;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
         actions: <Widget>[
-          PopupMenuButton<DotMenu>(
-            key: Key("threeDotButton"),
-            onSelected: (DotMenu result) {
-              _markAsEnded(fin);
-            },
-            itemBuilder: (BuildContext context) => <PopupMenuEntry<DotMenu>>[
-              const PopupMenuItem<DotMenu>(
-                key: Key("markAsEndedButton"),
-                value: DotMenu.markEnded,
-                child: Text('Mark as inactive'),
-              ),
-            ],
-          )
+          if (widget.fin.isActive)
+            PopupMenuButton<DotMenu>(
+              key: Key("threeDotButton"),
+              onSelected: (DotMenu result) {
+                setState(() {
+                  _markAsEnded(widget.fin);
+                });
+              },
+              itemBuilder: (BuildContext context) => <PopupMenuEntry<DotMenu>>[
+                const PopupMenuItem<DotMenu>(
+                  key: Key("markAsEndedButton"),
+                  value: DotMenu.markEnded,
+                  child: Text('Mark as inactive'),
+                ),
+              ],
+            )
         ],
       ),
-      body: Container(child: _FinesseDetails(fin, isSelected)),
+      body: Container(child: _FinesseDetails(widget.fin, widget.isSelected)),
       backgroundColor: primaryBackground,
     );
   }
@@ -119,6 +128,8 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
           width: 600,
           height: 240,
           fit: BoxFit.cover,
+          colorBlendMode: BlendMode.color,
+          color: fin.isActive ? Colors.transparent : Color(0xff000000),
         ),
       ),
     );
@@ -130,7 +141,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
         style: TextStyle(
           fontWeight: FontWeight.bold,
           fontSize: 30,
-          color: primaryHighlight,
+          color: fin.isActive ? primaryHighlight : inactiveColor,
         ),
       ),
     );
@@ -144,7 +155,9 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
             padding: EdgeInsets.only(right: 10),
             child: Icon(
               Icons.info,
-              color: secondaryHighlight,
+              color: fin.isActive
+                  ? fin.isActive ? secondaryHighlight : inactiveColor
+                  : inactiveColor,
             ),
           ),
           Flexible(
@@ -152,7 +165,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
               fin.description,
               style: TextStyle(
                 fontSize: 16,
-                color: primaryHighlight,
+                color: fin.isActive ? primaryHighlight : inactiveColor,
               ),
             ),
           ),
@@ -168,30 +181,27 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
             padding: EdgeInsets.only(right: 10),
             child: Icon(
               Icons.calendar_today,
-              color: secondaryHighlight,
+              color: fin.isActive ? secondaryHighlight : inactiveColor,
             ),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                fin.isActive.length < 3 && !fin.isActive.contains(fin.emailId)
-                    ? 'Ongoing'
-                    : 'Inactive',
+                fin.isActive ? 'Ongoing' : 'Inactive',
                 style: TextStyle(
                   fontSize: 16,
-                  color: primaryHighlight,
+                  color: fin.isActive ? primaryHighlight : inactiveColor,
                 ),
               ),
-              fin.duration != "" &&
-                      (fin.isActive.length < 3 &&
-                          !fin.isActive.contains(fin.emailId))
-                  ? Text("Duration: ${fin.duration}",
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: secondaryHighlight,
-                      ))
-                  : Container(),
+              if (fin.duration != "" && fin.isActive)
+                Text(
+                  "Duration: ${fin.duration}",
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: fin.isActive ? secondaryHighlight : inactiveColor,
+                  ),
+                ),
             ],
           ),
         ],
@@ -207,41 +217,42 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
               padding: EdgeInsets.only(right: 10),
               child: Icon(
                 Icons.thumbs_up_down,
-                color: secondaryHighlight,
+                color: fin.isActive ? secondaryHighlight : inactiveColor,
               ),
             ),
             Text(
               '${fin.points} ${(fin.points == 1) ? "point" : "points"}',
               style: TextStyle(
                 fontSize: 16,
-                color: primaryHighlight,
+                color: fin.isActive ? primaryHighlight : inactiveColor,
               ),
             ),
           ]),
-          SizedBox(
-            height: 24,
-            child: ToggleButtons(
-              renderBorder: false,
-              fillColor: Colors.transparent,
-              splashColor: Colors.transparent,
-              selectedColor: primaryHighlight,
-              color: secondaryHighlight,
-              children: <Widget>[
-                Icon(
-                  Icons.arrow_upward,
-                ),
-                Icon(
-                  Icons.arrow_downward,
-                ),
-              ],
-              onPressed: (index) {
-                setState(() {
-                  handleVote(index, isSelected, fin);
-                });
-              },
-              isSelected: isSelected,
+          if (fin.isActive)
+            SizedBox(
+              height: 24,
+              child: ToggleButtons(
+                renderBorder: false,
+                fillColor: Colors.transparent,
+                splashColor: Colors.transparent,
+                selectedColor: primaryHighlight,
+                color: fin.isActive ? secondaryHighlight : inactiveColor,
+                children: <Widget>[
+                  Icon(
+                    Icons.arrow_upward,
+                  ),
+                  Icon(
+                    Icons.arrow_downward,
+                  ),
+                ],
+                onPressed: (index) {
+                  setState(() {
+                    handleVote(index, isSelected, fin);
+                  });
+                },
+                isSelected: isSelected,
+              ),
             ),
-          ),
         ],
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
       ),
@@ -255,14 +266,16 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
             padding: EdgeInsets.only(right: 10),
             child: Icon(
               Icons.account_circle,
-              color: getColor(fin.emailId),
+              color: fin.isActive
+                  ? getColor(fin.emailId, fin.isActive)
+                  : inactiveColor,
             ),
           ),
           Text(
             fin.emailId,
             style: TextStyle(
               fontSize: 16,
-              color: primaryHighlight,
+              color: fin.isActive ? primaryHighlight : inactiveColor,
             ),
           ),
         ],
@@ -277,7 +290,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
             padding: EdgeInsets.only(right: 10),
             child: Icon(
               Icons.place,
-              color: secondaryHighlight,
+              color: fin.isActive ? secondaryHighlight : inactiveColor,
             ),
           ),
           Column(
@@ -288,7 +301,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
                   fin.location,
                   style: TextStyle(
                     fontSize: 16,
-                    color: primaryHighlight,
+                    color: fin.isActive ? primaryHighlight : inactiveColor,
                     decoration: TextDecoration.underline,
                   ),
                 ),
@@ -322,12 +335,13 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
         decoration: InputDecoration(
           border: InputBorder.none,
           hintText: 'Add a comment...',
-          hintStyle: TextStyle(color: secondaryHighlight),
+          hintStyle: TextStyle(
+              color: fin.isActive ? secondaryHighlight : inactiveColor),
           prefixIcon: Padding(
             padding: EdgeInsets.symmetric(horizontal: 8),
             child: Icon(
               Icons.account_circle,
-              color: getColor(User.currentUser.email),
+              color: getColor(User.currentUser.email, fin.isActive),
               size: 45,
             ),
           ),
@@ -350,9 +364,11 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
                       addComment(newComment, fin.eventId);
                       fin.numComments++;
                       _controller.clear();
+                      sendToAll('new comment', comment, topic: fin.eventId);
                     }),
         ),
-        style: TextStyle(color: Colors.grey[100]),
+        style:
+            TextStyle(color: fin.isActive ? primaryHighlight : inactiveColor),
         onFieldSubmitted: (comment) {
           if (comment.isNotEmpty) {
             Comment newComment = Comment.post(comment);
@@ -360,6 +376,9 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
             addComment(newComment, fin.eventId);
             fin.numComments++;
             _controller.clear();
+            sendToAll('New comment on ${fin.eventTitle}',
+                '${User.currentUser.userName}: $comment',
+                topic: fin.eventId);
           }
         },
       ),
@@ -381,7 +400,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
                   padding: EdgeInsets.symmetric(horizontal: 8),
                   child: Icon(
                     Icons.account_circle,
-                    color: getColor(comment.emailId),
+                    color: getColor(comment.emailId, fin.isActive),
                     size: 45,
                   ),
                 ),
@@ -396,13 +415,17 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
                             Text(
                               comment.username,
                               style: TextStyle(
-                                color: primaryHighlight,
+                                color: fin.isActive
+                                    ? primaryHighlight
+                                    : inactiveColor,
                               ),
                             ),
                             Text(
                               " · ${timeago.format(comment.postedDateTime)}",
                               style: TextStyle(
-                                color: secondaryHighlight,
+                                color: fin.isActive
+                                    ? secondaryHighlight
+                                    : inactiveColor,
                               ),
                             ),
                           ],
@@ -411,7 +434,8 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
                       Text(
                         comment.comment,
                         style: TextStyle(
-                          color: Colors.grey[100],
+                          color:
+                              fin.isActive ? primaryHighlight : inactiveColor,
                         ),
                       ),
                     ],
@@ -447,14 +471,14 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
                 'Comments  ',
                 style: TextStyle(
                   fontSize: 16,
-                  color: primaryHighlight,
+                  color: fin.isActive ? primaryHighlight : inactiveColor,
                 ),
               ),
               Text(
                 '${fin.numComments}',
                 style: TextStyle(
                   fontSize: 15,
-                  color: secondaryHighlight,
+                  color: fin.isActive ? secondaryHighlight : inactiveColor,
                 ),
               ),
             ],
@@ -474,10 +498,10 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            fin.image != "" ? imageSection : Container(),
+            if (fin.image != "") imageSection,
             titleSection,
             locationSection,
-            fin.description != "" ? descriptionSection : Container(),
+            if (fin.description != "") descriptionSection,
             timeSection,
             userSection,
             votingSection,
@@ -489,11 +513,19 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
     );
   }
 
-  Color getColor(String email) {
+  Color getColor(String email, bool isActive) {
     int min = 0xff000000;
     int max = 0xffffffff;
     int seed = email.codeUnits.fold(0, (i, j) => i + j);
     int val = min + Random(seed).nextInt(max - min + 1);
+    Color c = Color(val);
+    if (!isActive) {
+//      int r = c.red, g = c.green, b = c.blue;
+//      int luminosity = (0.299 * r + 0.587 * g + 0.114 * b).round();
+      double l = c.computeLuminance();
+      val = (l * 255).round();
+      return Color.fromARGB(255, val, val, val);
+    }
     return Color(val);
   }
 }
@@ -523,8 +555,8 @@ class FullImage extends StatelessWidget {
   }
 }
 
-_markAsEnded(Finesse fin) {
-  List activeList = fin.isActive;
+void _markAsEnded(Finesse fin) {
+  List activeList = fin.markedInactive;
   if (activeList.contains(User.currentUser.email)) {
     Fluttertoast.showToast(
       msg: "Already marked as inactive",
@@ -532,15 +564,14 @@ _markAsEnded(Finesse fin) {
       backgroundColor: secondaryBackground,
       textColor: primaryHighlight,
     );
-    return;
+  } else {
+    activeList.add(User.currentUser.email);
+    updateFinesse(fin);
+    Fluttertoast.showToast(
+      msg: "Marked as inactive",
+      toastLength: Toast.LENGTH_SHORT,
+      backgroundColor: secondaryBackground,
+      textColor: primaryHighlight,
+    );
   }
-  activeList.add(User.currentUser.email);
-  fin.isActive = activeList;
-  updateFinesse(fin);
-  Fluttertoast.showToast(
-    msg: "Marked as inactive",
-    toastLength: Toast.LENGTH_SHORT,
-    backgroundColor: secondaryBackground,
-    textColor: primaryHighlight,
-  );
 }
