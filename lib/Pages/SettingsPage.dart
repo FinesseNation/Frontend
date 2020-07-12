@@ -4,6 +4,7 @@ import 'package:finesse_nation/Pages/LoginScreen.dart';
 import 'package:finesse_nation/Styles.dart';
 import 'package:finesse_nation/User.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Contains functionality that allows the user to
@@ -65,7 +66,14 @@ class _SettingsPageState extends State<SettingsPage> {
                           value: toggle,
                           onChanged: (value) {
                             toggle = !toggle;
-                            notificationsSet(toggle, updateUser: false);
+                            notificationsSet(toggle);
+                            Fluttertoast.showToast(
+                              msg: "Notifications " +
+                                  (toggle ? "enabled" : "disabled"),
+                              toastLength: Toast.LENGTH_SHORT,
+                              backgroundColor: secondaryBackground,
+                              textColor: primaryHighlight,
+                            );
                           }),
                     ),
                   ],

@@ -13,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// The root domain for the Finesse Nation API.
 const _DOMAIN = 'https://finesse-nation.herokuapp.com/api/';
+//const _DOMAIN = 'http://10.0.0.135:8080/api/';
 
 /// Deleting a Finesse.
 const _DELETE_URL = _DOMAIN + 'food/deleteEvent';
@@ -257,7 +258,6 @@ Future<void> changeNotifications(bool toggle) async {
 }
 
 Future<void> setVotes() async {
-  print('setting votes');
   var payload = {
     "emailId": User.currentUser.email,
     'upvoted': User.currentUser.upvoted,
@@ -265,8 +265,6 @@ Future<void> setVotes() async {
   };
   http.Response response = await _postData(_SET_VOTES_URL, payload);
   if (response.statusCode != 200) {
-    print(response.statusCode);
-    print(response.body);
     throw Exception('set votes request failed');
   }
 }
@@ -281,10 +279,8 @@ Future<void> notificationsSet(toggle, {updateUser: true}) async {
     for (String topic in User.currentUser.subscriptions) {
       _firebaseMessaging.subscribeToTopic(topic);
     }
-    print('subscribed user to their subscribed topics');
   } else {
     _firebaseMessaging.deleteInstanceID();
-    print('unsubscribed user from all topics');
   }
   if (updateUser) {
     changeNotifications(toggle);
