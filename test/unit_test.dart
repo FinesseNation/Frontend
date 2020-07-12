@@ -1,9 +1,9 @@
+import 'package:finesse_nation/Comment.dart';
+import 'package:finesse_nation/Finesse.dart';
+import 'package:finesse_nation/User.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:test/test.dart';
-import 'package:finesse_nation/Finesse.dart';
-import 'package:finesse_nation/User.dart';
-import 'package:finesse_nation/Comment.dart';
 
 ///Misc Supplemental unit tests to increase code coverage
 void main() {
@@ -11,12 +11,26 @@ void main() {
   SharedPreferences.setMockInitialValues(
       {"typeFilter": false, "activeFilter": false});
   User.currentUser =
-      User('test@test.com', 'test123', 'test', 'test', 0, true, [], []);
+      User(
+          'test@test.com',
+          'test123',
+          'test',
+          'test',
+          0,
+          true,
+          [],
+          [],
+          []);
 
   ///Basic username getter test
   test('Get UserName test', () {
     User testUser = User("this._email", "this._password", "UserName",
-        "this._school", 0, false, [], []);
+        "this._school",
+        0,
+        false,
+        [],
+        [],
+        []);
     expect(testUser.userName, "UserName");
   });
 
@@ -45,10 +59,10 @@ void main() {
         "60 hours",
         "Food",
         new DateTime.now());
-    expect(newFinesse.isActive, []);
+    expect(newFinesse.markedInactive, []);
     List<String> activeList = ["person1", "person2"];
     newFinesse.markedInactive = activeList;
-    expect(newFinesse.isActive, activeList);
+    expect(newFinesse.markedInactive, activeList);
   });
 
   ///Checking getter on comment postedDateTime
