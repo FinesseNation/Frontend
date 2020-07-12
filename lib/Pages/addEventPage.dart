@@ -337,15 +337,19 @@ class _MyCustomFormState extends State<_MyCustomForm> {
                               currTime,
                             );
                             String res = await addFinesse(newFinesse);
+                            // could exploit the fact that id is sequential-ish
                             String newId = jsonDecode(res)['id'];
                             User.currentUser.upvoted.add(newId);
-                            FirebaseMessaging().subscribeToTopic(newId);
+                            User.currentUser.subscriptions.add(newId);
+                            // just don't display anything if app is open
+                            // in order to avoid unsub then resub
                             await FirebaseMessaging()
                                 .unsubscribeFromTopic(ALL_TOPIC);
                             await sendToAll(
                                 newFinesse.eventTitle, newFinesse.location,
                                 id: newId, isNew: true);
                             if (User.currentUser.notifications) {
+                              FirebaseMessaging().subscribeToTopic(newId);
                               FirebaseMessaging().subscribeToTopic(ALL_TOPIC);
                             }
                             await Navigator.pushAndRemoveUntil(

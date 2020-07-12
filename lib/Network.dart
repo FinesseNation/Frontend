@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'package:finesse_nation/.env.dart';
 import 'package:finesse_nation/Comment.dart';
 import 'package:finesse_nation/Finesse.dart';
-import 'package:finesse_nation/Pages/SettingsPage.dart';
 import 'package:finesse_nation/User.dart';
 import 'package:finesse_nation/login/flutter_login.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -46,6 +46,9 @@ const _NOTIFICATION_TOGGLE_URL = _DOMAIN + 'user/changeNotifications';
 
 /// Getting a specific user's information.
 const _GET_CURRENT_USER_URL = _DOMAIN + 'user/getCurrentUser';
+
+/// Interacting with Firebase Cloud Messaging.
+final _firebaseMessaging = FirebaseMessaging();
 
 /// Sending a notification.
 const _SEND_NOTIFICATION_URL = 'https://fcm.googleapis.com/fcm/send';
@@ -254,6 +257,7 @@ Future<void> changeNotifications(bool toggle) async {
 }
 
 Future<void> setVotes() async {
+  print('setting votes');
   var payload = {
     "emailId": User.currentUser.email,
     'upvoted': User.currentUser.upvoted,
@@ -267,6 +271,26 @@ Future<void> setVotes() async {
   }
 }
 
+/// Sets the notification preferences for the current user.
+Future<void> notificationsSet(toggle, {updateUser: true}) async {
+  if (User.currentUser.email.contains('@test.com') ||
+      User.currentUser.email.contains('@test.edu')) {
+    return;
+  }
+  if (toggle) {
+    for (String topic in User.currentUser.subscriptions) {
+      _firebaseMessaging.subscribeToTopic(topic);
+    }
+    print('subscribed user to their subscribed topics');
+  } else {
+    _firebaseMessaging.deleteInstanceID();
+    print('unsubscribed user from all topics');
+  }
+  if (updateUser) {
+    changeNotifications(toggle);
+  }
+}
+
 /// Populates the current user fields using [email].
 Future<void> updateCurrentUser({String email}) async {
   email = email ?? User.currentUser.email;
@@ -276,10 +300,15 @@ Future<void> updateCurrentUser({String email}) async {
   if (response.statusCode == 200) {
     var data = json.decode(response.body);
     User.currentUser = User.fromJson(data);
-    await Notifications.notificationsSet(User.currentUser.notifications);
+    await notificationsSet(User.currentUser.notifications, updateUser: false);
     SharedPreferences.getInstance().then((prefs) {
       prefs.setString('currentUser', email);
     });
+//    if (User.currentUser.notifications) {
+//      for (String topic in User.currentUser.subscriptions) {
+//        _firebaseMessaging.subscribeToTopic(topic);
+//      }
+//    }
   } else {
     throw Exception('Failed to get current user');
   }

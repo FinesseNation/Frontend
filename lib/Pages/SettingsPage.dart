@@ -3,7 +3,6 @@ import 'package:finesse_nation/Network.dart';
 import 'package:finesse_nation/Pages/LoginScreen.dart';
 import 'package:finesse_nation/Styles.dart';
 import 'package:finesse_nation/User.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -24,28 +23,6 @@ class Settings extends StatelessWidget {
   }
 }
 
-/// Class to subscribe and unsubscribe from notifications.
-class Notifications {
-  ///Set the notifications for the current user
-  static Future<void> notificationsSet(toggle, {updateUser: true}) async {
-    final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
-    if (User.currentUser.email.contains('@test.com') ||
-        User.currentUser.email.contains('@test.edu')) {
-      return;
-    }
-    if (toggle) {
-      _firebaseMessaging.subscribeToTopic(ALL_TOPIC);
-      print('subscribed user to $ALL_TOPIC');
-    } else {
-      _firebaseMessaging.unsubscribeFromTopic(ALL_TOPIC);
-      print('unsubscribed user from $ALL_TOPIC');
-    }
-    if (updateUser) {
-      changeNotifications(toggle);
-    }
-  }
-}
-
 /// Displays settings.
 class SettingsPage extends StatefulWidget {
   @override
@@ -58,14 +35,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
   _SettingsPageState createState() {
     return _SettingsPageState();
-  }
-
-  @override
-  void dispose() {
-    if (toggle != initialToggle) {
-      Notifications.notificationsSet(toggle);
-    }
-    super.dispose();
   }
 
   @override
@@ -96,6 +65,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           value: toggle,
                           onChanged: (value) {
                             toggle = !toggle;
+                            notificationsSet(toggle, updateUser: false);
                           }),
                     ),
                   ],
@@ -139,8 +109,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           style: TextStyle(color: secondaryBackground),
                         ),
                         onPressed: () {
-                          Notifications.notificationsSet(false,
-                              updateUser: false);
+                          notificationsSet(false, updateUser: false);
                           SharedPreferences.getInstance().then((prefs) {
                             prefs.remove('currentUser');
                           });

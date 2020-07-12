@@ -1,16 +1,11 @@
 import 'package:custom_switch/custom_switch.dart';
-import 'package:finesse_nation/Finesse.dart';
 import 'package:finesse_nation/Network.dart';
-import 'package:finesse_nation/Pages/FinessePage.dart';
 import 'package:finesse_nation/Pages/LoginScreen.dart';
 import 'package:finesse_nation/Pages/SettingsPage.dart';
 import 'package:finesse_nation/Pages/addEventPage.dart';
 import 'package:finesse_nation/Styles.dart';
-import 'package:finesse_nation/User.dart';
 import 'package:finesse_nation/widgets/FinesseList.dart';
 import 'package:finesse_nation/widgets/PopUpBox.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_statusbarcolor/flutter_statusbarcolor.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -18,13 +13,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// The entrypoint for the app.
 void main() async {
+  // Move this after runApp()
   WidgetsFlutterBinding.ensureInitialized();
   SharedPreferences _prefs = await SharedPreferences.getInstance();
   _prefs.getBool('activeFilter') ?? _prefs.setBool('activeFilter', true);
   _prefs.getBool('typeFilter') ?? _prefs.setBool('typeFilter', true);
   String _currentUser = _prefs.get('currentUser');
   if (_currentUser != null) {
-    updateCurrentUser(email: _currentUser);
+    await updateCurrentUser(email: _currentUser);
   }
   runApp(_MyApp(_currentUser));
 }
