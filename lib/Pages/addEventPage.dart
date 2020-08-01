@@ -7,7 +7,6 @@ import 'package:finesse_nation/Styles.dart';
 import 'package:finesse_nation/User.dart';
 import 'package:finesse_nation/main.dart';
 import 'package:finesse_nation/widgets/PopUpBox.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -343,14 +342,14 @@ class _MyCustomFormState extends State<_MyCustomForm> {
                             User.currentUser.subscriptions.add(newId);
                             // just don't display anything if app is open
                             // in order to avoid unsub then resub
-                            await FirebaseMessaging()
+                            await firebaseMessaging
                                 .unsubscribeFromTopic(ALL_TOPIC);
                             await sendToAll(
                                 newFinesse.eventTitle, newFinesse.location,
                                 id: newId, isNew: true);
                             if (User.currentUser.notifications) {
-                              FirebaseMessaging().subscribeToTopic(newId);
-                              FirebaseMessaging().subscribeToTopic(ALL_TOPIC);
+                              firebaseMessaging.subscribeToTopic(newId);
+                              firebaseMessaging.subscribeToTopic(ALL_TOPIC);
                             }
                             await Navigator.pushAndRemoveUntil(
                               context,

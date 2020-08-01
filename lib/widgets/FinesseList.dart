@@ -4,14 +4,12 @@ import 'package:finesse_nation/Pages/FinessePage.dart';
 import 'package:finesse_nation/Styles.dart';
 import 'package:finesse_nation/User.dart';
 import 'package:finesse_nation/widgets/FinesseCard.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 bool _fcmAlreadySetup = false;
-GlobalKey<ScaffoldState> _scaffoldKey;
 
 /// Returns a [ListView] containing a [Card] for each [Finesse].
 class FinesseList extends StatefulWidget {
@@ -19,7 +17,6 @@ class FinesseList extends StatefulWidget {
 
   @override
   _FinesseListState createState() {
-    _scaffoldKey = GlobalKey<ScaffoldState>();
     return _FinesseListState();
   }
 }
@@ -27,7 +24,6 @@ class FinesseList extends StatefulWidget {
 class _FinesseListState extends State<FinesseList> {
   Future<List<Finesse>> _finesses;
   RefreshController _refreshController;
-  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
 
   void _onRefresh() async {
     _finesses = fetchFinesses();
@@ -52,10 +48,10 @@ class _FinesseListState extends State<FinesseList> {
   Widget build(BuildContext context) {
     if (!_fcmAlreadySetup) {
       if (!kIsWeb) {
-        _firebaseMessaging.requestNotificationPermissions();
+        firebaseMessaging.requestNotificationPermissions();
       }
-      _firebaseMessaging.subscribeToTopic(ALL_TOPIC);
-      _firebaseMessaging.configure(
+      firebaseMessaging.subscribeToTopic(ALL_TOPIC);
+      firebaseMessaging.configure(
         onMessage: (Map<String, dynamic> message) async {
           print("onMessage: $message");
           String id = message['data']['id'];
@@ -115,15 +111,9 @@ class _FinesseListState extends State<FinesseList> {
         },
         onLaunch: (Map<String, dynamic> message) async {
           print("onLaunch: $message");
-          setState(() {
-            print('reloading');
-          });
         },
         onResume: (Map<String, dynamic> message) async {
           print("onResume: $message");
-          setState(() {
-            print('reloading');
-          });
         },
       );
       _fcmAlreadySetup = true;

@@ -7,7 +7,6 @@ import 'package:finesse_nation/Network.dart';
 import 'package:finesse_nation/Styles.dart';
 import 'package:finesse_nation/User.dart';
 import 'package:finesse_nation/Util.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -321,10 +320,10 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
       addComment(newComment, fin.eventId);
       fin.numComments++;
       _controller.clear();
-      FirebaseMessaging().unsubscribeFromTopic(fin.eventId);
+      firebaseMessaging.unsubscribeFromTopic(fin.eventId);
       await sendToAll(fin.eventTitle, '${User.currentUser.userName}: $comment',
           topic: fin.eventId, id: fin.eventId);
-      FirebaseMessaging().subscribeToTopic(fin.eventId);
+      firebaseMessaging.subscribeToTopic(fin.eventId);
     }
 
     Widget addCommentSection = Padding(

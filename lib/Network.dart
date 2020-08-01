@@ -49,7 +49,7 @@ const _NOTIFICATION_TOGGLE_URL = _DOMAIN + 'user/changeNotifications';
 const _GET_CURRENT_USER_URL = _DOMAIN + 'user/getCurrentUser';
 
 /// Interacting with Firebase Cloud Messaging.
-final _firebaseMessaging = FirebaseMessaging();
+final firebaseMessaging = FirebaseMessaging();
 
 /// Sending a notification.
 const _SEND_NOTIFICATION_URL = 'https://fcm.googleapis.com/fcm/send';
@@ -277,10 +277,10 @@ Future<void> notificationsSet(toggle, {updateUser: true}) async {
   }
   if (toggle) {
     for (String topic in User.currentUser.subscriptions) {
-      _firebaseMessaging.subscribeToTopic(topic);
+      firebaseMessaging.subscribeToTopic(topic);
     }
   } else {
-    _firebaseMessaging.deleteInstanceID();
+    firebaseMessaging.deleteInstanceID();
   }
   if (updateUser) {
     changeNotifications(toggle);
@@ -302,7 +302,7 @@ Future<void> updateCurrentUser({String email}) async {
     });
 //    if (User.currentUser.notifications) {
 //      for (String topic in User.currentUser.subscriptions) {
-//        _firebaseMessaging.subscribeToTopic(topic);
+//        firebaseMessaging.subscribeToTopic(topic);
 //      }
 //    }
   } else {
