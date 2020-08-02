@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'dart:ui';
 
 import 'package:finesse_nation/Comment.dart';
@@ -493,40 +492,30 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
     );
 
     return SingleChildScrollView(
-      child: Card(
-        color: secondaryBackground,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (fin.image != "") imageSection,
-            titleSection,
-            locationSection,
-            if (fin.description != "") descriptionSection,
-            timeSection,
-            userSection,
-            votingSection,
-            viewCommentSection,
-            addCommentSection,
-          ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 5),
+        child: Card(
+          clipBehavior: Clip.hardEdge,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10)),
+          color: secondaryBackground,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (fin.image != "") imageSection,
+              titleSection,
+              locationSection,
+              if (fin.description != "") descriptionSection,
+              timeSection,
+              userSection,
+              votingSection,
+              viewCommentSection,
+              addCommentSection,
+            ],
+          ),
         ),
       ),
     );
-  }
-
-  Color getColor(String email, bool isActive) {
-    int min = 0xff000000;
-    int max = 0xffffffff;
-    int seed = email.codeUnits.fold(0, (i, j) => i + j);
-    int val = min + Random(seed).nextInt(max - min + 1);
-    Color c = Color(val);
-    if (!isActive) {
-//      int r = c.red, g = c.green, b = c.blue;
-//      int luminosity = (0.299 * r + 0.587 * g + 0.114 * b).round();
-      double l = c.computeLuminance();
-      val = (l * 255).round();
-      return Color.fromARGB(255, val, val, val);
-    }
-    return Color(val);
   }
 }
 

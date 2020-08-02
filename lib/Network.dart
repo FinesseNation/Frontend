@@ -13,7 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// The root domain for the Finesse Nation API.
 const _DOMAIN = 'https://finesse-nation.herokuapp.com/api/';
-//const _DOMAIN = 'http://10.0.0.135:8080/api/';
+//const _DOMAIN = 'http://10.157.185.113:8080/api/';
 
 /// Deleting a Finesse.
 const _DELETE_URL = _DOMAIN + 'food/deleteEvent';
@@ -23,6 +23,9 @@ const _ADD_URL = _DOMAIN + 'food/addEvent';
 
 /// Getting the Finesses.
 const _GET_URL = _DOMAIN + 'food/getEvents';
+
+/// Getting the leaderboard.
+const _GET_LEADERBOARD_URL = _DOMAIN + 'user/getLeaderboard?currentEmail=';
 
 /// Adding a comment.
 const _ADD_COMMENT_URL = _DOMAIN + 'comment';
@@ -99,6 +102,21 @@ Future<List<Finesse>> fetchFinesses() async {
     return responseJson;
   } else {
     throw Exception('Failed to load finesses');
+  }
+}
+
+Future<List<dynamic>> getLeaderboard() async {
+  final response = await http.get(_GET_LEADERBOARD_URL + User.currentUser.email,
+      headers: {'api_token': _token});
+  if (response.statusCode == 200) {
+    var data = json.decode(response.body);
+    int currentRank = data[0];
+    data = data[1];
+    List<User> leaderboard =
+    data.map<User>((json) => User.fromJson(json)).toList();
+    return [currentRank, leaderboard];
+  } else {
+    throw Exception('Failed to get leaderboard');
   }
 }
 

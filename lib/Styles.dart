@@ -1,4 +1,6 @@
+import 'dart:math';
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 /// Contains constant [Color] values
@@ -17,3 +19,19 @@ const Color secondaryHighlight = Color(0xff8c8c8c);
 
 /// The text color when the [Finesse] is inactive.
 const Color inactiveColor = Color(0xFF606060);
+
+Color getColor(String email, bool isActive) {
+  int min = 0xff000000;
+  int max = 0xffffffff;
+  int seed = email.codeUnits.fold(0, (i, j) => i + j);
+  int val = min + Random(seed).nextInt(max - min + 1);
+  Color c = Color(val);
+  if (!isActive) {
+//      int r = c.red, g = c.green, b = c.blue;
+//      int luminosity = (0.299 * r + 0.587 * g + 0.114 * b).round();
+    double l = c.computeLuminance();
+    val = (l * 255).round();
+    return Color.fromARGB(255, val, val, val);
+  }
+  return Color(val);
+}

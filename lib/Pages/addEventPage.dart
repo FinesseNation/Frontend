@@ -20,7 +20,7 @@ class AddEvent extends StatelessWidget {
       appBar: AppBar(
         title: Text(appTitle),
       ),
-      backgroundColor: secondaryBackground,
+      backgroundColor: primaryBackground,
       body: _MyCustomForm(),
     );
   }
@@ -152,140 +152,165 @@ class _MyCustomFormState extends State<_MyCustomForm> {
       },
       child: SingleChildScrollView(
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                TextFormField(
-                  key: Key('name'),
-                  textCapitalization: TextCapitalization.sentences,
-                  style: TextStyle(
-                    color: Colors.white,
-                  ),
-                  controller: eventNameController,
-                  decoration: const InputDecoration(
-                    labelText: "Title *",
-                    labelStyle: TextStyle(
-                      color: primaryHighlight,
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value.isEmpty) {
-                      return 'Please enter an event name';
-                    }
-                    return null;
-                  },
-                ),
-                TextFormField(
-                  key: Key('location'),
-                  textCapitalization: TextCapitalization.sentences,
-                  style: TextStyle(
-                    color: Colors.white,
-                  ),
-                  controller: locationController,
-                  decoration: const InputDecoration(
-                    labelText: "Location *",
-                    labelStyle: TextStyle(
-                      color: primaryHighlight,
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value.isEmpty) {
-                      return 'Please enter a location';
-                    }
-                    return null;
-                  },
-                ),
-                TextFormField(
-                  key: Key('description'),
-                  textCapitalization: TextCapitalization.sentences,
-                  style: TextStyle(
-                    color: Colors.white,
-                  ),
-                  controller: descriptionController,
-                  decoration: const InputDecoration(
-                    labelText: "Description",
-                    labelStyle: TextStyle(
-                      color: primaryHighlight,
-                    ),
-                  ),
-                  validator: (value) {
-                    return null;
-                  },
-                ),
-                TextFormField(
-                  key: Key('duration'),
-                  textCapitalization: TextCapitalization.sentences,
-                  style: TextStyle(
-                    color: Colors.white,
-                  ),
-                  controller: durationController,
-                  decoration: const InputDecoration(
-                    labelText: "Duration",
-                    labelStyle: TextStyle(
-                      color: primaryHighlight,
-                    ),
-                  ),
-                  validator: (value) {
-                    return null;
-                  },
-                ),
-                Container(
-                  padding: const EdgeInsets.only(top: 20),
-                  child: Text(
-                    "Type",
-                    style: TextStyle(
-                      color: primaryHighlight,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                DropdownButton<String>(
-                  items: <String>['Food', 'Other'].map((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(
-                        value,
-                        style: TextStyle(
-                          color: Colors.white,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                  value: _type,
-                  onChanged: (newValue) {
-                    setState(() {
-                      _type = newValue;
-                    });
-                  },
-                ),
-                Container(
-                  padding: const EdgeInsets.only(top: 15, bottom: 10),
-                  child: Text(
-                    "Image",
-                    style: TextStyle(
-                      color: primaryHighlight,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                if (_image != null) Image.file(_image, height: 240),
                 Padding(
-                  padding: EdgeInsets.only(top: 15),
-                  child: ButtonTheme(
-                    minWidth: 100,
-                    height: 50,
-                    child: FlatButton(
-                      color: primaryHighlight,
-                      key: Key("Upload"),
-                      onPressed: () async {
-                        await uploadImagePopup();
-                      },
-                      child: Text(
-                        'ADD IMAGE',
-                        style: TextStyle(color: secondaryBackground),
+                  padding: const EdgeInsets.symmetric(horizontal: 5),
+                  child: Card(
+                    clipBehavior: Clip.hardEdge,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    color: secondaryBackground,
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                          left: 10, right: 10, bottom: 10),
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            key: Key('name'),
+                            textCapitalization: TextCapitalization.sentences,
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
+                            controller: eventNameController,
+                            decoration: const InputDecoration(
+                              labelText: "Title *",
+                              labelStyle: TextStyle(
+                                color: primaryHighlight,
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value.isEmpty) {
+                                return 'Please enter an event name';
+                              }
+                              return null;
+                            },
+                          ),
+                          TextFormField(
+                            key: Key('location'),
+                            textCapitalization: TextCapitalization.sentences,
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
+                            controller: locationController,
+                            decoration: const InputDecoration(
+                              labelText: "Location *",
+                              labelStyle: TextStyle(
+                                color: primaryHighlight,
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value.isEmpty) {
+                                return 'Please enter a location';
+                              }
+                              return null;
+                            },
+                          ),
+                          TextFormField(
+                            key: Key('description'),
+                            textCapitalization: TextCapitalization.sentences,
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
+                            controller: descriptionController,
+                            decoration: const InputDecoration(
+                              labelText: "Description",
+                              labelStyle: TextStyle(
+                                color: primaryHighlight,
+                              ),
+                            ),
+                            validator: (value) {
+                              return null;
+                            },
+                          ),
+                          TextFormField(
+                            key: Key('duration'),
+                            textCapitalization: TextCapitalization.sentences,
+                            style: TextStyle(
+                              color: Colors.white,
+                            ),
+                            controller: durationController,
+                            decoration: const InputDecoration(
+                              labelText: "Duration",
+                              labelStyle: TextStyle(
+                                color: primaryHighlight,
+                              ),
+                            ),
+                            validator: (value) {
+                              return null;
+                            },
+                          ),
+                          Container(
+                            alignment: Alignment.centerLeft,
+                            padding: const EdgeInsets.only(top: 20),
+                            child: Text(
+                              "Type",
+                              style: TextStyle(
+                                color: primaryHighlight,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            alignment: Alignment.centerLeft,
+                            child: DropdownButton<String>(
+                              items:
+                              <String>['Food', 'Other'].map((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(
+                                    value,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                              value: _type,
+                              onChanged: (newValue) {
+                                setState(() {
+                                  _type = newValue;
+                                });
+                              },
+                            ),
+                          ),
+                          Container(
+                            alignment: Alignment.centerLeft,
+                            padding: const EdgeInsets.only(
+                              top: 15,
+                            ),
+                            child: Text(
+                              "Image",
+                              style: TextStyle(
+                                color: primaryHighlight,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                          if (_image != null)
+                            Container(
+                              alignment: Alignment.centerLeft,
+                              child: Image.file(_image, height: 240),
+                            ),
+                          Container(
+                            alignment: Alignment.centerLeft,
+                            padding: EdgeInsets.symmetric(vertical: 10),
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.add_a_photo,
+                                size: 50,
+                                color: primaryHighlight,
+                              ),
+                              key: Key("Upload"),
+                              onPressed: () async {
+                                await uploadImagePopup();
+                              },
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -293,7 +318,8 @@ class _MyCustomFormState extends State<_MyCustomForm> {
                 Container(
                   alignment: Alignment.bottomRight,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 16.0, horizontal: 10),
                     child: ButtonTheme(
                       minWidth: 100,
                       height: 50,

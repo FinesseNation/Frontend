@@ -1,5 +1,6 @@
 import 'package:custom_switch/custom_switch.dart';
 import 'package:finesse_nation/Network.dart';
+import 'package:finesse_nation/Pages/LeaderboardPage.dart';
 import 'package:finesse_nation/Pages/LoginScreen.dart';
 import 'package:finesse_nation/Pages/SettingsPage.dart';
 import 'package:finesse_nation/Pages/addEventPage.dart';
@@ -275,9 +276,20 @@ class _MyHomePageState extends State<MyHomePage> {
               },
             ),
             ListTile(
-              title: Text('Item 2'),
+              leading: Icon(
+                Icons.format_list_numbered,
+                color: primaryHighlight,
+              ),
+              title: Text(
+                'Leaderboard',
+                style: TextStyle(color: primaryHighlight),
+              ),
               onTap: () {
                 Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => LeaderboardPage()),
+                );
               },
             ),
           ],
