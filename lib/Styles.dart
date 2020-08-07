@@ -2,7 +2,7 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-
+import 'package:flutter_statusbarcolor/flutter_statusbarcolor.dart';
 /// Contains constant [Color] values
 
 /// The primary background color.
@@ -34,4 +34,27 @@ Color getColor(String email, bool isActive) {
     return Color.fromARGB(255, val, val, val);
   }
   return Color(val);
+}
+
+void changeStatusColor(Color color) async {
+  try {
+    FlutterStatusbarcolor.setStatusBarColor(color, animate: true);
+    if (useWhiteForeground(color)) {
+      FlutterStatusbarcolor.setStatusBarWhiteForeground(true);
+      FlutterStatusbarcolor.setNavigationBarWhiteForeground(true);
+    } else {
+      FlutterStatusbarcolor.setStatusBarWhiteForeground(false);
+      FlutterStatusbarcolor.setNavigationBarWhiteForeground(false);
+    }
+  } catch (e) {
+    debugPrint(e.toString());
+  }
+}
+
+void changeNavigationColor(Color color) async {
+  try {
+    FlutterStatusbarcolor.setNavigationBarColor(color, animate: true);
+  } catch (e) {
+    debugPrint(e.toString());
+  }
 }

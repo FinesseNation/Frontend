@@ -7,11 +7,17 @@ import 'package:finesse_nation/Styles.dart';
 import 'package:finesse_nation/User.dart';
 import 'package:finesse_nation/main.dart';
 import 'package:finesse_nation/widgets/PopUpBox.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
 /// Allows the user to add a new [Finesse].
 class AddEvent extends StatelessWidget {
+  final bool isOngoing;
+
+  AddEvent(this.isOngoing);
+
   @override
   Widget build(BuildContext context) {
     final appTitle = 'Share a Finesse';
@@ -21,16 +27,17 @@ class AddEvent extends StatelessWidget {
         title: Text(appTitle),
       ),
       backgroundColor: primaryBackground,
-      body: _MyCustomForm(),
+      body: _MyCustomForm(isOngoing),
     );
   }
 }
 
-typedef void OnPickImageCallback(
-    double maxWidth, double maxHeight, int quality);
-
 // Create a Form widget.
 class _MyCustomForm extends StatefulWidget {
+  final bool isOngoing;
+
+  _MyCustomForm(this.isOngoing);
+
   @override
   _MyCustomFormState createState() {
     return _MyCustomFormState();
@@ -47,6 +54,11 @@ class _MyCustomFormState extends State<_MyCustomForm> {
   final durationController = TextEditingController();
   final picker = ImagePicker();
 
+  static DateTime _startDate;
+  static DateTime _endDate;
+  static TimeOfDay _startTime;
+  static TimeOfDay _endTime;
+
   String _type = "Food";
 
   File _image;
@@ -61,6 +73,15 @@ class _MyCustomFormState extends State<_MyCustomForm> {
     descriptionController.dispose();
     durationController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _startDate = DateTime.now();
+    _startTime = TimeOfDay.now();
+    _endDate = _startDate;
+    _endTime = TimeOfDay(hour: _startTime.hour + 1, minute: _startTime.minute);
   }
 
   void _onImageButtonPressed(ImageSource source) async {
@@ -139,9 +160,76 @@ class _MyCustomFormState extends State<_MyCustomForm> {
     );
   }
 
+  Widget timeRow(String type) {
+    bool isStart = type == 'Start';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 2),
+          child: Text(
+            type,
+            style: TextStyle(
+              color: secondaryHighlight,
+              fontSize: 12,
+            ),
+          ),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            InkWell(
+              onTap: () async {
+                DateTime tempDate = await showDatePicker(
+                  context: context,
+                  initialDate: isStart ? _startDate : _endDate,
+                  firstDate: isStart ? _startDate : _endDate,
+                  lastDate: DateTime.now().add(
+                    Duration(days: 365),
+                  ),
+                );
+                setState(() {
+                  isStart
+                      ? _startDate = tempDate ?? _startDate
+                      : _endDate = tempDate ?? _endDate;
+                });
+              },
+              child: Text(
+                DateFormat('EEEE, MMM d, y')
+                    .format(isStart ? _startDate : _endDate),
+                style: TextStyle(color: primaryHighlight, fontSize: 16),
+              ),
+            ),
+            InkWell(
+              onTap: () async {
+                TimeOfDay tempTime = await showTimePicker(
+                  context: context,
+                  initialTime: isStart ? _startTime : _endTime,
+                );
+                setState(() {
+                  isStart
+                      ? _startTime = tempTime ?? _startTime
+                      : _endTime = tempTime ?? _endTime;
+                });
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(right: 0.0),
+                child: Text(
+                  isStart
+                      ? _startTime.format(context)
+                      : _endTime.format(context),
+                  style: TextStyle(color: primaryHighlight, fontSize: 16),
+                ),
+              ),
+            )
+          ],
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Build a Form widget using the _formKey created above.
     return GestureDetector(
       onTap: () {
         FocusScopeNode currentFocus = FocusScope.of(context);
@@ -166,148 +254,202 @@ class _MyCustomFormState extends State<_MyCustomForm> {
                     color: secondaryBackground,
                     child: Padding(
                       padding: const EdgeInsets.only(
-                          left: 10, right: 10, bottom: 10),
+                          left: 10, right: 15, bottom: 10),
                       child: Column(
                         children: [
-                          TextFormField(
-                            key: Key('name'),
-                            textCapitalization: TextCapitalization.sentences,
-                            style: TextStyle(
-                              color: Colors.white,
-                            ),
-                            controller: eventNameController,
-                            decoration: const InputDecoration(
-                              labelText: "Title *",
-                              labelStyle: TextStyle(
-                                color: primaryHighlight,
+                          Row(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(right: 10),
+                                child: Icon(
+                                  Icons.title,
+                                  color: secondaryHighlight,
+                                ),
                               ),
-                            ),
-                            validator: (value) {
-                              if (value.isEmpty) {
-                                return 'Please enter an event name';
-                              }
-                              return null;
-                            },
-                          ),
-                          TextFormField(
-                            key: Key('location'),
-                            textCapitalization: TextCapitalization.sentences,
-                            style: TextStyle(
-                              color: Colors.white,
-                            ),
-                            controller: locationController,
-                            decoration: const InputDecoration(
-                              labelText: "Location *",
-                              labelStyle: TextStyle(
-                                color: primaryHighlight,
+                              Expanded(
+                                child: TextFormField(
+                                  key: Key('name'),
+                                  textCapitalization:
+                                      TextCapitalization.sentences,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                  ),
+                                  controller: eventNameController,
+                                  decoration: const InputDecoration(
+                                    labelText: "Title",
+                                    labelStyle: TextStyle(
+                                      color: secondaryHighlight,
+                                    ),
+                                  ),
+                                  validator: (value) {
+                                    if (value.isEmpty) {
+                                      return 'Please enter an event name';
+                                    }
+                                    return null;
+                                  },
+                                ),
                               ),
-                            ),
-                            validator: (value) {
-                              if (value.isEmpty) {
-                                return 'Please enter a location';
-                              }
-                              return null;
-                            },
+                            ],
                           ),
-                          TextFormField(
-                            key: Key('description'),
-                            textCapitalization: TextCapitalization.sentences,
-                            style: TextStyle(
-                              color: Colors.white,
-                            ),
-                            controller: descriptionController,
-                            decoration: const InputDecoration(
-                              labelText: "Description",
-                              labelStyle: TextStyle(
-                                color: primaryHighlight,
+                          Row(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(right: 10),
+                                child: Icon(
+                                  Icons.location_on,
+                                  color: secondaryHighlight,
+                                ),
                               ),
-                            ),
-                            validator: (value) {
-                              return null;
-                            },
-                          ),
-                          TextFormField(
-                            key: Key('duration'),
-                            textCapitalization: TextCapitalization.sentences,
-                            style: TextStyle(
-                              color: Colors.white,
-                            ),
-                            controller: durationController,
-                            decoration: const InputDecoration(
-                              labelText: "Duration",
-                              labelStyle: TextStyle(
-                                color: primaryHighlight,
+                              Expanded(
+                                child: TextFormField(
+                                  key: Key('location'),
+                                  textCapitalization:
+                                      TextCapitalization.sentences,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                  ),
+                                  controller: locationController,
+                                  decoration: const InputDecoration(
+                                    labelText: "Location",
+                                    labelStyle: TextStyle(
+                                      color: secondaryHighlight,
+                                    ),
+                                  ),
+                                  validator: (value) {
+                                    if (value.isEmpty) {
+                                      return 'Please enter a location';
+                                    }
+                                    return null;
+                                  },
+                                ),
                               ),
-                            ),
-                            validator: (value) {
-                              return null;
-                            },
+                            ],
                           ),
-                          Container(
-                            alignment: Alignment.centerLeft,
-                            padding: const EdgeInsets.only(top: 20),
-                            child: Text(
-                              "Type",
-                              style: TextStyle(
-                                color: primaryHighlight,
-                                fontSize: 16,
+                          Row(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(right: 10),
+                                child: Icon(
+                                  Icons.short_text,
+                                  color: secondaryHighlight,
+                                ),
                               ),
-                            ),
+                              Expanded(
+                                child: TextFormField(
+                                  key: Key('description'),
+                                  textCapitalization:
+                                      TextCapitalization.sentences,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                  ),
+                                  controller: descriptionController,
+                                  decoration: const InputDecoration(
+                                    labelText: "Description",
+                                    labelStyle: TextStyle(
+                                      color: secondaryHighlight,
+                                    ),
+                                  ),
+                                  validator: (value) {
+                                    return null;
+                                  },
+                                ),
+                              ),
+                            ],
                           ),
-                          Container(
-                            alignment: Alignment.centerLeft,
-                            child: DropdownButton<String>(
-                              items:
-                              <String>['Food', 'Other'].map((String value) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(
-                                    value,
+                          Row(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(right: 10),
+                                child: Icon(
+                                  Icons.calendar_today,
+                                  color: secondaryHighlight,
+                                ),
+                              ),
+                              if (widget.isOngoing)
+                                Expanded(
+                                  child: TextFormField(
+                                    key: Key('duration'),
+                                    textCapitalization:
+                                        TextCapitalization.sentences,
                                     style: TextStyle(
                                       color: Colors.white,
                                     ),
+                                    controller: durationController,
+                                    decoration: const InputDecoration(
+                                      labelText: "Duration",
+                                      labelStyle: TextStyle(
+                                        color: secondaryHighlight,
+                                      ),
+                                    ),
+                                    validator: (value) {
+                                      return null;
+                                    },
                                   ),
-                                );
-                              }).toList(),
-                              value: _type,
-                              onChanged: (newValue) {
-                                setState(() {
-                                  _type = newValue;
-                                });
-                              },
-                            ),
+                                )
+                              else
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(top: 10),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        timeRow('Start'),
+                                        Padding(
+                                          padding:
+                                              EdgeInsets.symmetric(vertical: 2),
+                                        ),
+                                        timeRow('End'),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
-                          Container(
-                            alignment: Alignment.centerLeft,
-                            padding: const EdgeInsets.only(
-                              top: 15,
-                            ),
-                            child: Text(
-                              "Image",
-                              style: TextStyle(
-                                color: primaryHighlight,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                          if (_image != null)
-                            Container(
-                              alignment: Alignment.centerLeft,
-                              child: Image.file(_image, height: 240),
-                            ),
-                          Container(
-                            alignment: Alignment.centerLeft,
-                            padding: EdgeInsets.symmetric(vertical: 10),
-                            child: IconButton(
-                              icon: Icon(
-                                Icons.add_a_photo,
-                                size: 50,
-                                color: primaryHighlight,
-                              ),
-                              key: Key("Upload"),
-                              onPressed: () async {
-                                await uploadImagePopup();
-                              },
+                          Padding(
+                            padding: const EdgeInsets.only(top: 15),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 10),
+                                  child: Icon(
+                                    Icons.image,
+                                    color: secondaryHighlight,
+                                  ),
+                                ),
+                                if (_image != null)
+                                  Container(
+                                    alignment: Alignment.centerLeft,
+                                    child: InkWell(
+                                      child: Image.file(_image, height: 240),
+                                      onTap: () async {
+                                        await uploadImagePopup();
+                                      },
+                                    ),
+                                  )
+                                else
+                                  SizedBox(
+                                    height: 25,
+                                    child: OutlineButton(
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(100)),
+                                      child: Text(
+                                        'Add image',
+                                        style: TextStyle(
+                                          color: secondaryHighlight,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.normal,
+                                        ),
+                                      ),
+                                      key: Key("Upload"),
+                                      onPressed: () async {
+                                        await uploadImagePopup();
+                                      },
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
                         ],

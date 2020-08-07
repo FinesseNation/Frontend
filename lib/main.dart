@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_statusbarcolor/flutter_statusbarcolor.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:unicorndial/unicorndial.dart';
 
 /// The entrypoint for the app.
 void main() async {
@@ -34,28 +35,7 @@ class _MyApp extends StatelessWidget {
 
   _MyApp(this._currentUser);
 
-  static changeStatusColor(Color color) async {
-    try {
-      await FlutterStatusbarcolor.setStatusBarColor(color, animate: true);
-      if (useWhiteForeground(color)) {
-        FlutterStatusbarcolor.setStatusBarWhiteForeground(true);
-        FlutterStatusbarcolor.setNavigationBarWhiteForeground(true);
-      } else {
-        FlutterStatusbarcolor.setStatusBarWhiteForeground(false);
-        FlutterStatusbarcolor.setNavigationBarWhiteForeground(false);
-      }
-    } catch (e) {
-      debugPrint(e.toString());
-    }
-  }
 
-  static changeNavigationColor(Color color) async {
-    try {
-      await FlutterStatusbarcolor.setNavigationBarColor(color, animate: true);
-    } catch (e) {
-      debugPrint(e.toString());
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -248,94 +228,154 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            DrawerHeader(
-              child: Text('Drawer Header'),
-              decoration: BoxDecoration(
-                color: secondaryHighlight,
-              ),
-            ),
-            ListTile(
-              leading: Icon(
-                Icons.settings,
-                color: primaryHighlight,
-              ),
-              title: Text(
-                'Settings',
-                style: TextStyle(color: primaryHighlight),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => Settings()),
-                );
-              },
-            ),
-            ListTile(
-              leading: Icon(
-                Icons.format_list_numbered,
-                color: primaryHighlight,
-              ),
-              title: Text(
-                'Leaderboard',
-                style: TextStyle(color: primaryHighlight),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => LeaderboardPage()),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title
-        title: Hero(
-          tag: 'logo',
-          child: Image.asset(
-            'images/logo.png',
-            height: 35,
-          ),
-        ),
-        centerTitle: true,
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(
-              Icons.filter_list,
-            ),
-            key: Key("Filter"),
-            color: Colors.white,
-            onPressed: () async {
-              showFilterMenu();
-            },
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AddEvent(),
-            ),
-          );
-        },
-        key: Key('add event'),
-        child: Icon(
+      floatingActionButton: UnicornDialer(
+        hasBackground: false,
+        finalButtonIcon: Icon(Icons.close),
+        parentButtonBackground: primaryHighlight,
+        orientation: UnicornOrientation.VERTICAL,
+        parentButton: Icon(
           Icons.add,
           color: secondaryBackground,
         ),
-        backgroundColor: primaryHighlight,
+        childButtons: [
+          UnicornButton(
+            hasLabel: true,
+            labelText: "Ongoing",
+            labelColor: secondaryBackground,
+            labelHasShadow: false,
+            labelBackgroundColor: primaryHighlight,
+            currentButton: FloatingActionButton(
+              heroTag: "ongoing",
+              backgroundColor: primaryHighlight,
+              mini: true,
+              child: Icon(
+                Icons.fastfood,
+                color: secondaryBackground,
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddEvent(true),
+                  ),
+                );
+              },
+            ),
+          ),
+          UnicornButton(
+            hasLabel: true,
+            labelText: "Future",
+            labelColor: secondaryBackground,
+            labelHasShadow: false,
+            labelBackgroundColor: primaryHighlight,
+            currentButton: FloatingActionButton(
+              heroTag: "future",
+              backgroundColor: primaryHighlight,
+              mini: true,
+              child: Icon(
+                Icons.calendar_today,
+                color: secondaryBackground,
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddEvent(false),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
-      body: FinesseList(),
+      body:  DefaultTabController(
+        length: 3,
+        child: Scaffold(
+          drawer: Drawer(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: <Widget>[
+                DrawerHeader(
+                  child: Text('Drawer Header'),
+                  decoration: BoxDecoration(
+                    color: secondaryHighlight,
+                  ),
+                ),
+                ListTile(
+                  leading: Icon(
+                    Icons.settings,
+                    color: primaryHighlight,
+                  ),
+                  title: Text(
+                    'Settings',
+                    style: TextStyle(color: primaryHighlight),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Settings()),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: Icon(
+                    Icons.format_list_numbered,
+                    color: primaryHighlight,
+                  ),
+                  title: Text(
+                    'Leaderboard',
+                    style: TextStyle(color: primaryHighlight),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => LeaderboardPage()),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          appBar: AppBar(
+            bottom: TabBar(
+              tabs: [
+                Tab(icon: Icon(Icons.directions_car)),
+                Tab(icon: Icon(Icons.directions_transit)),
+                Tab(icon: Icon(Icons.directions_bike)),
+              ],
+            ),
+            title: Hero(
+              tag: 'logo',
+              child: Image.asset(
+                'images/logo.png',
+                height: 35,
+              ),
+            ),
+            centerTitle: true,
+            actions: <Widget>[
+              IconButton(
+                icon: Icon(
+                  Icons.filter_list,
+                ),
+                key: Key("Filter"),
+                color: Colors.white,
+                onPressed: () async {
+                  showFilterMenu();
+                },
+              ),
+            ],
+          ),
+          body: TabBarView(
+            children: [
+              FinesseList(),
+              Icon(Icons.directions_transit),
+              Icon(Icons.directions_bike),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

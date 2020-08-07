@@ -106,6 +106,7 @@ Future<List<Finesse>> fetchFinesses() async {
 }
 
 Future<List<dynamic>> getLeaderboard() async {
+  updateCurrentUser();
   final response = await http.get(_GET_LEADERBOARD_URL + User.currentUser.email,
       headers: {'api_token': _token});
   if (response.statusCode == 200) {

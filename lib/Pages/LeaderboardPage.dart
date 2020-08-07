@@ -21,7 +21,7 @@ class LeaderboardPage extends StatelessWidget {
           if (snapshot.hasData &&
               snapshot.connectionState == ConnectionState.done) {
             return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 5),
               child: ListView(
                 children: toLeaderboard(snapshot.data[0], snapshot.data[1]),
               ),
@@ -35,7 +35,11 @@ class LeaderboardPage extends StatelessWidget {
 }
 
 List<Widget> toLeaderboard(int currentRank, List<User> users) {
-  List<Widget> leaderboard = [];
+  List<Widget> leaderboard = [
+    Padding(
+      padding: EdgeInsets.only(top: 5),
+    )
+  ];
   for (int i = 0; i < users.length; i++) {
     leaderboard.add(toLeaderboardRow(users[i], i + 1));
   }
@@ -58,14 +62,14 @@ Widget toLeaderboardRow(User user, int rank) {
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
     color: secondaryBackground,
     child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             children: [
               SizedBox(
-                width: 25,
+                width: 50,
                 child: Text(
                   '$rank',
                   style: TextStyle(
@@ -75,7 +79,7 @@ Widget toLeaderboardRow(User user, int rank) {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                padding: const EdgeInsets.only(right: 15),
                 child: CircleAvatar(
                   backgroundImage:
                       NetworkImage('https://api.adorable.io/avatars/$rank/'),

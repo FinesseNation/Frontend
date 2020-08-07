@@ -112,14 +112,20 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
 
   Widget mainCard(BuildContext context) {
     Widget imageSection = InkWell(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => FullImage(
-            fin,
+      onTap: () async {
+        changeStatusColor(Colors.black);
+        changeNavigationColor(Colors.black);
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => FullImage(
+              fin,
+            ),
           ),
-        ),
-      ),
+        );
+        changeStatusColor(primaryBackground);
+        changeNavigationColor(primaryBackground);
+      },
       child: Hero(
         tag: fin.eventId,
         child: Image.memory(
@@ -153,7 +159,7 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
           Padding(
             padding: EdgeInsets.only(right: 10),
             child: Icon(
-              Icons.info,
+              Icons.short_text,
               color: fin.isActive
                   ? fin.isActive ? secondaryHighlight : inactiveColor
                   : inactiveColor,
@@ -496,8 +502,8 @@ class _FinesseDetailsState extends State<_FinesseDetails> {
         padding: const EdgeInsets.symmetric(horizontal: 5),
         child: Card(
           clipBehavior: Clip.hardEdge,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           color: secondaryBackground,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -527,9 +533,11 @@ class FullImage extends StatelessWidget {
 
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: primaryBackground,
+      backgroundColor: Colors.black,
       body: InkWell(
-        onTap: () => Navigator.pop(context),
+        onTap: () {
+          Navigator.pop(context);
+        },
         child: Center(
           child: Hero(
             tag: fin.eventId,
