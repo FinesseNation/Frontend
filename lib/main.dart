@@ -171,7 +171,7 @@ class _HomePageState extends State<HomePage> {
         body: TabBarView(
           children: [
             FinesseList(),
-            Icon(Icons.directions_transit),
+            Image.asset('images/rem.png'),
           ],
         ),
         floatingActionButton: UnicornDialer(

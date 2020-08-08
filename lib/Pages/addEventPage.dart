@@ -13,40 +13,20 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 /// Allows the user to add a new [Finesse].
-class AddEvent extends StatelessWidget {
+class AddEvent extends StatefulWidget {
   final bool isOngoing;
 
   AddEvent(this.isOngoing);
 
   @override
-  Widget build(BuildContext context) {
-    final appTitle = 'Share a Finesse';
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(appTitle),
-      ),
-      backgroundColor: primaryBackground,
-      body: _MyCustomForm(isOngoing),
-    );
+  _AddEventState createState() {
+    return _AddEventState();
   }
 }
 
-// Create a Form widget.
-class _MyCustomForm extends StatefulWidget {
-  final bool isOngoing;
+enum Repetition { none, daily, weekly, monthly, yearly }
 
-  _MyCustomForm(this.isOngoing);
-
-  @override
-  _MyCustomFormState createState() {
-    return _MyCustomFormState();
-  }
-}
-
-// Create a corresponding State class.
-// This class holds data related to the form.
-class _MyCustomFormState extends State<_MyCustomForm> {
+class _AddEventState extends State<AddEvent> {
   final _formKey = GlobalKey<FormState>();
   final eventNameController = TextEditingController();
   final locationController = TextEditingController();
@@ -59,15 +39,28 @@ class _MyCustomFormState extends State<_MyCustomForm> {
   TimeOfDay _startTime;
   TimeOfDay _endTime;
 
+  static const Map<Repetition, String> repetitionLabels = {
+    Repetition.none: 'Does not repeat',
+    Repetition.daily: 'Every day',
+    Repetition.weekly: 'Every week',
+    Repetition.monthly: 'Every month',
+    Repetition.yearly: 'Every year',
+  };
+
+  bool more;
+
+  Repetition selectedRepetition;
+
   String _type = "Food";
 
   File _image;
   double width = 1200;
   double height = 480;
 
+  bool shouldValidate;
+
   @override
   void dispose() {
-    // Clean up the controller when the widget is disposed.
     eventNameController.dispose();
     locationController.dispose();
     descriptionController.dispose();
@@ -78,6 +71,7 @@ class _MyCustomFormState extends State<_MyCustomForm> {
   @override
   void initState() {
     super.initState();
+    shouldValidate = false;
     DateTime now = DateTime.now();
     _startDate = now.subtract(
       Duration(
@@ -95,6 +89,10 @@ class _MyCustomFormState extends State<_MyCustomForm> {
       hour: _startTime.hour + 1,
       minute: _startTime.minute,
     ); // TODO: Won't be correct if time after 11pm
+
+    more = false;
+
+    selectedRepetition = Repetition.none;
   }
 
   bool endIsBeforeStart() {
@@ -275,6 +273,33 @@ class _MyCustomFormState extends State<_MyCustomForm> {
     );
   }
 
+  Future<void> showRepeatDialog() async {
+    Repetition result = await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+            children: Repetition.values.map((rep) {
+              return SimpleDialogOption(
+                onPressed: () {
+                  Navigator.pop(context, rep);
+                },
+                child: Text(
+                  repetitionLabels[rep],
+                  style: TextStyle(
+                    fontWeight: (rep == selectedRepetition)
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                  ),
+                ),
+              );
+            }).toList(),
+          );
+        });
+    setState(() {
+      selectedRepetition = result ?? selectedRepetition;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -285,321 +310,386 @@ class _MyCustomFormState extends State<_MyCustomForm> {
           currentFocus.focusedChild.unfocus();
         }
       },
-      child: SingleChildScrollView(
-        child: Container(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Share a Finesse'),
+          actions: [
+            Builder(
+              builder: (context) =>
+                  IconButton(
+                    icon: Icon(Icons.send),
+                    onPressed: () async {
+                      if (!_formKey.currentState.validate()) {
+                        setState(() {
+                          shouldValidate = true;
+                        });
+                      }
+                      if (endIsBeforeStart()) {
+                        Scaffold.of(context).showSnackBar(
+                          SnackBar(
+                            content:
+                            Text("The end date can't be before the start date"),
+                          ),
+                        );
+                        return;
+                      }
+                      /*else {
+                    Scaffold.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Cool"),
+                      ),
+                    );
+                    return;
+                  }*/
+                      if (_formKey.currentState.validate()) {
+                        Scaffold.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Sharing Finesse',
+                              style: TextStyle(
+                                color: secondaryHighlight,
+                              ),
+                            ),
+                          ),
+                        );
+                        Text eventName = Text(eventNameController.text);
+                        Text location = Text(locationController.text);
+                        Text description = Text(descriptionController.text);
+                        Text duration = Text(durationController.text);
+                        DateTime currTime = DateTime.now();
+
+                        String imageString;
+                        if (_image == null) {
+                          imageString = '';
+                        } else {
+                          imageString = base64Encode(_image.readAsBytesSync());
+                        }
+
+                        Finesse newFinesse = Finesse.finesseAdd(
+                          eventName.data,
+                          description.data,
+                          imageString,
+                          location.data,
+                          duration.data,
+                          _type,
+                          currTime,
+                        );
+                        String res = await addFinesse(newFinesse);
+                        // could exploit the fact that id is sequential-ish
+                        String newId = jsonDecode(res)['id'];
+                        User.currentUser.upvoted.add(newId);
+                        User.currentUser.subscriptions.add(newId);
+                        // TODO: just don't display anything if app is open
+                        // in order to avoid unsub then resub
+                        await firebaseMessaging.unsubscribeFromTopic(ALL_TOPIC);
+                        await sendToAll(
+                            newFinesse.eventTitle, newFinesse.location,
+                            id: newId, isNew: true);
+                        if (User.currentUser.notifications) {
+                          firebaseMessaging.subscribeToTopic(newId);
+                          firebaseMessaging.subscribeToTopic(ALL_TOPIC);
+                        }
+                        await Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                              builder: (BuildContext context) => HomePage()),
+                              (Route<dynamic> route) => false,
+                        );
+                      }
+                    },
+                  ),
+            ),
+          ],
+        ),
+        backgroundColor: primaryBackground,
+        body: SingleChildScrollView(
           child: Form(
             key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 5),
-                  child: Card(
-                    clipBehavior: Clip.hardEdge,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    color: secondaryBackground,
-                    child: Padding(
-                      padding: const EdgeInsets.only(
-                          left: 10, right: 15, bottom: 10),
-                      child: Column(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 5),
+              child: Card(
+                clipBehavior: Clip.hardEdge,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                color: secondaryBackground,
+                child: Padding(
+                  padding:
+                  const EdgeInsets.only(left: 10, right: 15, bottom: 10),
+                  child: Column(
+                    children: [
+                      Row(
                         children: [
-                          Row(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(right: 10),
-                                child: Icon(
-                                  Icons.title,
-                                  color: secondaryHighlight,
-                                ),
-                              ),
-                              Expanded(
-                                child: TextFormField(
-                                  key: Key('name'),
-                                  textCapitalization:
-                                      TextCapitalization.sentences,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                  ),
-                                  controller: eventNameController,
-                                  decoration: const InputDecoration(
-                                    labelText: "Title",
-                                    labelStyle: TextStyle(
-                                      color: secondaryHighlight,
-                                    ),
-                                  ),
-                                  validator: (value) {
-                                    if (value.isEmpty) {
-                                      return 'Please enter an event name';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(right: 10),
-                                child: Icon(
-                                  Icons.location_on,
-                                  color: secondaryHighlight,
-                                ),
-                              ),
-                              Expanded(
-                                child: TextFormField(
-                                  key: Key('location'),
-                                  textCapitalization:
-                                      TextCapitalization.sentences,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                  ),
-                                  controller: locationController,
-                                  decoration: const InputDecoration(
-                                    labelText: "Location",
-                                    labelStyle: TextStyle(
-                                      color: secondaryHighlight,
-                                    ),
-                                  ),
-                                  validator: (value) {
-                                    if (value.isEmpty) {
-                                      return 'Please enter a location';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(right: 10),
-                                child: Icon(
-                                  Icons.short_text,
-                                  color: secondaryHighlight,
-                                ),
-                              ),
-                              Expanded(
-                                child: TextFormField(
-                                  key: Key('description'),
-                                  textCapitalization:
-                                      TextCapitalization.sentences,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                  ),
-                                  controller: descriptionController,
-                                  decoration: const InputDecoration(
-                                    labelText: "Description",
-                                    labelStyle: TextStyle(
-                                      color: secondaryHighlight,
-                                    ),
-                                  ),
-                                  validator: (value) {
-                                    return null;
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(right: 10),
-                                child: Icon(
-                                  Icons.calendar_today,
-                                  color: secondaryHighlight,
-                                ),
-                              ),
-                              if (widget.isOngoing)
-                                Expanded(
-                                  child: TextFormField(
-                                    key: Key('duration'),
-                                    textCapitalization:
-                                        TextCapitalization.sentences,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                    ),
-                                    controller: durationController,
-                                    decoration: const InputDecoration(
-                                      labelText: "Duration",
-                                      labelStyle: TextStyle(
-                                        color: secondaryHighlight,
-                                      ),
-                                    ),
-                                    validator: (value) {
-                                      return null;
-                                    },
-                                  ),
-                                )
-                              else
-                                Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(top: 10),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        timeRow('Start'),
-                                        Padding(
-                                          padding:
-                                              EdgeInsets.symmetric(vertical: 2),
-                                        ),
-                                        timeRow('End'),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
                           Padding(
-                            padding: const EdgeInsets.only(top: 15),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 10),
-                                  child: Icon(
-                                    Icons.image,
-                                    color: secondaryHighlight,
-                                  ),
+                            padding: const EdgeInsets.only(right: 10),
+                            child: Icon(
+                              Icons.title,
+                              color: secondaryHighlight,
+                            ),
+                          ),
+                          Expanded(
+                            child: TextFormField(
+                              autovalidate: shouldValidate,
+                              key: Key('name'),
+                              textCapitalization: TextCapitalization.sentences,
+                              style: TextStyle(
+                                color: Colors.white,
+                              ),
+                              controller: eventNameController,
+                              decoration: const InputDecoration(
+                                labelText: "Title",
+                                labelStyle: TextStyle(
+                                  color: secondaryHighlight,
                                 ),
-                                if (_image != null)
-                                  Container(
-                                    alignment: Alignment.centerLeft,
-                                    child: InkWell(
-                                      child: Image.file(_image, height: 240),
-                                      onTap: () async {
-                                        await uploadImagePopup();
-                                      },
-                                    ),
-                                  )
-                                else
-                                  SizedBox(
-                                    height: 25,
-                                    child: OutlineButton(
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(100)),
-                                      child: Text(
-                                        'Add image',
-                                        style: TextStyle(
-                                          color: secondaryHighlight,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.normal,
-                                        ),
-                                      ),
-                                      key: Key("Upload"),
-                                      onPressed: () async {
-                                        await uploadImagePopup();
-                                      },
-                                    ),
-                                  ),
-                              ],
+                              ),
+                              validator: (value) {
+                                if (value.isEmpty) {
+                                  return 'Please enter an event name';
+                                }
+                                return null;
+                              },
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ),
-                ),
-                Container(
-                  alignment: Alignment.bottomRight,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 16.0, horizontal: 10),
-                    child: ButtonTheme(
-                      minWidth: 100,
-                      height: 50,
-                      child: RaisedButton(
-                        key: Key('submit'),
-                        color: primaryHighlight,
-                        onPressed: () async {
-                          if (endIsBeforeStart()) {
-                            Scaffold.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                    "The event can't end before it begins"),
+                      Row(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(right: 10),
+                            child: Icon(
+                              Icons.location_on,
+                              color: secondaryHighlight,
+                            ),
+                          ),
+                          Expanded(
+                            child: TextFormField(
+                              autovalidate: shouldValidate,
+                              key: Key('location'),
+                              textCapitalization: TextCapitalization.sentences,
+                              style: TextStyle(
+                                color: Colors.white,
                               ),
-                            );
-                            return;
-                          } else {
-                            Scaffold.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text("Cool"),
+                              controller: locationController,
+                              decoration: const InputDecoration(
+                                labelText: "Location",
+                                labelStyle: TextStyle(
+                                  color: secondaryHighlight,
+                                ),
                               ),
-                            );
-                            return;
-                          }
-                          if (_formKey.currentState.validate()) {
-                            Scaffold.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Sharing Finesse',
-                                  style: TextStyle(
+                              validator: (value) {
+                                if (value.isEmpty) {
+                                  return 'Please enter a location';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(right: 10),
+                            child: Icon(
+                              Icons.short_text,
+                              color: secondaryHighlight,
+                            ),
+                          ),
+                          Expanded(
+                            child: TextFormField(
+                              key: Key('description'),
+                              textCapitalization: TextCapitalization.sentences,
+                              style: TextStyle(
+                                color: Colors.white,
+                              ),
+                              controller: descriptionController,
+                              decoration: const InputDecoration(
+                                labelText: "Description",
+                                labelStyle: TextStyle(
+                                  color: secondaryHighlight,
+                                ),
+                              ),
+                              validator: (value) {
+                                return null;
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        crossAxisAlignment: widget.isOngoing
+                            ? CrossAxisAlignment.center
+                            : CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: widget.isOngoing
+                                ? const EdgeInsets.only(right: 10)
+                                : const EdgeInsets.only(top: 12, right: 10),
+                            child: Icon(
+                              Icons.calendar_today,
+                              color: secondaryHighlight,
+                            ),
+                          ),
+                          if (widget.isOngoing)
+                            Expanded(
+                              child: TextFormField(
+                                key: Key('duration'),
+                                textCapitalization:
+                                TextCapitalization.sentences,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                ),
+                                controller: durationController,
+                                decoration: const InputDecoration(
+                                  labelText: "Duration",
+                                  labelStyle: TextStyle(
                                     color: secondaryHighlight,
                                   ),
                                 ),
+                                validator: (value) {
+                                  return null;
+                                },
                               ),
-                            );
-                            Text eventName = Text(eventNameController.text);
-                            Text location = Text(locationController.text);
-                            Text description = Text(descriptionController.text);
-                            Text duration = Text(durationController.text);
-                            DateTime currTime = DateTime.now();
-
-                            String imageString;
-                            if (_image == null) {
-                              imageString = '';
-                            } else {
-                              imageString =
-                                  base64Encode(_image.readAsBytesSync());
-                            }
-
-                            Finesse newFinesse = Finesse.finesseAdd(
-                              eventName.data,
-                              description.data,
-                              imageString,
-                              location.data,
-                              duration.data,
-                              _type,
-                              currTime,
-                            );
-                            String res = await addFinesse(newFinesse);
-                            // could exploit the fact that id is sequential-ish
-                            String newId = jsonDecode(res)['id'];
-                            User.currentUser.upvoted.add(newId);
-                            User.currentUser.subscriptions.add(newId);
-                            // just don't display anything if app is open
-                            // in order to avoid unsub then resub
-                            await firebaseMessaging
-                                .unsubscribeFromTopic(ALL_TOPIC);
-                            await sendToAll(
-                                newFinesse.eventTitle, newFinesse.location,
-                                id: newId, isNew: true);
-                            if (User.currentUser.notifications) {
-                              firebaseMessaging.subscribeToTopic(newId);
-                              firebaseMessaging.subscribeToTopic(ALL_TOPIC);
-                            }
-                            await Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (BuildContext context) =>
-                                      HomePage()),
-                                  (Route<dynamic> route) => false,
-                            );
-                          }
-                        },
-                        child: Text(
-                          'SUBMIT',
-                          style: TextStyle(color: secondaryBackground),
+                            )
+                          else
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 10),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    timeRow('Start'),
+                                    Padding(
+                                      padding:
+                                      EdgeInsets.symmetric(vertical: 5),
+                                    ),
+                                    GestureDetector(
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Padding(
+                                            padding:
+                                            const EdgeInsets.only(right: 3),
+                                            child: Icon(
+                                              more
+                                                  ? Icons.cancel
+                                                  : Icons.add_circle,
+                                              color: secondaryHighlight,
+                                              size: 20,
+                                            ),
+                                          ),
+                                          Text(
+                                            more ? 'Cancel' : 'More options',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: secondaryHighlight,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      onTap: () {
+                                        setState(() {
+                                          more = !more;
+                                          //updateEnd();
+                                          selectedRepetition = Repetition.none;
+                                        });
+                                      },
+                                    ),
+                                    if (more)
+                                      Column(
+                                        crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 8.0),
+                                            child: timeRow('End'),
+                                          ),
+                                          Column(
+                                            crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                            children: [
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                    bottom: 2),
+                                                child: Text(
+                                                  'Repeat',
+                                                  style: TextStyle(
+                                                    color: secondaryHighlight,
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                              ),
+                                              InkWell(
+                                                child: Text(
+                                                  repetitionLabels[
+                                                  selectedRepetition],
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    color: primaryHighlight,
+                                                  ),
+                                                ),
+                                                onTap: showRepeatDialog,
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 15),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(right: 10),
+                              child: Icon(
+                                Icons.image,
+                                color: secondaryHighlight,
+                              ),
+                            ),
+                            if (_image != null)
+                              Container(
+                                alignment: Alignment.centerLeft,
+                                child: InkWell(
+                                  child: Image.file(_image, height: 240),
+                                  onTap: () async {
+                                    await uploadImagePopup();
+                                  },
+                                ),
+                              )
+                            else
+                              SizedBox(
+                                height: 25,
+                                child: OutlineButton(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(100),
+                                  ),
+                                  child: Text(
+                                    'Add image',
+                                    style: TextStyle(
+                                      color: secondaryHighlight,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.normal,
+                                    ),
+                                  ),
+                                  key: Key("Upload"),
+                                  onPressed: () async {
+                                    await uploadImagePopup();
+                                  },
+                                ),
+                              ),
+                          ],
                         ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
           ),
         ),

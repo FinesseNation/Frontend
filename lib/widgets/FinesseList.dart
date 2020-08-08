@@ -44,6 +44,7 @@ class _FinesseListState extends State<FinesseList>
   }
 
   Widget build(BuildContext context) {
+    super.build(context);
     if (!_fcmAlreadySetup) {
       if (!kIsWeb) {
         firebaseMessaging.requestNotificationPermissions();
@@ -65,7 +66,7 @@ class _FinesseListState extends State<FinesseList>
                 });
           } else {
             Finesse target =
-                Finesse.finesseList.singleWhere((fin) => fin.eventId == id);
+            Finesse.finesseList.singleWhere((fin) => fin.eventId == id);
             action = SnackBarAction(
               label: 'VIEW',
               onPressed: () {
