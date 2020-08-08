@@ -21,21 +21,19 @@ class FinesseList extends StatefulWidget {
   }
 }
 
-class _FinesseListState extends State<FinesseList> {
+class _FinesseListState extends State<FinesseList>
+    with AutomaticKeepAliveClientMixin<FinesseList> {
   Future<List<Finesse>> _finesses;
   RefreshController _refreshController;
 
+  @override
+  bool get wantKeepAlive => true;
+
   void _onRefresh() async {
     _finesses = fetchFinesses();
-    await Future.delayed(Duration(seconds: 1));
+    await Future.delayed(Duration(milliseconds: 500));
     _refreshController.refreshCompleted();
-//    await Future.delayed(Duration(seconds: 1));
     setState(() {});
-
-//    _finesses.whenComplete(() {
-//      _refreshController.refreshCompleted();
-//      setState(() => {});
-//    });
   }
 
   @override
@@ -124,10 +122,9 @@ class _FinesseListState extends State<FinesseList> {
         initialData: Finesse.finesseList,
         future: _finesses,
         builder: (context, snapshot) {
-          if (snapshot.hasData &&
-              snapshot.connectionState == ConnectionState.done) {
+          if (snapshot.connectionState == ConnectionState.done) {
             Finesse.finesseList = snapshot.data.reversed.toList();
-            return listViewWidget(Finesse.finesseList, context);
+            return listViewWidget(Finesse.finesseList);
           }
           return Center(child: CircularProgressIndicator());
         },
@@ -135,7 +132,7 @@ class _FinesseListState extends State<FinesseList> {
     );
   }
 
-  Widget listViewWidget(List<Finesse> finesses, BuildContext context) {
+  Widget listViewWidget(List<Finesse> finesses) {
     return SmartRefresher(
       enablePullDown: true,
       enablePullUp: false,
@@ -147,7 +144,7 @@ class _FinesseListState extends State<FinesseList> {
       onRefresh: _onRefresh,
       child: ListView.builder(
         itemCount: finesses.length,
-        itemBuilder: (context, i) {
+        itemBuilder: (_, i) {
           Finesse fin = finesses[i];
           List<bool> votes = [
             User.currentUser.upvoted.contains(fin.eventId),

@@ -54,10 +54,10 @@ class _MyCustomFormState extends State<_MyCustomForm> {
   final durationController = TextEditingController();
   final picker = ImagePicker();
 
-  static DateTime _startDate;
-  static DateTime _endDate;
-  static TimeOfDay _startTime;
-  static TimeOfDay _endTime;
+  DateTime _startDate;
+  DateTime _endDate;
+  TimeOfDay _startTime;
+  TimeOfDay _endTime;
 
   String _type = "Food";
 
@@ -78,10 +78,44 @@ class _MyCustomFormState extends State<_MyCustomForm> {
   @override
   void initState() {
     super.initState();
-    _startDate = DateTime.now();
+    DateTime now = DateTime.now();
+    _startDate = now.subtract(
+      Duration(
+        hours: now.hour,
+        minutes: now.minute,
+        seconds: now.second,
+        milliseconds: now.millisecond,
+        microseconds: now.microsecond,
+      ),
+    );
+    print('init start = $_startDate');
     _startTime = TimeOfDay.now();
     _endDate = _startDate;
-    _endTime = TimeOfDay(hour: _startTime.hour + 1, minute: _startTime.minute);
+    _endTime = TimeOfDay(
+      hour: _startTime.hour + 1,
+      minute: _startTime.minute,
+    ); // TODO: Won't be correct if time after 11pm
+  }
+
+  bool endIsBeforeStart() {
+    DateTime start = _startDate.add(
+      Duration(
+        hours: _startTime.hour,
+        minutes: _startTime.minute,
+      ),
+    );
+    DateTime end = _endDate.add(
+      Duration(
+        hours: _endTime.hour,
+        minutes: _endTime.minute,
+      ),
+    );
+    print('start = $start');
+    print('end = $end');
+
+    print(end.isBefore(start) ? 'invalid' : 'valid');
+    print('-------------------');
+    return end.isBefore(start);
   }
 
   void _onImageButtonPressed(ImageSource source) async {
@@ -162,6 +196,8 @@ class _MyCustomFormState extends State<_MyCustomForm> {
 
   Widget timeRow(String type) {
     bool isStart = type == 'Start';
+    bool isInvalid = isStart && endIsBeforeStart();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -183,21 +219,33 @@ class _MyCustomFormState extends State<_MyCustomForm> {
                 DateTime tempDate = await showDatePicker(
                   context: context,
                   initialDate: isStart ? _startDate : _endDate,
-                  firstDate: isStart ? _startDate : _endDate,
+                  firstDate: isStart ? DateTime.now() : _startDate,
                   lastDate: DateTime.now().add(
                     Duration(days: 365),
                   ),
                 );
+                if (tempDate == null) {
+                  return;
+                }
                 setState(() {
-                  isStart
-                      ? _startDate = tempDate ?? _startDate
-                      : _endDate = tempDate ?? _endDate;
+                  if (isStart) {
+                    _startDate = tempDate;
+                    if (endIsBeforeStart()) {
+                      // TODO: increment end date and time correctly
+                      _endDate = tempDate;
+                    }
+                  } else {
+                    _endDate = tempDate;
+                  }
                 });
               },
               child: Text(
                 DateFormat('EEEE, MMM d, y')
                     .format(isStart ? _startDate : _endDate),
-                style: TextStyle(color: primaryHighlight, fontSize: 16),
+                style: TextStyle(
+                  color: isInvalid ? Colors.red : primaryHighlight,
+                  fontSize: 16,
+                ),
               ),
             ),
             InkWell(
@@ -206,19 +254,18 @@ class _MyCustomFormState extends State<_MyCustomForm> {
                   context: context,
                   initialTime: isStart ? _startTime : _endTime,
                 );
+                if (tempTime == null) {
+                  return;
+                }
                 setState(() {
-                  isStart
-                      ? _startTime = tempTime ?? _startTime
-                      : _endTime = tempTime ?? _endTime;
+                  isStart ? _startTime = tempTime : _endTime = tempTime;
                 });
               },
-              child: Padding(
-                padding: const EdgeInsets.only(right: 0.0),
-                child: Text(
-                  isStart
-                      ? _startTime.format(context)
-                      : _endTime.format(context),
-                  style: TextStyle(color: primaryHighlight, fontSize: 16),
+              child: Text(
+                isStart ? _startTime.format(context) : _endTime.format(context),
+                style: TextStyle(
+                  color: isInvalid ? Colors.red : primaryHighlight,
+                  fontSize: 16,
                 ),
               ),
             )
@@ -469,6 +516,22 @@ class _MyCustomFormState extends State<_MyCustomForm> {
                         key: Key('submit'),
                         color: primaryHighlight,
                         onPressed: () async {
+                          if (endIsBeforeStart()) {
+                            Scaffold.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                    "The event can't end before it begins"),
+                              ),
+                            );
+                            return;
+                          } else {
+                            Scaffold.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text("Cool"),
+                              ),
+                            );
+                            return;
+                          }
                           if (_formKey.currentState.validate()) {
                             Scaffold.of(context).showSnackBar(
                               SnackBar(
@@ -523,8 +586,8 @@ class _MyCustomFormState extends State<_MyCustomForm> {
                               context,
                               MaterialPageRoute(
                                   builder: (BuildContext context) =>
-                                      MyHomePage()),
-                              (Route<dynamic> route) => false,
+                                      HomePage()),
+                                  (Route<dynamic> route) => false,
                             );
                           }
                         },
