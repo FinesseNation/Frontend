@@ -1,27 +1,35 @@
 import 'package:finesse_nation/Finesse.dart';
 import 'package:finesse_nation/Pages/FinessePage.dart';
+import 'package:finesse_nation/Styles.dart';
+import 'package:finesse_nation/User.dart';
+import 'package:finesse_nation/Util.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:finesse_nation/Util.dart';
-import 'package:finesse_nation/Styles.dart';
 import 'package:flutter/widgets.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class FinesseCard extends StatefulWidget {
   final Finesse fin;
-  final List<bool> isSelected;
 
-  FinesseCard(this.fin, this.isSelected);
+  FinesseCard(this.fin);
 
   @override
-  _FinesseCardState createState() => _FinesseCardState(fin, isSelected);
+  _FinesseCardState createState() => _FinesseCardState();
 }
 
 class _FinesseCardState extends State<FinesseCard> {
   Finesse fin;
   List<bool> isSelected;
 
-  _FinesseCardState(this.fin, this.isSelected);
+  @override
+  void initState() {
+    super.initState();
+    fin = widget.fin;
+    isSelected = [
+      User.currentUser.upvoted.contains(fin.eventId),
+      User.currentUser.downvoted.contains(fin.eventId)
+    ];
+  }
 
   Widget build(BuildContext context) {
     return Padding(
@@ -77,7 +85,7 @@ class _FinesseCardState extends State<FinesseCard> {
                     Text(
                       fin.location + " · ${timeago.format(fin.postedTime)}",
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 12,
                         color:
                             fin.isActive ? secondaryHighlight : inactiveColor,
                       ),
@@ -89,7 +97,7 @@ class _FinesseCardState extends State<FinesseCard> {
                           "${fin.points} ${(fin.points == 1) ? "point" : "points"}\n"
                           "${fin.numComments} ${(fin.numComments == 1) ? "comment" : "comments"}",
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 12,
                             color: fin.isActive
                                 ? secondaryHighlight
                                 : inactiveColor,

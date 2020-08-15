@@ -160,7 +160,7 @@ class _HomePageState extends State<HomePage> {
           actions: <Widget>[
             IconButton(
               icon: Icon(
-                Icons.filter_list,
+                Icons.notifications,
               ),
               key: Key("Filter"),
               color: Colors.white,

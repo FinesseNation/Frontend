@@ -145,14 +145,7 @@ class _FinesseListState extends State<FinesseList>
       onRefresh: _onRefresh,
       child: ListView.builder(
         itemCount: finesses.length,
-        itemBuilder: (_, i) {
-          Finesse fin = finesses[i];
-          List<bool> votes = [
-            User.currentUser.upvoted.contains(fin.eventId),
-            User.currentUser.downvoted.contains(fin.eventId)
-          ];
-          return FinesseCard(fin, votes);
-        },
+        itemBuilder: (_, i) => FinesseCard(finesses[i]),
       ),
     );
   }

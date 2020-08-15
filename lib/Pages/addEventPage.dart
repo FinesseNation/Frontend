@@ -9,6 +9,7 @@ import 'package:finesse_nation/main.dart';
 import 'package:finesse_nation/widgets/PopUpBox.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
@@ -443,7 +444,7 @@ class _AddEventState extends State<AddEvent> {
                               ),
                               validator: (value) {
                                 if (value.isEmpty) {
-                                  return 'Please enter an event name';
+                                  return 'Please enter a title';
                                 }
                                 return null;
                               },
@@ -656,7 +657,10 @@ class _AddEventState extends State<AddEvent> {
                               Container(
                                 alignment: Alignment.centerLeft,
                                 child: InkWell(
-                                  child: Image.file(_image, height: 240),
+                                  child: Image.file(
+                                    _image,
+                                    height: 240,
+                                  ),
                                   onTap: () async {
                                     await uploadImagePopup();
                                   },
@@ -666,6 +670,8 @@ class _AddEventState extends State<AddEvent> {
                               SizedBox(
                                 height: 25,
                                 child: OutlineButton(
+                                  borderSide:
+                                  BorderSide(color: secondaryHighlight),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(100),
                                   ),
