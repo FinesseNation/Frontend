@@ -12,8 +12,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Contains functions and constants used to interact with the API.
 
 /// The root domain for the Finesse Nation API.
-const _DOMAIN = 'https://finesse-nation.herokuapp.com/api/';
-//const _DOMAIN = 'http://10.157.185.113:8080/api/';
+//const _DOMAIN = 'https://finesse-nation.herokuapp.com/api/';
+const _DOMAIN = 'http://10.121.248.97:8080/api/';
 
 /// Deleting a Finesse.
 const _DELETE_URL = _DOMAIN + 'food/deleteEvent';
@@ -102,6 +102,20 @@ Future<List<Finesse>> fetchFinesses() async {
     return responseJson;
   } else {
     throw Exception('Failed to load finesses');
+  }
+}
+
+Future<Finesse> getFinesse(String eventId) async {
+  final response =
+  await http.get(_GET_URL + '/$eventId', headers: {'api_token': _token});
+  print(response.body.length);
+  print(response.statusCode);
+  if (response.statusCode == 200) {
+    var data = json.decode(response.body);
+    Finesse fin = Finesse.fromJson(data);
+    return fin;
+  } else {
+    throw Exception('Failed to get finesse $eventId');
   }
 }
 
@@ -347,13 +361,14 @@ Future<http.Response> addComment(Comment comment, String eventId) async {
 
 /// Gets the comments for a Finesse given its [eventId].
 Future<List<Comment>> getComments(String eventId) async {
+  print('getting comments');
   final response = await http
       .get(_GET_COMMENT_URL + eventId, headers: {'api_token': _token});
 
   if (response.statusCode == 200) {
     var data = json.decode(response.body);
     List<Comment> comments =
-        data.map<Comment>((json) => Comment.fromJson(json)).toList();
+    data.map<Comment>((json) => Comment.fromJson(json)).toList();
     return comments;
   } else {
     throw Exception("Error while getting comments");

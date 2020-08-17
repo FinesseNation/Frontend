@@ -43,7 +43,12 @@ class _FinesseCardState extends State<FinesseCard> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (context) => FinessePage(fin, isSelected)),
+                builder: (context) =>
+                    FinessePage(
+                      fin,
+                      voteStatus: isSelected,
+                    ),
+              ),
             ).whenComplete(() => setState(() => {}));
           },
           child: Column(

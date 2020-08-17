@@ -1,8 +1,6 @@
 import 'package:finesse_nation/Finesse.dart';
 import 'package:finesse_nation/Network.dart';
-import 'package:finesse_nation/Pages/FinessePage.dart';
 import 'package:finesse_nation/Styles.dart';
-import 'package:finesse_nation/User.dart';
 import 'package:finesse_nation/widgets/FinesseCard.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -45,78 +43,6 @@ class _FinesseListState extends State<FinesseList>
 
   Widget build(BuildContext context) {
     super.build(context);
-    if (!_fcmAlreadySetup) {
-      if (!kIsWeb) {
-        firebaseMessaging.requestNotificationPermissions();
-      }
-      firebaseMessaging.subscribeToTopic(ALL_TOPIC);
-      firebaseMessaging.configure(
-        onMessage: (Map<String, dynamic> message) async {
-          print("onMessage: $message");
-          String id = message['data']['id'];
-          bool isNew = message['data']['isNew'] == 'true';
-          SnackBarAction action;
-          if (isNew) {
-            action = SnackBarAction(
-                label: 'RELOAD',
-                onPressed: () {
-                  setState(() {
-                    _finesses = fetchFinesses();
-                  });
-                });
-          } else {
-            Finesse target =
-            Finesse.finesseList.singleWhere((fin) => fin.eventId == id);
-            action = SnackBarAction(
-              label: 'VIEW',
-              onPressed: () {
-                List<bool> votes = [
-                  User.currentUser.upvoted.contains(target.eventId),
-                  User.currentUser.downvoted.contains(target.eventId)
-                ];
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => FinessePage(target, votes)),
-                ).whenComplete(() => setState(() => {}));
-              },
-            );
-          }
-          Scaffold.of(context).showSnackBar(
-            SnackBar(
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    message['notification']['title'],
-                    style: TextStyle(
-                      color: primaryHighlight,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    message['notification']['body'],
-                    style: TextStyle(
-                      color: secondaryHighlight,
-                    ),
-                  ),
-                ],
-              ),
-              action: action,
-            ),
-          );
-        },
-        onLaunch: (Map<String, dynamic> message) async {
-          print("onLaunch: $message");
-        },
-        onResume: (Map<String, dynamic> message) async {
-          print("onResume: $message");
-        },
-      );
-      _fcmAlreadySetup = true;
-    }
     return Container(
       color: primaryBackground,
       child: FutureBuilder(

@@ -10,11 +10,9 @@ import 'package:finesse_nation/Styles.dart';
 import 'package:finesse_nation/User.dart';
 import 'package:finesse_nation/Util.dart';
 import 'package:finesse_nation/main.dart';
-import 'package:finesse_nation/widgets/PopUpBox.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:url_launcher/url_launcher.dart';
 
@@ -24,8 +22,15 @@ enum DotMenu { markEnded }
 class FinessePage extends StatefulWidget {
   final Finesse fin;
   final List<bool> voteStatus;
+  final bool scrollDown;
 
-  FinessePage(this.fin, this.voteStatus);
+  FinessePage(this.fin, {voteStatus, scrollDown})
+      : this.voteStatus = voteStatus ??
+      [
+        User.currentUser.upvoted.contains(fin.eventId),
+        User.currentUser.downvoted.contains(fin.eventId)
+      ],
+        this.scrollDown = scrollDown ?? false;
 
   @override
   _FinessePageState createState() => _FinessePageState();
@@ -34,6 +39,7 @@ class FinessePage extends StatefulWidget {
 class _FinessePageState extends State<FinessePage> {
   Finesse fin;
   List<bool> voteStatus;
+  bool scrollDown;
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -42,29 +48,26 @@ class _FinessePageState extends State<FinessePage> {
   final TextEditingController locationController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
   final TextEditingController durationController = TextEditingController();
-
-  final picker = ImagePicker();
+  final dataKey = new GlobalKey();
 
   bool _commentIsEmpty = true;
 
   bool _inEditMode;
 
-  String tempImage;
   bool deletedImage;
   File _image;
 
   List<bool> activeStatus;
 
-  // double width = 1;
-  // double gap = 1;
+//  double width = 8;
+//  double gap = 8;
+//  bool showSliders = true;
 
   void resetState() {
     _inEditMode = false;
 
-    tempImage = null;
     deletedImage = false;
     _image = null;
-    fin.image = tempImage ?? fin.image;
 
     activeStatus = [fin.isActive, !fin.isActive];
   }
@@ -75,84 +78,17 @@ class _FinessePageState extends State<FinessePage> {
 
     fin = widget.fin;
     voteStatus = widget.voteStatus;
+    scrollDown = widget.scrollDown;
 
     resetState();
-  }
-
-  void _onImageButtonPressed(ImageSource source) async {
-    PickedFile pickedFile = await picker.getImage(source: source);
-
-    setState(() {
-      _image = File(pickedFile.path);
-    });
-  }
-
-  Future<void> uploadImagePopup() async {
-    await PopUpBox.showPopupBox(
-      title: "Upload Image",
-      context: context,
-      button: FlatButton(
-        key: Key("UploadOK"),
-        onPressed: () {
-          Navigator.of(context, rootNavigator: true).pop();
-        },
-        child: Text(
-          "CANCEL",
-          style: TextStyle(
-            color: primaryHighlight,
-          ),
-        ),
-      ),
-      willDisplayWidget: Column(
-        children: [
-          FlatButton(
-            onPressed: () {
-              _onImageButtonPressed(ImageSource.gallery);
-              Navigator.of(context, rootNavigator: true).pop();
-            },
-            child: Row(
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(top: 15, right: 15, bottom: 15),
-                  child: const Icon(
-                    Icons.photo_library,
-                    color: secondaryHighlight,
-                  ),
-                ),
-                Text(
-                  'From Gallery',
-                  style: TextStyle(color: primaryHighlight, fontSize: 14),
-                ),
-              ],
-            ),
-          ),
-          FlatButton(
-            onPressed: () {
-              _onImageButtonPressed(ImageSource.camera);
-              Navigator.of(context, rootNavigator: true).pop();
-            },
-            child: Row(
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(top: 15, right: 15, bottom: 15),
-                  child: const Icon(
-                    Icons.camera_alt,
-                    color: secondaryHighlight,
-                  ),
-                ),
-                Text(
-                  'From Camera',
-                  style: TextStyle(
-                    color: primaryHighlight,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+    if (scrollDown) {
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) =>
+          Scrollable.ensureVisible(
+            dataKey.currentContext,
+            duration: Duration(seconds: 1),
+          ));
+    }
   }
 
   @override
@@ -172,11 +108,12 @@ class _FinessePageState extends State<FinessePage> {
                 color: secondaryHighlight,
                 padding: EdgeInsets.all(10),
                 strokeWidth: 1,
-                dashPattern: [8, 8] /* [width, gap] */,
+                dashPattern: [8, 8],
                 borderType: BorderType.RRect,
                 radius: Radius.circular(10),
                 child: SizedBox(
-                  width: 500,
+                  width: double.infinity,
+                  height: 100,
                   child: Center(
                     child: Text(
                       'ADD IMAGE',
@@ -188,33 +125,40 @@ class _FinessePageState extends State<FinessePage> {
                   ),
                 ),
               ),
-              onTap: uploadImagePopup,
+              onTap: () async {
+                File img = await uploadImagePopup(context);
+                setState(() {
+                  _image = img;
+                });
+              }, //() => setState(() => showSliders = !showSliders)
             ),
           ),
-          /*Slider(
-                  value: width,
-                  onChanged: (val) {
-                    setState(() {
-                      width = val;
-                    });
-                  },
-                  min: 0,
-                  max: 20,
-                  divisions: 20,
-                  label: '$width',
-                ),
-                Slider(
-                  value: gap,
-                  onChanged: (val) {
-                    setState(() {
-                      gap = val;
-                    });
-                  },
-                  min: 0,
-                  max: 20,
-                  divisions: 20,
-                  label: '$gap',
-                )*/
+          /*if (showSliders)
+                  Slider(
+                    value: width,
+                    onChanged: (val) {
+                      setState(() {
+                        width = val;
+                      });
+                    },
+                    min: 0,
+                    max: 20,
+                    divisions: 20,
+                    label: '$width',
+                  ),
+                if (showSliders)
+                  Slider(
+                    value: gap,
+                    onChanged: (val) {
+                      setState(() {
+                        gap = val;
+                      });
+                    },
+                    min: 0,
+                    max: 20,
+                    divisions: 20,
+                    label: '$gap',
+                  ),*/
         ],
       )
           : Stack(
@@ -233,7 +177,12 @@ class _FinessePageState extends State<FinessePage> {
             children: [
               IconButton(
                 icon: Icon(Icons.edit),
-                onPressed: uploadImagePopup,
+                onPressed: () async {
+                  File img = await uploadImagePopup(context);
+                  setState(() {
+                    _image = img;
+                  });
+                },
               ),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 30),
@@ -241,7 +190,6 @@ class _FinessePageState extends State<FinessePage> {
               IconButton(
                 icon: Icon(Icons.delete),
                 onPressed: () {
-                  tempImage = fin.image;
                   setState(() {
                     _image = null;
                     deletedImage = true;
@@ -277,7 +225,12 @@ class _FinessePageState extends State<FinessePage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                onPressed: uploadImagePopup,
+                onPressed: () async {
+                  File img = await uploadImagePopup(context);
+                  setState(() {
+                    _image = img;
+                  });
+                },
                 icon: Icon(Icons.edit),
               ),
               Padding(
@@ -285,7 +238,6 @@ class _FinessePageState extends State<FinessePage> {
               ),
               IconButton(
                 onPressed: () {
-                  tempImage = fin.image;
                   setState(() {
                     _image = null;
                     deletedImage = true;
@@ -671,15 +623,16 @@ class _FinessePageState extends State<FinessePage> {
       addComment(newComment, fin.eventId);
       fin.numComments++;
       commentController.clear();
-      firebaseMessaging.unsubscribeFromTopic(fin.eventId);
+      /*firebaseMessaging.unsubscribeFromTopic(fin.eventId);
       await sendToAll(fin.eventTitle, '${User.currentUser.userName}: $comment',
-          topic: fin.eventId, id: fin.eventId);
+          topic: fin.eventId, id: fin.eventId);*/
       firebaseMessaging.subscribeToTopic(fin.eventId);
     }
 
     Widget addCommentSection = Padding(
       padding: EdgeInsets.symmetric(vertical: 4),
       child: TextFormField(
+        key: dataKey,
         keyboardAppearance: Brightness.dark,
         textCapitalization: TextCapitalization.sentences,
         controller: commentController,
@@ -916,37 +869,57 @@ class _FinessePageState extends State<FinessePage> {
                             (activeStatus[0] != fin.isActive) ||
                             (durationController.text != fin.duration);
                         if (wasEdited) {
+                          AlertDialog dialog = AlertDialog(
+                            backgroundColor: secondaryBackground,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            title: Text(
+                              'Discard changes?',
+                              style: TextStyle(
+                                color: primaryHighlight,
+                              ),
+                            ),
+                            content: SingleChildScrollView(
+                              child: Text(
+                                'Are you sure you want to discard your changes to this event?',
+                                style: TextStyle(
+                                  color: primaryHighlight,
+                                ),
+                              ),
+                            ),
+                            actions: <Widget>[
+                              FlatButton(
+                                child: Text(
+                                  'NO',
+                                  style: TextStyle(
+                                    color: secondaryHighlight,
+                                  ),
+                                ),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                              FlatButton(
+                                child: Text(
+                                  'YES',
+                                  style: TextStyle(
+                                    color: secondaryHighlight,
+                                  ),
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    resetState();
+                                  });
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            ],
+                          );
                           showDialog(
-                              context: context,
-                              builder: (context) {
-                                return AlertDialog(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  title: Text('Discard changes?'),
-                                  content: SingleChildScrollView(
-                                    child: Text(
-                                        'Are you sure you want to discard your changes to this event?'),
-                                  ),
-                                  actions: <Widget>[
-                                    FlatButton(
-                                      child: Text('NO'),
-                                      onPressed: () {
-                                        Navigator.of(context).pop();
-                                      },
-                                    ),
-                                    FlatButton(
-                                      child: Text('YES'),
-                                      onPressed: () {
-                                        setState(() {
-                                          resetState();
-                                        });
-                                        Navigator.of(context).pop();
-                                      },
-                                    ),
-                                  ],
-                                );
-                              });
+                            context: context,
+                            builder: (_) => dialog,
+                          );
                         } else {
                           setState(() {
                             resetState();
@@ -960,41 +933,61 @@ class _FinessePageState extends State<FinessePage> {
                         color: primaryHighlight,
                       ),
                       onPressed: () {
+                        AlertDialog dialog = AlertDialog(
+                          backgroundColor: secondaryBackground,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          title: Text(
+                            'Delete?',
+                            style: TextStyle(
+                              color: primaryHighlight,
+                            ),
+                          ),
+                          content: SingleChildScrollView(
+                            child: Text(
+                              'Are you sure you want to delete this event? If the event is over, please mark it as \'inactive\' instead.',
+                              style: TextStyle(
+                                color: primaryHighlight,
+                              ),
+                            ),
+                          ),
+                          actions: <Widget>[
+                            FlatButton(
+                              child: Text(
+                                'NO',
+                                style: TextStyle(
+                                  color: secondaryHighlight,
+                                ),
+                              ),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            FlatButton(
+                              child: Text(
+                                'YES',
+                                style: TextStyle(
+                                  color: secondaryHighlight,
+                                ),
+                              ),
+                              onPressed: () async {
+                                await removeFinesse(fin);
+                                Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (BuildContext context) =>
+                                          HomePage()),
+                                      (Route<dynamic> route) => false,
+                                );
+                              },
+                            ),
+                          ],
+                        );
                         showDialog(
-                            context: context,
-                            builder: (context) {
-                              return AlertDialog(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                title: Text('Delete?'),
-                                content: SingleChildScrollView(
-                                  child: Text(
-                                      'Are you sure you want to delete this event?'),
-                                ),
-                                actions: <Widget>[
-                                  FlatButton(
-                                    child: Text('NO'),
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                  ),
-                                  FlatButton(
-                                    child: Text('YES'),
-                                    onPressed: () async {
-                                      await removeFinesse(fin);
-                                      await Navigator.pushAndRemoveUntil(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (BuildContext context) =>
-                                                HomePage()),
-                                            (Route<dynamic> route) => false,
-                                      );
-                                    },
-                                  ),
-                                ],
-                              );
-                            });
+                          context: context,
+                          builder: (_) => dialog,
+                        );
                       }),
                 ],
               ),
@@ -1042,10 +1035,15 @@ class _FinessePageState extends State<FinessePage> {
                     ],
                   ),
                 ),
-                userSection,
-                votingSection,
-                viewCommentSection,
-                addCommentSection,
+                if (!_inEditMode)
+                  Column(
+                    children: [
+                      userSection,
+                      votingSection,
+                      viewCommentSection,
+                      addCommentSection,
+                    ],
+                  ),
               ],
             ),
           ),

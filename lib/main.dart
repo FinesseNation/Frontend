@@ -1,11 +1,17 @@
+import 'package:finesse_nation/Finesse.dart';
 import 'package:finesse_nation/Network.dart';
+import 'package:finesse_nation/NotificationEntry.dart';
+import 'package:finesse_nation/NotificationSingleton.dart';
 import 'package:finesse_nation/Pages/LeaderboardPage.dart';
 import 'package:finesse_nation/Pages/LoginScreen.dart';
+import 'package:finesse_nation/Pages/NotificationsPage.dart';
 import 'package:finesse_nation/Pages/SettingsPage.dart';
 import 'package:finesse_nation/Pages/addEventPage.dart';
 import 'package:finesse_nation/Styles.dart';
+import 'package:finesse_nation/User.dart';
 import 'package:finesse_nation/widgets/FinesseList.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -64,6 +70,52 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       print('reloading');
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    print('setting up fcm');
+    if (!kIsWeb) {
+      firebaseMessaging.requestNotificationPermissions();
+    }
+    firebaseMessaging.subscribeToTopic(ALL_TOPIC);
+    firebaseMessaging.configure(
+      onMessage: (Map<String, dynamic> message) async {
+        print("onMessage: $message");
+
+        String author = message['data']['author'];
+        print(author);
+        if (author == User.currentUser.email) return;
+
+        String title = message['notification']['title'];
+        String body = message['notification']['body'];
+        String id = message['data']['id'];
+        NotificationType type = message['data']['type'] == 'post'
+            ? NotificationType.post
+            : NotificationType.comment;
+        // TODO: make finessepage fields futurebuilder?
+        Finesse fin;
+        try {
+          fin = Finesse.finesseList
+              .singleWhere((finesse) => finesse.eventId == id);
+        } on StateError {
+          print('couldnt find fin');
+          fin = await getFinesse(id);
+        }
+        if (type == NotificationType.comment) {
+          fin.comments = await getComments(id);
+        }
+        NotificationSingleton.instance
+            .addNotification(NotificationEntry(title, body, fin, type));
+      },
+      onLaunch: (Map<String, dynamic> message) async {
+        print("onLaunch: $message");
+      },
+      onResume: (Map<String, dynamic> message) async {
+        print("onResume: $message");
+      },
+    );
   }
 
   @override
@@ -158,13 +210,29 @@ class _HomePageState extends State<HomePage> {
           ),
           centerTitle: true,
           actions: <Widget>[
-            IconButton(
-              icon: Icon(
-                Icons.notifications,
-              ),
-              key: Key("Filter"),
-              color: Colors.white,
-              onPressed: () {},
+            ValueListenableBuilder<List<NotificationEntry>>(
+              valueListenable: NotificationSingleton.instance,
+              builder: (context, notifications, _) {
+                return IconButton(
+                  icon: Icon(
+                    Icons.notifications,
+                  ),
+                  key: Key("Filter"),
+                  color: notifications.any((notif) => notif.isUnread)
+                      ? Colors.red
+                      : Colors.white,
+                  onPressed: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => NotificationsPage(),
+                      ),
+                    );
+                    NotificationSingleton.instance.markAllAsRead();
+//                    setState(() {});
+                  },
+                );
+              },
             ),
           ],
         ),

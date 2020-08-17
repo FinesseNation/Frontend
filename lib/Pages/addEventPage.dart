@@ -382,11 +382,12 @@ class _AddEventState extends State<AddEvent> {
                         User.currentUser.subscriptions.add(newId);
                         // TODO: just don't display anything if app is open
                         // in order to avoid unsub then resub
-                        await firebaseMessaging.unsubscribeFromTopic(ALL_TOPIC);
-                        await sendToAll(
-                            newFinesse.eventTitle, newFinesse.location,
-                            id: newId, isNew: true);
+//                        await firebaseMessaging.unsubscribeFromTopic(ALL_TOPIC);
+//                        await sendToAll(
+//                            newFinesse.eventTitle, newFinesse.location,
+//                            id: newId, isNew: true);
                         if (User.currentUser.notifications) {
+                          print('subscribing to $newId');
                           firebaseMessaging.subscribeToTopic(newId);
                           firebaseMessaging.subscribeToTopic(ALL_TOPIC);
                         }

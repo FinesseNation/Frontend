@@ -17,6 +17,7 @@ class Settings extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(appTitle),
+        centerTitle: true,
       ),
       backgroundColor: secondaryBackground,
       body: SettingsPage(),
