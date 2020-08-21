@@ -53,8 +53,8 @@ dev_dependencies:
   flutter_launcher_icons: "^0.7.3"
   flutter_test:
     sdk: flutter
-  flutter_driver:
-    sdk: flutter
+  #  flutter_driver:
+  #    sdk: flutter
   test: any
 
 #Must run flutter pub run flutter_launcher_icons:main to update the icons
