@@ -1,23 +1,26 @@
 import 'dart:math';
 
+import 'package:finesse_nation/main.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:transformer_page_view/transformer_page_view.dart';
+
 import '../constants.dart';
+import '../dart_helper.dart';
+import '../matrix.dart';
+import '../models/login_data.dart';
+import '../paddings.dart';
+import '../providers/auth.dart';
+import '../providers/login_messages.dart';
+import '../widget_helper.dart';
 import 'animated_button.dart';
 import 'animated_text.dart';
+import 'animated_text_form_field.dart';
 import 'custom_page_transformer.dart';
 import 'expandable_container.dart';
 import 'fade_in.dart';
-import 'animated_text_form_field.dart';
-import '../providers/auth.dart';
-import '../providers/login_messages.dart';
-import '../models/login_data.dart';
-import '../dart_helper.dart';
-import '../matrix.dart';
-import '../paddings.dart';
-import '../widget_helper.dart';
 
 class AuthCard extends StatefulWidget {
   AuthCard({
@@ -627,6 +630,32 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
     );
   }
 
+  Widget _buildSkipButton(ThemeData theme, LoginMessages messages, Auth auth) {
+    return FadeIn(
+      controller: _loadingController,
+      offset: 1,
+      curve: _textButtonLoadingAnimationInterval,
+      fadeDirection: FadeDirection.topToBottom,
+      child: SizedBox(
+        height: 20,
+        child: FlatButton(
+          child: Text(
+            'Skip for now',
+            style: theme.textTheme.bodyText2,
+          ),
+          onPressed: () {
+            SharedPreferences.getInstance().then((prefs) {
+              prefs.setString('currentUser', 'anon');
+            });
+            return Navigator.of(context).pushReplacement(MaterialPageRoute(
+              builder: (context) => HomePage(),
+            ));
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<Auth>(context, listen: true);
@@ -682,6 +711,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
                 _buildForgotPassword(theme, messages),
                 _buildSubmitButton(theme, messages, auth),
                 _buildSwitchAuthButton(theme, messages, auth),
+                _buildSkipButton(theme, messages, auth),
               ],
             ),
           ),
