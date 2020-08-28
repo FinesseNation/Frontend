@@ -48,7 +48,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
                     child: Card(
                       clipBehavior: Clip.hardEdge,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                       color: secondaryBackground,
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
@@ -93,6 +94,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                       MaterialPageRoute(
                         builder: (context) => FinessePage(
                           fin,
+                          false,
                           scrollDown: notif.type == NotificationType.comment,
                         ),
                       ),
@@ -107,8 +109,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
           } else {
             return Center(
               child: Text(
-                'empty',
-                style: TextStyle(color: primaryHighlight),
+                'No unread notifications',
+                style: TextStyle(
+                  color: secondaryHighlight,
+                ),
               ),
             );
           }

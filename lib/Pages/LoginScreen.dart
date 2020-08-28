@@ -28,7 +28,7 @@ class LoginScreen extends StatelessWidget {
         ));
       },
       onRecoverPassword: recoverPassword,
-      logoTag: 'logo',
+      logoTag: 'logo2',
       messages: LoginMessages(
           recoverPasswordDescription:
               'Email will be sent with a link to reset your password.'),

@@ -345,12 +345,6 @@ void main() {
         "Failed to get current user");
   });
 
-  ///Send push notification check for network response
-  test('Send Push Notification', () async {
-    var response = await sendToAll('test', 'test', topic: 'tests');
-    expect(response.statusCode, 200);
-  });
-
   /// Add a valid comment the database check that the api responds
   test('Add valid comment', () async {
     Comment comment =

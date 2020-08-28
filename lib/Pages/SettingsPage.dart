@@ -1,4 +1,3 @@
-import 'package:custom_switch/custom_switch.dart';
 import 'package:finesse_nation/Network.dart';
 import 'package:finesse_nation/Pages/LoginScreen.dart';
 import 'package:finesse_nation/Styles.dart';
@@ -19,7 +18,7 @@ class Settings extends StatelessWidget {
         title: Text(appTitle),
         centerTitle: true,
       ),
-      backgroundColor: secondaryBackground,
+      backgroundColor: primaryBackground,
       body: SettingsPage(),
     );
   }
@@ -32,8 +31,7 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  var initialToggle = User.currentUser.notifications;
-  var toggle = User.currentUser.notifications;
+  var toggle = User.currentUser?.notifications ?? true;
 
   _SettingsPageState createState() {
     return _SettingsPageState();
@@ -41,105 +39,121 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[
-        Row(
+    return Padding(
+      padding: const EdgeInsets.all(5),
+      child: Card(
+        clipBehavior: Clip.hardEdge,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        color: secondaryBackground,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Padding(
-              padding:
+            Row(
+              children: <Widget>[
+                Padding(
+                  padding:
                   EdgeInsets.only(right: 15, bottom: 10, top: 10, left: 10),
-              child: Text(
-                'Notifications',
-                style: TextStyle(color: Colors.white, fontSize: 20),
-              ),
-            ),
-            Expanded(
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: Column(
-                  children: <Widget>[
-                    Padding(
-                      padding: EdgeInsets.only(
-                          right: 15, bottom: 10, top: 10, left: 10),
-                      child: CustomSwitch(
-                          key: Key("Notification Toggle"),
-                          activeColor: primaryHighlight,
-                          value: toggle,
-                          onChanged: (value) {
-                            toggle = !toggle;
-                            notificationsSet(toggle);
-                            Fluttertoast.showToast(
-                              msg: "Notifications " +
-                                  (toggle ? "enabled" : "disabled"),
-                              toastLength: Toast.LENGTH_SHORT,
-                              backgroundColor: secondaryBackground,
-                              textColor: primaryHighlight,
-                            );
-                          }),
-                    ),
-                  ],
+                  child: Text(
+                    'Notifications',
+                    style: TextStyle(color: Colors.white, fontSize: 20),
+                  ),
                 ),
-              ),
-            )
-          ],
-        ),
-        Divider(color: primaryBackground),
-        Row(
-          children: <Widget>[
-            Padding(
-                padding:
-                    EdgeInsets.only(right: 15, bottom: 10, top: 10, left: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      'Account',
-                      style: TextStyle(color: Colors.white, fontSize: 20),
-                    ),
-                    Text(
-                      User.currentUser.email,
-                      style: TextStyle(color: Colors.white, fontSize: 15),
-                    ),
-                  ],
-                )),
-            Expanded(
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: Column(
-                  children: <Widget>[
-                    Padding(
-                      padding: EdgeInsets.only(
-                          right: 15, bottom: 10, top: 10, left: 10),
-                      child: RaisedButton(
-                        key: Key('logoutButton'),
-                        color: primaryHighlight,
-                        child: Text(
-                          'LOGOUT',
-                          style: TextStyle(color: secondaryBackground),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Column(
+                      children: <Widget>[
+                        Padding(
+                          padding: EdgeInsets.only(
+                              right: 15, bottom: 10, top: 10, left: 10),
+                          child: Switch(
+                              key: Key("Notification Toggle"),
+                              activeColor: primaryHighlight,
+                              value: toggle,
+                              onChanged: (value) {
+                                setState(() {
+                                  toggle = !toggle;
+                                });
+                                notificationsSet(toggle);
+                                Fluttertoast.showToast(
+                                  msg: "Notifications " +
+                                      (toggle ? "enabled" : "disabled"),
+                                  toastLength: Toast.LENGTH_SHORT,
+                                  backgroundColor: secondaryBackground,
+                                  textColor: primaryHighlight,
+                                );
+                              }),
                         ),
-                        onPressed: () {
-                          notificationsSet(false, updateUser: false);
-                          SharedPreferences.getInstance().then((prefs) {
-                            prefs.remove('currentUser');
-                          });
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                                builder: (BuildContext context) =>
-                                    LoginScreen()),
-                            (Route<dynamic> route) => false,
-                          );
-                        },
-                      ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-            )
+                  ),
+                )
+              ],
+            ),
+            Divider(color: primaryBackground),
+            Row(
+              children: <Widget>[
+                Padding(
+                    padding: EdgeInsets.only(
+                        right: 15, bottom: 10, top: 10, left: 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          'Account',
+                          style: TextStyle(color: Colors.white, fontSize: 20),
+                        ),
+                        Text(
+                          User.currentUser?.email ?? 'Not logged in',
+                          style: TextStyle(color: Colors.white, fontSize: 15),
+                        ),
+                      ],
+                    )),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Column(
+                      children: <Widget>[
+                        Padding(
+                          padding: EdgeInsets.only(
+                            right: 15,
+                            bottom: 10,
+                            top: 10,
+                            left: 10,
+                          ),
+                          child: RaisedButton(
+                            key: Key('logoutButton'),
+                            color: primaryHighlight,
+                            child: Text(
+                              User.currentUser != null ? 'LOGOUT' : 'LOGIN',
+                              style: TextStyle(color: secondaryBackground),
+                            ),
+                            onPressed: () {
+                              notificationsSet(false, updateUser: false);
+                              User.currentUser = null;
+                              SharedPreferences.getInstance().then((prefs) {
+                                prefs.remove('currentUser');
+                              });
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (BuildContext context) =>
+                                        LoginScreen()),
+                                    (Route<dynamic> route) => false,
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              ],
+            ),
+//            Divider(color: primaryBackground),
           ],
         ),
-        Divider(color: primaryBackground),
-      ],
+      ),
     );
   }
 }

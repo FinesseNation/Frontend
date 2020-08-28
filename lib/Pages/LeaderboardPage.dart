@@ -43,7 +43,8 @@ List<Widget> toLeaderboard(int currentRank, List<User> users) {
   for (int i = 0; i < users.length; i++) {
     leaderboard.add(toLeaderboardRow(users[i], i + 1));
   }
-  if (!users.any((user) => user.email == User.currentUser.email)) {
+  if (User.currentUser != null &&
+      !users.any((user) => user.email == User.currentUser.email)) {
     leaderboard.add(
       Icon(
         Icons.more_horiz,
@@ -69,7 +70,7 @@ Widget toLeaderboardRow(User user, int rank) {
           Row(
             children: [
               SizedBox(
-                width: 50,
+                width: 40,
                 child: Text(
                   '$rank',
                   style: TextStyle(
@@ -91,7 +92,7 @@ Widget toLeaderboardRow(User user, int rank) {
                 style: TextStyle(
                   color: primaryHighlight,
                   fontSize: 20,
-                  fontWeight: (user.email == User.currentUser.email)
+                  fontWeight: (user.email == User.currentUser?.email)
                       ? FontWeight.bold
                       : FontWeight.normal,
                 ),
@@ -103,7 +104,7 @@ Widget toLeaderboardRow(User user, int rank) {
             style: TextStyle(
               color: primaryHighlight,
               fontSize: 25,
-              fontWeight: (user.email == User.currentUser.email)
+              fontWeight: (user.email == User.currentUser?.email)
                   ? FontWeight.bold
                   : FontWeight.normal,
             ),

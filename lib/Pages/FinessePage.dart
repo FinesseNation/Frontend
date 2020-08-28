@@ -6,13 +6,17 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:finesse_nation/Comment.dart';
 import 'package:finesse_nation/Finesse.dart';
 import 'package:finesse_nation/Network.dart';
+import 'package:finesse_nation/Pages/LoginScreen.dart';
 import 'package:finesse_nation/Styles.dart';
 import 'package:finesse_nation/User.dart';
 import 'package:finesse_nation/Util.dart';
 import 'package:finesse_nation/main.dart';
+import 'package:finesse_nation/widgets/TimeEntry.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl/intl.dart';
+import 'package:share/share.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:url_launcher/url_launcher.dart';
 
@@ -21,10 +25,11 @@ enum DotMenu { markEnded }
 /// Displays details about a specific [Finesse].
 class FinessePage extends StatefulWidget {
   final Finesse fin;
+  final bool isFuture;
   final List<bool> voteStatus;
   final bool scrollDown;
 
-  FinessePage(this.fin, {voteStatus, scrollDown})
+  FinessePage(this.fin, this.isFuture, {voteStatus, scrollDown})
       : this.voteStatus = voteStatus ??
       [
         User.currentUser.upvoted.contains(fin.eventId),
@@ -37,7 +42,10 @@ class FinessePage extends StatefulWidget {
 }
 
 class _FinessePageState extends State<FinessePage> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+
   Finesse fin;
+  bool isFuture;
   List<bool> voteStatus;
   bool scrollDown;
 
@@ -59,6 +67,15 @@ class _FinessePageState extends State<FinessePage> {
 
   List<bool> activeStatus;
 
+  Future<List<Comment>> comments;
+
+  DateTime _startDate;
+  DateTime _endDate;
+  TimeOfDay _startTime;
+  TimeOfDay _endTime;
+
+  Repetition selectedRepetition;
+
 //  double width = 8;
 //  double gap = 8;
 //  bool showSliders = true;
@@ -70,6 +87,42 @@ class _FinessePageState extends State<FinessePage> {
     _image = null;
 
     activeStatus = [fin.isActive, !fin.isActive];
+
+    _startDate = fin.startTime.subtract(
+      Duration(
+        hours: fin.startTime.hour,
+        minutes: fin.startTime.minute,
+        seconds: fin.startTime.second,
+        milliseconds: fin.startTime.millisecond,
+        microseconds: fin.startTime.microsecond,
+      ),
+    );
+
+    _startTime = TimeOfDay(
+      hour: fin.startTime.hour,
+      minute: fin.startTime.minute,
+    );
+
+    if (fin.endTime != null) {
+      _endDate = fin.endTime.subtract(
+        Duration(
+          hours: fin.endTime.hour,
+          minutes: fin.endTime.minute,
+          seconds: fin.endTime.second,
+          milliseconds: fin.endTime.millisecond,
+          microseconds: fin.endTime.microsecond,
+        ),
+      );
+      _endTime = TimeOfDay(
+        hour: fin.endTime.hour,
+        minute: fin.endTime.minute,
+      );
+    } else {
+      _endDate = null;
+      _endTime = null;
+    }
+
+    selectedRepetition = fin.repetition ?? Repetition.none;
   }
 
   @override
@@ -77,63 +130,68 @@ class _FinessePageState extends State<FinessePage> {
     super.initState();
 
     fin = widget.fin;
+    isFuture = widget.isFuture;
     voteStatus = widget.voteStatus;
     scrollDown = widget.scrollDown;
 
     resetState();
+
+    comments = getComments(fin.eventId);
+
     if (scrollDown) {
-      WidgetsBinding.instance
-          .addPostFrameCallback((_) =>
-          Scrollable.ensureVisible(
-            dataKey.currentContext,
-            duration: Duration(seconds: 1),
-          ));
+      WidgetsBinding.instance.addPostFrameCallback(
+            (_) =>
+            Scrollable.ensureVisible(
+              dataKey.currentContext,
+              duration: Duration(seconds: 1),
+            ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    Widget imageSection;
-    if (_inEditMode && (fin.image == '' || deletedImage)) {
-      imageSection = _image == null
-          ? Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: InkWell(
-              customBorder: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: DottedBorder(
-                color: secondaryHighlight,
-                padding: EdgeInsets.all(10),
-                strokeWidth: 1,
-                dashPattern: [8, 8],
-                borderType: BorderType.RRect,
-                radius: Radius.circular(10),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 100,
-                  child: Center(
-                    child: Text(
-                      'ADD IMAGE',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: secondaryHighlight,
+    Widget editImageSection;
+    if (fin.image == '' || deletedImage) {
+      if (_image == null) {
+        editImageSection = Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: InkWell(
+                customBorder: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: DottedBorder(
+                  color: secondaryHighlight,
+                  padding: EdgeInsets.all(10),
+                  strokeWidth: 1,
+                  dashPattern: [8, 8],
+                  borderType: BorderType.RRect,
+                  radius: Radius.circular(10),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 100,
+                    child: Center(
+                      child: Text(
+                        'ADD IMAGE',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: secondaryHighlight,
+                        ),
                       ),
                     ),
                   ),
                 ),
+                onTap: () async {
+                  File img = await uploadImagePopup(context);
+                  setState(() {
+                    if (img != null) _image = img;
+                  });
+                }, //() => setState(() => showSliders = !showSliders)
               ),
-              onTap: () async {
-                File img = await uploadImagePopup(context);
-                setState(() {
-                  _image = img;
-                });
-              }, //() => setState(() => showSliders = !showSliders)
             ),
-          ),
-          /*if (showSliders)
+            /*if (showSliders)
                   Slider(
                     value: width,
                     onChanged: (val) {
@@ -159,152 +217,152 @@ class _FinessePageState extends State<FinessePage> {
                     divisions: 20,
                     label: '$gap',
                   ),*/
-        ],
-      )
-          : Stack(
-        alignment: Alignment.center,
-        children: [
-          Image.file(
-            _image,
-            width: 600,
-            height: 240,
-            fit: BoxFit.cover,
-            colorBlendMode: BlendMode.luminosity,
-            color: Colors.white.withOpacity(0.5),
-          ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: Icon(Icons.edit),
-                onPressed: () async {
-                  File img = await uploadImagePopup(context);
-                  setState(() {
-                    _image = img;
-                  });
-                },
-              ),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 30),
-              ),
-              IconButton(
-                icon: Icon(Icons.delete),
-                onPressed: () {
-                  setState(() {
-                    _image = null;
-                    deletedImage = true;
-                  });
-                },
-              ),
-            ],
-          ),
-        ],
-      );
-    } else if (_inEditMode && fin.image != '') {
-      imageSection = Stack(
-        alignment: Alignment.center,
-        children: [
-          _image != null
-              ? Image.file(
-            _image,
-            width: 600,
-            height: 240,
-            fit: BoxFit.cover,
-            colorBlendMode: BlendMode.luminosity,
-            color: Colors.white.withOpacity(0.5),
-          )
-              : Image.memory(
-            fin.convertedImage,
-            width: 600,
-            height: 240,
-            fit: BoxFit.cover,
-            colorBlendMode: BlendMode.luminosity,
-            color: Colors.white.withOpacity(0.5),
-          ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                onPressed: () async {
-                  File img = await uploadImagePopup(context);
-                  setState(() {
-                    _image = img;
-                  });
-                },
-                icon: Icon(Icons.edit),
-              ),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 30),
-              ),
-              IconButton(
-                onPressed: () {
-                  setState(() {
-                    _image = null;
-                    deletedImage = true;
-                  });
-                },
-                icon: Icon(Icons.delete),
-              ),
-            ],
-          ),
-        ],
-      );
-    } else {
-      imageSection = InkWell(
-        onTap: () async {
-          changeStatusColor(Colors.black);
-          changeNavigationColor(Colors.black);
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  FullImage(
-                    fin,
-                  ),
+          ],
+        );
+      } else {
+        editImageSection = Stack(
+          alignment: Alignment.center,
+          children: [
+            Image.file(
+              _image,
+              width: 600,
+              height: 240,
+              fit: BoxFit.cover,
+              colorBlendMode: BlendMode.luminosity,
+              color: Colors.white.withOpacity(0.5),
             ),
-          );
-          changeStatusColor(primaryBackground);
-          changeNavigationColor(primaryBackground);
-        },
-        child: Hero(
-          tag: fin.eventId,
-          child: Image.memory(
-            fin.convertedImage,
-            width: 600,
-            height: 240,
-            fit: BoxFit.cover,
-            colorBlendMode: BlendMode.saturation,
-            color: fin.isActive ? Colors.transparent : inactiveColor,
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.edit),
+                  onPressed: () async {
+                    File img = await uploadImagePopup(context);
+                    setState(() {
+                      if (img != null) _image = img;
+                    });
+                  },
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 30),
+                ),
+                IconButton(
+                  icon: Icon(Icons.delete),
+                  onPressed: () {
+                    setState(() {
+                      _image = null;
+                      deletedImage = true;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ],
+        );
+      }
+    } else if (fin.image != '') {
+      editImageSection = Stack(
+        alignment: Alignment.center,
+        children: [
+          if (_image != null)
+            Image.file(
+              _image,
+              width: 600,
+              height: 240,
+              fit: BoxFit.cover,
+              colorBlendMode: BlendMode.luminosity,
+              color: Colors.white.withOpacity(0.5),
+            )
+          else
+            Image.memory(
+              fin.convertedImage,
+              width: 600,
+              height: 240,
+              fit: BoxFit.cover,
+              colorBlendMode: BlendMode.luminosity,
+              color: Colors.white.withOpacity(0.5),
+            ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                onPressed: () async {
+                  File img = await uploadImagePopup(context);
+                  setState(() {
+                    if (img != null) _image = img;
+                  });
+                },
+                icon: Icon(Icons.edit),
+              ),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 30),
+              ),
+              IconButton(
+                onPressed: () {
+                  setState(() {
+                    _image = null;
+                    deletedImage = true;
+                  });
+                },
+                icon: Icon(Icons.delete),
+              ),
+            ],
           ),
-        ),
+        ],
       );
     }
 
-    Widget titleSection = Container(
-      padding: EdgeInsets.only(
-          left: 20, bottom: _inEditMode ? 5 : 20, top: _inEditMode ? 0 : 20),
-      child: _inEditMode
-          ? SizedBox(
-        width: 300,
-        child: TextFormField(
-          autovalidate: true,
-          controller: titleController,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 30,
-            color: primaryHighlight,
+    Widget imageSection;
+    imageSection = InkWell(
+      onTap: () async {
+        changeStatusColor(Colors.black);
+        changeNavigationColor(Colors.black);
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                FullImage(
+                  fin,
+                ),
           ),
-          decoration: const InputDecoration(
-            hintText: "Title",
-            hintStyle: TextStyle(
-              color: secondaryHighlight,
-            ),
-          ),
-          validator: (value) =>
-          value.isEmpty ? 'Please enter a title' : null,
+        );
+        changeStatusColor(primaryBackground);
+        changeNavigationColor(primaryBackground);
+      },
+      child: Hero(
+        tag: fin.eventId,
+        child: Image.memory(
+          fin.convertedImage,
+          width: 600,
+          height: 240,
+          fit: BoxFit.cover,
+          colorBlendMode: BlendMode.saturation,
+          color: fin.isActive ? Colors.transparent : inactiveColor,
         ),
-      )
-          : Text(
+      ),
+    );
+
+    Widget editTitleSection;
+    editTitleSection = TextFormField(
+      autovalidate: true,
+      controller: titleController,
+      style: TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: 30,
+        color: primaryHighlight,
+      ),
+      decoration: const InputDecoration(
+        hintText: "Title",
+        hintStyle: TextStyle(
+          color: secondaryHighlight,
+        ),
+      ),
+      validator: (value) => value.isEmpty ? 'Please enter a title' : null,
+    );
+
+    Widget titleSection = Container(
+      padding: EdgeInsets.only(bottom: 20, top: 15),
+      child: Text(
         fin.eventTitle,
         style: TextStyle(
           fontWeight: FontWeight.bold,
@@ -314,8 +372,9 @@ class _FinessePageState extends State<FinessePage> {
       ),
     );
 
-    Widget locationSection = Container(
-      padding: EdgeInsets.only(left: 20, bottom: _inEditMode ? 5 : 20),
+    Widget editLocationSection;
+    editLocationSection = Padding(
+      padding: EdgeInsets.only(bottom: 5),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -326,9 +385,7 @@ class _FinessePageState extends State<FinessePage> {
               color: fin.isActive ? secondaryHighlight : inactiveColor,
             ),
           ),
-          _inEditMode
-              ? SizedBox(
-            width: 300,
+          Expanded(
             child: TextFormField(
               autovalidate: true,
               controller: locationController,
@@ -345,12 +402,27 @@ class _FinessePageState extends State<FinessePage> {
               validator: (value) =>
               value.isEmpty ? 'Please enter a location' : null,
             ),
-          )
-              : Flexible(
+          ),
+        ],
+      ),
+    );
+
+    Widget locationSection = Container(
+      padding: EdgeInsets.only(bottom: 20),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(right: 10),
+            child: Icon(
+              Icons.place,
+              color: fin.isActive ? secondaryHighlight : inactiveColor,
+            ),
+          ),
+          Flexible(
             child: InkWell(
               onTap: () =>
-                  launch(
-                      'https://www.google.com/maps/search/${fin.location}'),
+                  launch('https://www.google.com/maps/search/${fin.location}'),
               child: Text(
                 fin.location,
                 style: TextStyle(
@@ -365,8 +437,38 @@ class _FinessePageState extends State<FinessePage> {
       ),
     );
 
+    Widget editDescriptionSection;
+    editDescriptionSection = Row(
+      children: [
+        Padding(
+          padding: EdgeInsets.only(right: 10),
+          child: Icon(
+            Icons.short_text,
+            color: fin.isActive
+                ? fin.isActive ? secondaryHighlight : inactiveColor
+                : inactiveColor,
+          ),
+        ),
+        Expanded(
+          child: TextFormField(
+            controller: descriptionController,
+            style: TextStyle(
+              fontSize: 16,
+              color: primaryHighlight,
+            ),
+            decoration: const InputDecoration(
+              hintText: "Description",
+              hintStyle: TextStyle(
+                color: secondaryHighlight,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+
     Widget descriptionSection = Container(
-      padding: EdgeInsets.only(left: 20, bottom: _inEditMode ? 5 : 20),
+      padding: EdgeInsets.only(bottom: 20),
       child: Row(
         children: [
           Padding(
@@ -378,24 +480,7 @@ class _FinessePageState extends State<FinessePage> {
                   : inactiveColor,
             ),
           ),
-          _inEditMode
-              ? SizedBox(
-            width: 300,
-            child: TextFormField(
-              controller: descriptionController,
-              style: TextStyle(
-                fontSize: 16,
-                color: primaryHighlight,
-              ),
-              decoration: const InputDecoration(
-                hintText: "Description",
-                hintStyle: TextStyle(
-                  color: secondaryHighlight,
-                ),
-              ),
-            ),
-          )
-              : Flexible(
+          Flexible(
             child: SelectableLinkify(
               text: fin.description,
               style: TextStyle(
@@ -419,98 +504,91 @@ class _FinessePageState extends State<FinessePage> {
       ),
     );
 
-    Widget timeSection = Container(
-      padding: EdgeInsets.only(left: 20, bottom: _inEditMode ? 5 : 20),
-      child: Row(
-        children: [
-          Padding(
-            padding: EdgeInsets.only(right: 10),
-            child: Icon(
-              Icons.calendar_today,
-              color: fin.isActive ? secondaryHighlight : inactiveColor,
-            ),
-          ),
-          _inEditMode
-              ? Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                height: 30,
-                child: ToggleButtons(
-                  fillColor: Colors.transparent,
-                  splashColor: Colors.transparent,
-                  selectedColor: primaryHighlight,
-                  color: secondaryHighlight,
-                  children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2),
-                      child: Text(
-                        'Ongoing',
-                        style: TextStyle(
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 2),
-                      child: Text(
-                        'Inactive',
-                        style: TextStyle(
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ],
-                  onPressed: (int index) {
-                    setState(() {
-                      for (int buttonIndex = 0;
-                      buttonIndex < activeStatus.length;
-                      buttonIndex++) {
-                        if (buttonIndex == index) {
-                          setState(() {
-                            activeStatus[buttonIndex] = true;
-                          });
-                        } else {
-                          setState(() {
-                            activeStatus[buttonIndex] = false;
-                          });
-                        }
-                      }
-                    });
-                  },
-                  isSelected: activeStatus,
-                ),
-              ),
-              if (activeStatus[0])
-                SizedBox(
-                  width: 300,
-                  height: 30,
-                  child: TextFormField(
-                    controller: durationController,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: primaryHighlight,
-                    ),
-                    decoration: const InputDecoration(
-                      prefixText: 'Duration: ',
-                      prefixStyle: TextStyle(
+    Widget editTimeContent;
+
+    Widget timeContent;
+
+    if (!isFuture) {
+      if (_inEditMode) {
+        editTimeContent = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: 30,
+              child: ToggleButtons(
+                fillColor: Colors.transparent,
+                splashColor: Colors.transparent,
+                selectedColor: primaryHighlight,
+                color: secondaryHighlight,
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child: Text(
+                      'Ongoing',
+                      style: TextStyle(
                         fontSize: 16,
-                        color: secondaryHighlight,
                       ),
                     ),
                   ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child: Text(
+                      'Inactive',
+                      style: TextStyle(
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ],
+                onPressed: (int index) {
+                  setState(() {
+                    for (int buttonIndex = 0;
+                    buttonIndex < activeStatus.length;
+                    buttonIndex++) {
+                      if (buttonIndex == index) {
+                        setState(() {
+                          activeStatus[buttonIndex] = true;
+                        });
+                      } else {
+                        setState(() {
+                          activeStatus[buttonIndex] = false;
+                        });
+                      }
+                    }
+                  });
+                },
+                isSelected: activeStatus,
+              ),
+            ),
+            if (activeStatus[0])
+              TextFormField(
+                controller: durationController,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: primaryHighlight,
                 ),
-            ],
-          )
-              : !fin.isActive
-              ? Text(
+                decoration: const InputDecoration(
+                  hintText: 'Duration',
+                  hintStyle: TextStyle(
+                    fontSize: 16,
+                    color: secondaryHighlight,
+                  ),
+                ),
+              ),
+          ],
+        );
+      } else {
+        if (!fin.isActive) {
+          timeContent = Text(
             'Inactive',
             style: TextStyle(
               fontSize: 16,
               color: inactiveColor,
             ),
-          )
-              : Expanded(
+          );
+        } else {
+          timeContent = Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -526,7 +604,7 @@ class _FinessePageState extends State<FinessePage> {
                     ),
                   ),
                 Text(
-                  'Posted ' + timeago.format(fin.postedTime),
+                  'Posted ' + timeago.format(fin.startTime),
                   style: TextStyle(
                     fontSize: fin.duration != '' ? 14 : 16,
                     color: fin.duration != ''
@@ -536,13 +614,201 @@ class _FinessePageState extends State<FinessePage> {
                 ),
               ],
             ),
+          );
+        }
+      }
+    } else if (isFuture && fin.endTime == null) {
+      if (_inEditMode) {
+        editTimeContent = TimeEntry(
+          initStartDate: _startDate,
+          initStartTime: _startTime,
+          initEndDate: _endDate,
+          initEndTime: _endTime,
+          initRepetition: selectedRepetition,
+          onSelectStartDate: (date) {
+            _startDate = date;
+          },
+          onSelectStartTime: (time) {
+            _startTime = time;
+          },
+          onSelectEndDate: (date) {
+            _endDate = date;
+          },
+          onSelectEndTime: (time) {
+            _endTime = time;
+          },
+          onSelectRepetition: (rep) {
+            selectedRepetition = rep;
+          },
+        );
+      } else {
+        timeContent = Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                (fin.startTime.year == DateTime
+                    .now()
+                    .year)
+                    ? DateFormat('EEEE, MMMM d').format(fin.startTime)
+                    : DateFormat('EEEE, MMMM d, y').format(fin.startTime),
+                style: TextStyle(
+                  fontSize: 16,
+                  color: primaryHighlight,
+                ),
+              ),
+              Text(
+                DateFormat('h:m a').format(fin.startTime),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: secondaryHighlight,
+                ),
+              ),
+            ],
           ),
+        );
+      }
+    } else {
+      // isFuture, endTime provided
+      if (_inEditMode) {
+        editTimeContent = TimeEntry(
+          initStartDate: _startDate,
+          initStartTime: _startTime,
+          initEndDate: _endDate,
+          initEndTime: _endTime,
+          initRepetition: selectedRepetition,
+          onSelectStartDate: (date) {
+            _startDate = date;
+          },
+          onSelectStartTime: (time) {
+            _startTime = time;
+          },
+          onSelectEndDate: (date) {
+            _endDate = date;
+          },
+          onSelectEndTime: (time) {
+            _endTime = time;
+          },
+          onSelectRepetition: (rep) {
+            selectedRepetition = rep;
+          },
+        );
+      } else {
+        if (_startDate.isAtSameMomentAs(_endDate)) {
+          timeContent = Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  (fin.startTime.year == DateTime
+                      .now()
+                      .year)
+                      ? DateFormat('EEEE, MMMM d').format(fin.startTime)
+                      : DateFormat('EEEE, MMMM d, y').format(fin.startTime),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: primaryHighlight,
+                  ),
+                ),
+                Text(
+                  DateFormat('h:mm a').format(fin.startTime) +
+                      ' - ' +
+                      DateFormat('h:mm a').format(fin.endTime),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: secondaryHighlight,
+                  ),
+                ),
+              ],
+            ),
+          );
+        } else {
+          // startdate != enddate
+          timeContent = Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  ((fin.startTime.year == DateTime
+                      .now()
+                      .year)
+                      ? DateFormat('EEEE, MMMM d').format(fin.startTime)
+                      : DateFormat('EEEE, MMMM d, y')
+                      .format(fin.startTime)) +
+                      ' · ' +
+                      DateFormat('h:mm a').format(fin.startTime),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: primaryHighlight,
+                  ),
+                ),
+                Text(
+                  ((fin.endTime.year == DateTime
+                      .now()
+                      .year)
+                      ? DateFormat('EEEE, MMMM d').format(fin.endTime)
+                      : DateFormat('EEEE, MMMM d, y').format(fin.endTime)) +
+                      ' · ' +
+                      DateFormat('h:mm a').format(fin.endTime),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: secondaryHighlight,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+      }
+    }
+
+    Widget editTimeSection;
+    editTimeSection = Container(
+      padding: EdgeInsets.only(bottom: 5, top: 5),
+      child: Row(
+        crossAxisAlignment:
+        (false) ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: (false)
+                ? const EdgeInsets.only(top: 12, right: 10)
+                : const EdgeInsets.only(top: 0, right: 10),
+            child: Icon(
+              Icons.calendar_today,
+              color: fin.isActive ? secondaryHighlight : inactiveColor,
+            ),
+          ),
+          if (editTimeContent != null)
+            Expanded(
+              child: editTimeContent,
+            ),
+        ],
+      ),
+    );
+
+    Widget timeSection = Container(
+      padding: EdgeInsets.only(bottom: 20),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(right: 10),
+            child: Icon(
+              Icons.calendar_today,
+              color: fin.isActive ? secondaryHighlight : inactiveColor,
+            ),
+          ),
+          if (timeContent != null) timeContent,
         ],
       ),
     );
 
     Widget userSection = Container(
-      padding: const EdgeInsets.only(left: 20, bottom: 20),
+      padding: const EdgeInsets.only(bottom: 20),
       child: Row(
         children: [
           Padding(
@@ -568,25 +834,27 @@ class _FinessePageState extends State<FinessePage> {
     );
 
     Widget votingSection = Container(
-      padding: const EdgeInsets.only(left: 20, bottom: 20),
+      padding: const EdgeInsets.only(bottom: 20),
       child: Row(
         children: [
-          Row(children: [
-            Padding(
-              padding: EdgeInsets.only(right: 10),
-              child: Icon(
-                Icons.thumbs_up_down,
-                color: fin.isActive ? secondaryHighlight : inactiveColor,
+          Row(
+            children: [
+              Padding(
+                padding: EdgeInsets.only(right: 10),
+                child: Icon(
+                  Icons.thumbs_up_down,
+                  color: fin.isActive ? secondaryHighlight : inactiveColor,
+                ),
               ),
-            ),
-            Text(
-              '${fin.points} ${(fin.points == 1) ? "point" : "points"}',
-              style: TextStyle(
-                fontSize: 16,
-                color: fin.isActive ? primaryHighlight : inactiveColor,
+              Text(
+                '${fin.points} ${(fin.points == 1) ? "point" : "points"}',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: fin.isActive ? primaryHighlight : inactiveColor,
+                ),
               ),
-            ),
-          ]),
+            ],
+          ),
           if (fin.isActive)
             SizedBox(
               height: 24,
@@ -605,9 +873,35 @@ class _FinessePageState extends State<FinessePage> {
                   ),
                 ],
                 onPressed: (index) {
-                  setState(() {
-                    handleVote(index, voteStatus, fin);
-                  });
+                  if (User.currentUser != null) {
+                    setState(() {
+                      handleVote(index, voteStatus, fin);
+                    });
+                  }
+                  else {
+                    _scaffoldKey.currentState.showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Sorry, you must be logged in to vote on a post.',
+                          style: TextStyle(
+                            color: secondaryHighlight,
+                          ),
+                        ),
+                        action: SnackBarAction(
+                          label: 'LOGIN',
+                          onPressed: () {
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (BuildContext context) =>
+                                      LoginScreen()),
+                                  (Route<dynamic> route) => false,
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  }
                 },
                 isSelected: voteStatus,
               ),
@@ -631,37 +925,76 @@ class _FinessePageState extends State<FinessePage> {
 
     Widget addCommentSection = Padding(
       padding: EdgeInsets.symmetric(vertical: 4),
-      child: TextFormField(
-        key: dataKey,
-        keyboardAppearance: Brightness.dark,
-        textCapitalization: TextCapitalization.sentences,
-        controller: commentController,
-        autovalidate: true,
-        validator: (comment) {
-          bool isEmpty = comment.isEmpty;
-          if (isEmpty != _commentIsEmpty) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              setState(() {
-                _commentIsEmpty = isEmpty;
-              });
-            });
-          }
-          return null;
-        },
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          hintText: 'Add a comment...',
-          hintStyle: TextStyle(
-              color: fin.isActive ? secondaryHighlight : inactiveColor),
-          prefixIcon: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8),
-            child: Icon(
-              Icons.account_circle,
-              color: getColor(User.currentUser.email, fin.isActive),
-              size: 45,
+      child: Row(
+        children: [
+          Expanded(
+            child: TextFormField(
+              key: dataKey,
+              keyboardAppearance: Brightness.dark,
+              textCapitalization: TextCapitalization.sentences,
+              controller: commentController,
+              autovalidate: true,
+              validator: (comment) {
+                bool isEmpty = comment.isEmpty;
+                if (isEmpty != _commentIsEmpty) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    setState(() {
+                      _commentIsEmpty = isEmpty;
+                    });
+                  });
+                }
+                return null;
+              },
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                hintText: 'Add a comment...',
+                hintStyle: TextStyle(
+                    color: fin.isActive ? secondaryHighlight : inactiveColor),
+                prefixIcon: Padding(
+                  padding: EdgeInsets.only(right: 8),
+                  child: Icon(
+                    Icons.account_circle,
+                    color: getColor(User.currentUser?.email, fin.isActive) ??
+                        Colors.white,
+                    size: 45,
+                  ),
+                ),
+              ),
+              style:
+              TextStyle(color: fin.isActive ? primaryHighlight : inactiveColor),
+              onFieldSubmitted: (comment) async {
+                if (comment.isNotEmpty) {
+                  if (User.currentUser != null) {
+                    await postComment(comment);
+                  } else {
+                    _scaffoldKey.currentState.showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Sorry, you must be logged in to comment on a post.',
+                          style: TextStyle(
+                            color: secondaryHighlight,
+                          ),
+                        ),
+                        action: SnackBarAction(
+                          label: 'LOGIN',
+                          onPressed: () {
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (BuildContext context) =>
+                                      LoginScreen()),
+                                  (Route<dynamic> route) => false,
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  }
+                }
+              },
             ),
           ),
-          suffixIcon: IconButton(
+          IconButton(
               color: primaryHighlight,
               disabledColor: Colors.grey[500],
               icon: Icon(
@@ -670,21 +1003,39 @@ class _FinessePageState extends State<FinessePage> {
               onPressed: (_commentIsEmpty)
                   ? null
                   : () async {
-                FocusScopeNode currentFocus = FocusScope.of(context);
-                if (!currentFocus.hasPrimaryFocus) {
-                  currentFocus.unfocus();
+                if (User.currentUser != null) {
+                  FocusScopeNode currentFocus = FocusScope.of(context);
+                  if (!currentFocus.hasPrimaryFocus) {
+                    currentFocus.unfocus();
+                  }
+                  String comment = commentController.value.text;
+                  await postComment(comment);
+                } else {
+                  _scaffoldKey.currentState.showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Sorry, you must be logged in to comment on a post.',
+                        style: TextStyle(
+                          color: secondaryHighlight,
+                        ),
+                      ),
+                      action: SnackBarAction(
+                        label: 'LOGIN',
+                        onPressed: () {
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                                builder: (BuildContext context) =>
+                                    LoginScreen()),
+                                (Route<dynamic> route) => false,
+                          );
+                        },
+                      ),
+                    ),
+                  );
                 }
-                String comment = commentController.value.text;
-                await postComment(comment);
               }),
-        ),
-        style:
-        TextStyle(color: fin.isActive ? primaryHighlight : inactiveColor),
-        onFieldSubmitted: (comment) async {
-          if (comment.isNotEmpty) {
-            await postComment(comment);
-          }
-        },
+        ],
       ),
     );
 
@@ -693,7 +1044,6 @@ class _FinessePageState extends State<FinessePage> {
         padding: EdgeInsets.only(
           top: 5,
           bottom: 5,
-          right: 10,
         ),
         child: Column(
           children: [
@@ -701,7 +1051,7 @@ class _FinessePageState extends State<FinessePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8),
+                  padding: EdgeInsets.only(right: 8),
                   child: Icon(
                     Icons.account_circle,
                     color: getColor(comment.emailId, fin.isActive),
@@ -754,7 +1104,7 @@ class _FinessePageState extends State<FinessePage> {
 
     Widget viewCommentSection = FutureBuilder(
       initialData: fin.comments,
-      future: getComments(fin.eventId),
+      future: comments,
       builder: (context, snapshot) {
         if (snapshot.hasData &&
             snapshot.connectionState == ConnectionState.done) {
@@ -765,7 +1115,6 @@ class _FinessePageState extends State<FinessePage> {
         fin.comments.map((comment) => getCommentView(comment)).toList();
         Widget commentsHeader = Padding(
           padding: EdgeInsets.only(
-            left: 12,
             bottom: 10,
           ),
           child: Row(
@@ -795,14 +1144,69 @@ class _FinessePageState extends State<FinessePage> {
       },
     );
 
+    Widget readView = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (fin.image != "") imageSection,
+        Padding(
+          padding: const EdgeInsets.only(
+            left: 15,
+            right: 5,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              titleSection,
+              locationSection,
+              if (fin.description != "") descriptionSection,
+              timeSection,
+              userSection,
+              votingSection,
+              viewCommentSection,
+              addCommentSection,
+            ],
+          ),
+        ),
+      ],
+    );
+
+    Widget editView = Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 5),
+            child: editImageSection,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(
+              left: 15,
+              right: 15,
+              bottom: 5,
+            ),
+            child: Column(
+              children: [
+                editTitleSection,
+                editLocationSection,
+                editDescriptionSection,
+                editTimeSection,
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         automaticallyImplyLeading: !_inEditMode,
         title: _inEditMode
             ? Text('Editing \'${fin.eventTitle}\'')
             : Text(fin.eventTitle),
         actions: <Widget>[
-          if (fin.emailId == User.currentUser.email)
+          if (fin.emailId == User.currentUser?.email)
             if (!_inEditMode)
               IconButton(
                 icon: Icon(
@@ -849,9 +1253,30 @@ class _FinessePageState extends State<FinessePage> {
                             } else {
                               fin.markedInactive.add(User.currentUser.email);
                             }
+                            if (isFuture) {
+                              DateTime start = _startDate.add(
+                                Duration(
+                                  hours: _startTime.hour,
+                                  minutes: _startTime.minute,
+                                ),
+                              );
+                              fin.startTime = start;
+
+                              if (_endDate != null && _endTime != null) {
+                                DateTime end = _endDate.add(
+                                  Duration(
+                                    hours: _endTime.hour,
+                                    minutes: _endTime.minute,
+                                  ),
+                                );
+                                fin.endTime = end;
+                              }
+                            }
+
                             resetState();
                           });
-                          updateFinesse(fin);
+
+                          updateFinesse(fin, isFuture: isFuture);
                         }
                       }),
                   IconButton(
@@ -1007,6 +1432,11 @@ class _FinessePageState extends State<FinessePage> {
                 ),
               ],
             )*/
+          IconButton(
+            icon: Icon(Icons.share),
+            onPressed: () =>
+                Share.share('${fin.eventTitle} at ${fin.location}'),
+          ),
         ],
       ),
       backgroundColor: primaryBackground,
@@ -1018,34 +1448,7 @@ class _FinessePageState extends State<FinessePage> {
             shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             color: secondaryBackground,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (fin.image != "" || _inEditMode) imageSection,
-                      titleSection,
-                      locationSection,
-                      if (fin.description != "" || _inEditMode)
-                        descriptionSection,
-                      timeSection,
-                    ],
-                  ),
-                ),
-                if (!_inEditMode)
-                  Column(
-                    children: [
-                      userSection,
-                      votingSection,
-                      viewCommentSection,
-                      addCommentSection,
-                    ],
-                  ),
-              ],
-            ),
+            child: _inEditMode ? editView : readView,
           ),
         ),
       ),

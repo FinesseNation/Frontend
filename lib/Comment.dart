@@ -43,16 +43,4 @@ class Comment {
     map['postedTime'] = postedTime;
     return map;
   }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Comment &&
-          runtimeType == other.runtimeType &&
-          comment == other.comment &&
-          emailId == other.emailId &&
-          postedTime == other.postedTime;
-
-  @override
-  int get hashCode => comment.hashCode ^ emailId.hashCode ^ postedTime.hashCode;
 }

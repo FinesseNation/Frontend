@@ -8,12 +8,10 @@ import 'package:finesse_nation/Pages/NotificationsPage.dart';
 import 'package:finesse_nation/Pages/SettingsPage.dart';
 import 'package:finesse_nation/Pages/addEventPage.dart';
 import 'package:finesse_nation/Styles.dart';
-import 'package:finesse_nation/User.dart';
 import 'package:finesse_nation/widgets/FinesseList.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unicorndial/unicorndial.dart';
 
@@ -22,7 +20,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SharedPreferences _prefs = await SharedPreferences.getInstance();
   String _currentUser = _prefs.get('currentUser');
-  if (_currentUser != null) {
+  if (_currentUser != null && _currentUser != 'anon') {
     await updateCurrentUser(email: _currentUser);
   }
   runApp(_MyApp(_currentUser));
@@ -60,18 +58,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  Future<void> reload() async {
-    Fluttertoast.showToast(
-      msg: "Reloading...",
-      toastLength: Toast.LENGTH_LONG,
-      backgroundColor: secondaryBackground,
-      textColor: primaryHighlight,
-    );
-    setState(() {
-      print('reloading');
-    });
-  }
-
   @override
   void initState() {
     super.initState();
@@ -86,7 +72,7 @@ class _HomePageState extends State<HomePage> {
 
         String author = message['data']['author'];
         print(author);
-        if (author == User.currentUser.email) return;
+//        if (author == User.currentUser.email) return;
 
         String title = message['notification']['title'];
         String body = message['notification']['body'];
@@ -239,7 +225,7 @@ class _HomePageState extends State<HomePage> {
         body: TabBarView(
           children: [
             FinesseList(),
-            Image.asset('images/rem.png'),
+            FinesseList(isFuture: true),
           ],
         ),
         floatingActionButton: UnicornDialer(

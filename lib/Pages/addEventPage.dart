@@ -3,15 +3,16 @@ import 'dart:io';
 
 import 'package:finesse_nation/Finesse.dart';
 import 'package:finesse_nation/Network.dart';
+import 'package:finesse_nation/Pages/LoginScreen.dart';
 import 'package:finesse_nation/Styles.dart';
 import 'package:finesse_nation/User.dart';
 import 'package:finesse_nation/main.dart';
 import 'package:finesse_nation/widgets/PopUpBox.dart';
+import 'package:finesse_nation/widgets/TimeEntry.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 
 /// Allows the user to add a new [Finesse].
 class AddEvent extends StatefulWidget {
@@ -25,8 +26,6 @@ class AddEvent extends StatefulWidget {
   }
 }
 
-enum Repetition { none, daily, weekly, monthly, yearly }
-
 class _AddEventState extends State<AddEvent> {
   final _formKey = GlobalKey<FormState>();
   final eventNameController = TextEditingController();
@@ -39,16 +38,6 @@ class _AddEventState extends State<AddEvent> {
   DateTime _endDate;
   TimeOfDay _startTime;
   TimeOfDay _endTime;
-
-  static const Map<Repetition, String> repetitionLabels = {
-    Repetition.none: 'Does not repeat',
-    Repetition.daily: 'Every day',
-    Repetition.weekly: 'Every week',
-    Repetition.monthly: 'Every month',
-    Repetition.yearly: 'Every year',
-  };
-
-  bool more;
 
   Repetition selectedRepetition;
 
@@ -83,38 +72,10 @@ class _AddEventState extends State<AddEvent> {
         microseconds: now.microsecond,
       ),
     );
-    print('init start = $_startDate');
-    _startTime = TimeOfDay.now();
-    _endDate = _startDate;
-    _endTime = TimeOfDay(
-      hour: _startTime.hour + 1,
-      minute: _startTime.minute,
-    ); // TODO: Won't be correct if time after 11pm
 
-    more = false;
+    _startTime = TimeOfDay.now();
 
     selectedRepetition = Repetition.none;
-  }
-
-  bool endIsBeforeStart() {
-    DateTime start = _startDate.add(
-      Duration(
-        hours: _startTime.hour,
-        minutes: _startTime.minute,
-      ),
-    );
-    DateTime end = _endDate.add(
-      Duration(
-        hours: _endTime.hour,
-        minutes: _endTime.minute,
-      ),
-    );
-    print('start = $start');
-    print('end = $end');
-
-    print(end.isBefore(start) ? 'invalid' : 'valid');
-    print('-------------------');
-    return end.isBefore(start);
   }
 
   void _onImageButtonPressed(ImageSource source) async {
@@ -193,114 +154,6 @@ class _AddEventState extends State<AddEvent> {
     );
   }
 
-  Widget timeRow(String type) {
-    bool isStart = type == 'Start';
-    bool isInvalid = isStart && endIsBeforeStart();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 2),
-          child: Text(
-            type,
-            style: TextStyle(
-              color: secondaryHighlight,
-              fontSize: 12,
-            ),
-          ),
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            InkWell(
-              onTap: () async {
-                DateTime tempDate = await showDatePicker(
-                  context: context,
-                  initialDate: isStart ? _startDate : _endDate,
-                  firstDate: isStart ? DateTime.now() : _startDate,
-                  lastDate: DateTime.now().add(
-                    Duration(days: 365),
-                  ),
-                );
-                if (tempDate == null) {
-                  return;
-                }
-                setState(() {
-                  if (isStart) {
-                    _startDate = tempDate;
-                    if (endIsBeforeStart()) {
-                      // TODO: increment end date and time correctly
-                      _endDate = tempDate;
-                    }
-                  } else {
-                    _endDate = tempDate;
-                  }
-                });
-              },
-              child: Text(
-                DateFormat('EEEE, MMM d, y')
-                    .format(isStart ? _startDate : _endDate),
-                style: TextStyle(
-                  color: isInvalid ? Colors.red : primaryHighlight,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-            InkWell(
-              onTap: () async {
-                TimeOfDay tempTime = await showTimePicker(
-                  context: context,
-                  initialTime: isStart ? _startTime : _endTime,
-                );
-                if (tempTime == null) {
-                  return;
-                }
-                setState(() {
-                  isStart ? _startTime = tempTime : _endTime = tempTime;
-                });
-              },
-              child: Text(
-                isStart ? _startTime.format(context) : _endTime.format(context),
-                style: TextStyle(
-                  color: isInvalid ? Colors.red : primaryHighlight,
-                  fontSize: 16,
-                ),
-              ),
-            )
-          ],
-        ),
-      ],
-    );
-  }
-
-  Future<void> showRepeatDialog() async {
-    Repetition result = await showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return SimpleDialog(
-            children: Repetition.values.map((rep) {
-              return SimpleDialogOption(
-                onPressed: () {
-                  Navigator.pop(context, rep);
-                },
-                child: Text(
-                  repetitionLabels[rep],
-                  style: TextStyle(
-                    fontWeight: (rep == selectedRepetition)
-                        ? FontWeight.bold
-                        : FontWeight.normal,
-                  ),
-                ),
-              );
-            }).toList(),
-          );
-        });
-    setState(() {
-      selectedRepetition = result ?? selectedRepetition;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -314,34 +167,43 @@ class _AddEventState extends State<AddEvent> {
       child: Scaffold(
         appBar: AppBar(
           title: Text('Share a Finesse'),
+          centerTitle: true,
           actions: [
             Builder(
               builder: (context) =>
                   IconButton(
                     icon: Icon(Icons.send),
                     onPressed: () async {
+                      if (User.currentUser == null) {
+                        Scaffold.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Sorry, you must be logged in to create a post.',
+                              style: TextStyle(
+                                color: secondaryHighlight,
+                              ),
+                            ),
+                            action: SnackBarAction(
+                              label: 'LOGIN',
+                              onPressed: () {
+                                Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (BuildContext context) =>
+                                          LoginScreen()),
+                                      (Route<dynamic> route) => false,
+                                );
+                              },
+                            ),
+                          ),
+                        );
+                        return;
+                      }
                       if (!_formKey.currentState.validate()) {
                         setState(() {
                           shouldValidate = true;
                         });
                       }
-                      if (endIsBeforeStart()) {
-                        Scaffold.of(context).showSnackBar(
-                          SnackBar(
-                            content:
-                            Text("The end date can't be before the start date"),
-                          ),
-                        );
-                        return;
-                      }
-                      /*else {
-                    Scaffold.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text("Cool"),
-                      ),
-                    );
-                    return;
-                  }*/
                       if (_formKey.currentState.validate()) {
                         Scaffold.of(context).showSnackBar(
                           SnackBar(
@@ -366,30 +228,61 @@ class _AddEventState extends State<AddEvent> {
                           imageString = base64Encode(_image.readAsBytesSync());
                         }
 
-                        Finesse newFinesse = Finesse.finesseAdd(
-                          eventName.data,
-                          description.data,
-                          imageString,
-                          location.data,
-                          duration.data,
-                          _type,
-                          currTime,
-                        );
-                        String res = await addFinesse(newFinesse);
+                        Finesse newFinesse;
+                        if (widget.isOngoing) {
+                          newFinesse = Finesse.finesseAdd(
+                            eventName.data,
+                            description.data,
+                            imageString,
+                            location.data,
+                            duration.data,
+                            _type,
+                            currTime,
+                          );
+                        } else {
+                          DateTime start = _startDate.add(
+                            Duration(
+                              hours: _startTime.hour,
+                              minutes: _startTime.minute,
+                            ),
+                          );
+                          DateTime end = _endDate?.add(
+                            Duration(
+                              hours: _endTime.hour,
+                              minutes: _endTime.minute,
+                            ),
+                          );
+                          if (end.isBefore(start)) {
+                            Scaffold.of(context).showSnackBar(
+                              SnackBar(
+                                content:
+                                Text(
+                                    "The end date can't be before the start date"),
+                              ),
+                            );
+                            return;
+                          }
+                          newFinesse = Finesse.future(
+                            eventName.data,
+                            description.data,
+                            imageString,
+                            location.data,
+                            _type,
+                            start,
+                            endTime: end,
+                            repetition: selectedRepetition,
+                          );
+                        }
+
+                        String res = await addFinesse(
+                            newFinesse, widget.isOngoing);
                         // could exploit the fact that id is sequential-ish
                         String newId = jsonDecode(res)['id'];
                         User.currentUser.upvoted.add(newId);
                         User.currentUser.subscriptions.add(newId);
-                        // TODO: just don't display anything if app is open
-                        // in order to avoid unsub then resub
-//                        await firebaseMessaging.unsubscribeFromTopic(ALL_TOPIC);
-//                        await sendToAll(
-//                            newFinesse.eventTitle, newFinesse.location,
-//                            id: newId, isNew: true);
                         if (User.currentUser.notifications) {
                           print('subscribing to $newId');
                           firebaseMessaging.subscribeToTopic(newId);
-                          firebaseMessaging.subscribeToTopic(ALL_TOPIC);
                         }
                         await Navigator.pushAndRemoveUntil(
                           context,
@@ -554,90 +447,22 @@ class _AddEventState extends State<AddEvent> {
                             )
                           else
                             Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 10),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    timeRow('Start'),
-                                    Padding(
-                                      padding:
-                                      EdgeInsets.symmetric(vertical: 5),
-                                    ),
-                                    GestureDetector(
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Padding(
-                                            padding:
-                                            const EdgeInsets.only(right: 3),
-                                            child: Icon(
-                                              more
-                                                  ? Icons.cancel
-                                                  : Icons.add_circle,
-                                              color: secondaryHighlight,
-                                              size: 20,
-                                            ),
-                                          ),
-                                          Text(
-                                            more ? 'Cancel' : 'More options',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: secondaryHighlight,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      onTap: () {
-                                        setState(() {
-                                          more = !more;
-                                          //updateEnd();
-                                          selectedRepetition = Repetition.none;
-                                        });
-                                      },
-                                    ),
-                                    if (more)
-                                      Column(
-                                        crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                        children: [
-                                          Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                                vertical: 8.0),
-                                            child: timeRow('End'),
-                                          ),
-                                          Column(
-                                            crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                            children: [
-                                              Padding(
-                                                padding: const EdgeInsets.only(
-                                                    bottom: 2),
-                                                child: Text(
-                                                  'Repeat',
-                                                  style: TextStyle(
-                                                    color: secondaryHighlight,
-                                                    fontSize: 12,
-                                                  ),
-                                                ),
-                                              ),
-                                              InkWell(
-                                                child: Text(
-                                                  repetitionLabels[
-                                                  selectedRepetition],
-                                                  style: TextStyle(
-                                                    fontSize: 16,
-                                                    color: primaryHighlight,
-                                                  ),
-                                                ),
-                                                onTap: showRepeatDialog,
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                  ],
-                                ),
+                              child: TimeEntry(
+                                onSelectStartDate: (date) {
+                                  setState(() => _startDate = date);
+                                },
+                                onSelectStartTime: (time) {
+                                  setState(() => _startTime = time);
+                                },
+                                onSelectEndDate: (date) {
+                                  setState(() => _endDate = date);
+                                },
+                                onSelectEndTime: (time) {
+                                  setState(() => _endTime = time);
+                                },
+                                onSelectRepetition: (rep) {
+                                  setState(() => selectedRepetition = rep);
+                                },
                               ),
                             ),
                         ],

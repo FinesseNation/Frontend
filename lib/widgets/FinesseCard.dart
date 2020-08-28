@@ -1,17 +1,20 @@
 import 'package:finesse_nation/Finesse.dart';
 import 'package:finesse_nation/Pages/FinessePage.dart';
+import 'package:finesse_nation/Pages/LoginScreen.dart';
 import 'package:finesse_nation/Styles.dart';
 import 'package:finesse_nation/User.dart';
 import 'package:finesse_nation/Util.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:intl/intl.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class FinesseCard extends StatefulWidget {
   final Finesse fin;
+  final bool isFuture;
 
-  FinesseCard(this.fin);
+  FinesseCard(this.fin, this.isFuture);
 
   @override
   _FinesseCardState createState() => _FinesseCardState();
@@ -19,15 +22,19 @@ class FinesseCard extends StatefulWidget {
 
 class _FinesseCardState extends State<FinesseCard> {
   Finesse fin;
+  bool isFuture;
+
   List<bool> isSelected;
 
   @override
   void initState() {
     super.initState();
     fin = widget.fin;
+    isFuture = widget.isFuture;
+
     isSelected = [
-      User.currentUser.upvoted.contains(fin.eventId),
-      User.currentUser.downvoted.contains(fin.eventId)
+      User.currentUser?.upvoted?.contains(fin.eventId) ?? false,
+      User.currentUser?.downvoted?.contains(fin.eventId) ?? false
     ];
   }
 
@@ -46,6 +53,7 @@ class _FinesseCardState extends State<FinesseCard> {
                 builder: (context) =>
                     FinessePage(
                       fin,
+                      isFuture,
                       voteStatus: isSelected,
                     ),
               ),
@@ -88,7 +96,9 @@ class _FinesseCardState extends State<FinesseCard> {
                       ),
                     ),
                     Text(
-                      fin.location + " · ${timeago.format(fin.postedTime)}",
+                      isFuture ? DateFormat('E, MMM d · h:m a').format(
+                          fin.startTime) : fin.location + ' · ' +
+                          timeago.format(fin.startTime),
                       style: TextStyle(
                         fontSize: 12,
                         color:
@@ -128,9 +138,35 @@ class _FinesseCardState extends State<FinesseCard> {
                               ),
                             ],
                             onPressed: (index) {
-                              setState(() {
-                                handleVote(index, isSelected, fin);
-                              });
+                              if (User.currentUser != null) {
+                                setState(() {
+                                  handleVote(index, isSelected, fin);
+                                });
+                              }
+                              else {
+                                Scaffold.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Sorry, you must be logged in to vote on a post.',
+                                      style: TextStyle(
+                                        color: secondaryHighlight,
+                                      ),
+                                    ),
+                                    action: SnackBarAction(
+                                      label: 'LOGIN',
+                                      onPressed: () {
+                                        Navigator.pushAndRemoveUntil(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (BuildContext context) =>
+                                                  LoginScreen()),
+                                              (Route<dynamic> route) => false,
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                );
+                              }
                             },
                             isSelected: isSelected,
                           ),

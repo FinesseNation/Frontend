@@ -7,11 +7,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
-bool _fcmAlreadySetup = false;
-
 /// Returns a [ListView] containing a [Card] for each [Finesse].
 class FinesseList extends StatefulWidget {
-  FinesseList({Key key}) : super(key: key);
+  final bool isFuture;
+
+  FinesseList({bool isFuture, Key key})
+      : this.isFuture = isFuture ?? false,
+        super(key: key);
 
   @override
   _FinesseListState createState() {
@@ -28,7 +30,7 @@ class _FinesseListState extends State<FinesseList>
   bool get wantKeepAlive => true;
 
   void _onRefresh() async {
-    _finesses = fetchFinesses();
+    _finesses = fetchFinesses(isFuture: widget.isFuture);
     await Future.delayed(Duration(milliseconds: 500));
     _refreshController.refreshCompleted();
     setState(() {});
@@ -37,7 +39,7 @@ class _FinesseListState extends State<FinesseList>
   @override
   void initState() {
     super.initState();
-    _finesses = fetchFinesses();
+    _finesses = fetchFinesses(isFuture: widget.isFuture);
     _refreshController = RefreshController(initialRefresh: false);
   }
 
@@ -49,8 +51,12 @@ class _FinesseListState extends State<FinesseList>
         initialData: Finesse.finesseList,
         future: _finesses,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            Finesse.finesseList = snapshot.data.reversed.toList();
+          if (snapshot.data != null &&
+              snapshot.connectionState == ConnectionState.done) {
+            Finesse.finesseList = widget.isFuture
+                ? snapshot.data.toList()
+                : snapshot.data.reversed.toList();
+
             return listViewWidget(Finesse.finesseList);
           }
           return Center(child: CircularProgressIndicator());
@@ -69,9 +75,18 @@ class _FinesseListState extends State<FinesseList>
       ),
       controller: _refreshController,
       onRefresh: _onRefresh,
-      child: ListView.builder(
+      child: finesses.isEmpty
+          ? Center(
+        child: Text(
+          'No ${widget.isFuture ? 'scheduled' : 'ongoing'} events',
+          style: TextStyle(
+            color: secondaryHighlight,
+          ),
+        ),
+      )
+          : ListView.builder(
         itemCount: finesses.length,
-        itemBuilder: (_, i) => FinesseCard(finesses[i]),
+        itemBuilder: (_, i) => FinesseCard(finesses[i], widget.isFuture),
       ),
     );
   }

@@ -21,6 +21,9 @@ const Color secondaryHighlight = Color(0xff8c8c8c);
 const Color inactiveColor = Color(0xFF606060);
 
 Color getColor(String email, bool isActive) {
+  if (email == null) {
+    return null;
+  }
   int min = 0xff000000;
   int max = 0xffffffff;
   int seed = email.codeUnits.fold(0, (i, j) => i + j);
