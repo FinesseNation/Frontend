@@ -13,7 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// The root domain for the Finesse Nation API.
 //const _DOMAIN = 'https://finesse-nation.herokuapp.com/api/';
-const _DOMAIN = 'http://10.157.195.119:8080/api/';
+const _DOMAIN = 'http://10.0.0.135:8080/api/';
 
 /// Deleting a Finesse.
 const _DELETE_URL = _DOMAIN + 'food/deleteEvent';
@@ -111,8 +111,6 @@ Future<List<Finesse>> fetchFinesses({bool isFuture: false}) async {
 Future<Finesse> getFinesse(String eventId) async {
   final response =
   await http.get(_GET_URL + '/$eventId', headers: {'api_token': _token});
-  print(response.body.length);
-  print(response.statusCode);
   if (response.statusCode == 200) {
     var data = json.decode(response.body);
     Finesse fin = Finesse.fromJson(data);
@@ -127,8 +125,8 @@ Future<List<dynamic>> getLeaderboard() async {
     updateCurrentUser();
   }
   String email = User.currentUser?.email ?? '';
-  final response = await http.get(_GET_LEADERBOARD_URL + email,
-      headers: {'api_token': _token});
+  final response = await http
+      .get(_GET_LEADERBOARD_URL + email, headers: {'api_token': _token});
   if (response.statusCode == 200) {
     var data = json.decode(response.body);
     int currentRank = data[0];
@@ -249,19 +247,18 @@ Future<String> createUser(LoginData data) async {
 
 /// Validates [email].
 String validateEmail(String email) {
-  if (email.isEmpty) {
-    return 'Email can\'t be empty';
-  }
-  bool emailValid =
+  RegExp validEmail =
       RegExp(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]"
-              r"{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]"
-              r"{0,253}[a-zA-Z0-9])?)*$")
-          .hasMatch(email);
-  if (emailValid) {
-    return null;
+      r"{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]"
+      r"{0,253}[a-zA-Z0-9])?)*$");
+
+  if (email.isEmpty ||
+      !validEmail.hasMatch(email) ||
+      !email.endsWith('@illinois.edu')) {
+    return 'Please enter a valid illinois.edu email address';
   }
 
-  return "Invalid email address";
+  return null;
 }
 
 /// Validates [password].
@@ -350,7 +347,6 @@ Future<http.Response> addComment(Comment comment, String eventId) async {
 
 /// Gets the comments for a Finesse given its [eventId].
 Future<List<Comment>> getComments(String eventId) async {
-  print('getting comments');
   final response = await http
       .get(_GET_COMMENT_URL + eventId, headers: {'api_token': _token});
 

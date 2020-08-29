@@ -14,7 +14,6 @@ class NotificationsPage extends StatefulWidget {
 class _NotificationsPageState extends State<NotificationsPage> {
   @override
   Widget build(BuildContext context) {
-    //NotificationSingleton.instance.clearNotifications();
     return Scaffold(
       backgroundColor: primaryBackground,
       appBar: AppBar(
@@ -28,7 +27,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
             ),
             onPressed: () {
               setState(() {
-                NotificationSingleton.instance.markAllAsRead();
+                NotificationSingleton.instance.dismissAll();
               });
             },
           )
@@ -42,6 +41,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
               itemCount: notifications.length,
               itemBuilder: (_, i) {
                 NotificationEntry notif = notifications[i];
+                Color color = notif.isUnread ? primaryHighlight : inactiveColor;
                 return InkWell(
                   child: Padding(
                     padding: const EdgeInsets.only(top: 5, right: 5, left: 5),
@@ -52,35 +52,37 @@ class _NotificationsPageState extends State<NotificationsPage> {
                       ),
                       color: secondaryBackground,
                       child: Padding(
-                        padding: const EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 15, vertical: 8),
                         child: Row(
                           children: [
                             Padding(
-                              padding: const EdgeInsets.only(right: 8),
+                              padding: const EdgeInsets.only(right: 15),
                               child: Icon(
                                 notif.type == NotificationType.post
                                     ? Icons.fastfood
                                     : Icons.comment,
-                                color: primaryHighlight,
+                                color: color,
                               ),
                             ),
-                            Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  notif.title,
-                                  style: TextStyle(
-                                      color: primaryHighlight,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                Text(
-                                  notif.body,
-                                  style: TextStyle(
-                                      color: primaryHighlight,
-                                      fontWeight: FontWeight.normal),
-                                ),
-                              ],
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    notif.title,
+                                    style: TextStyle(
+                                        color: color,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(
+                                    notif.body,
+                                    style: TextStyle(
+                                        color: color,
+                                        fontWeight: FontWeight.normal),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -121,19 +123,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
     );
   }
 
-/*FlatButton(
-              child: Text('add'),
-              onPressed: () {
-                setState(() {
-                  NotificationSingleton.instance.addNotification(
-                      NotificationEntry('title', 'body', 'author'));
-                });
-              },
-            )*/
   @override
   void dispose() {
-//    NotificationSingleton.instance.clearNotifications();
-
     super.dispose();
   }
 }

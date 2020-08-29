@@ -56,7 +56,7 @@ class _FinessePageState extends State<FinessePage> {
   final TextEditingController locationController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
   final TextEditingController durationController = TextEditingController();
-  final dataKey = new GlobalKey();
+  final bottomOfPage = new GlobalKey();
 
   bool _commentIsEmpty = true;
 
@@ -142,7 +142,7 @@ class _FinessePageState extends State<FinessePage> {
       WidgetsBinding.instance.addPostFrameCallback(
             (_) =>
             Scrollable.ensureVisible(
-              dataKey.currentContext,
+              bottomOfPage.currentContext,
               duration: Duration(seconds: 1),
             ),
       );
@@ -877,8 +877,7 @@ class _FinessePageState extends State<FinessePage> {
                     setState(() {
                       handleVote(index, voteStatus, fin);
                     });
-                  }
-                  else {
+                  } else {
                     _scaffoldKey.currentState.showSnackBar(
                       SnackBar(
                         content: Text(
@@ -912,7 +911,7 @@ class _FinessePageState extends State<FinessePage> {
     );
 
     Future<void> postComment(String comment) async {
-      Comment newComment = Comment.post(comment);
+      Comment newComment = Comment.post(comment.trim());
       setState(() => fin.comments.add(newComment));
       addComment(newComment, fin.eventId);
       fin.numComments++;
@@ -929,7 +928,7 @@ class _FinessePageState extends State<FinessePage> {
         children: [
           Expanded(
             child: TextFormField(
-              key: dataKey,
+              key: bottomOfPage,
               keyboardAppearance: Brightness.dark,
               textCapitalization: TextCapitalization.sentences,
               controller: commentController,
@@ -960,8 +959,8 @@ class _FinessePageState extends State<FinessePage> {
                   ),
                 ),
               ),
-              style:
-              TextStyle(color: fin.isActive ? primaryHighlight : inactiveColor),
+              style: TextStyle(
+                  color: fin.isActive ? primaryHighlight : inactiveColor),
               onFieldSubmitted: (comment) async {
                 if (comment.isNotEmpty) {
                   if (User.currentUser != null) {
@@ -1432,11 +1431,12 @@ class _FinessePageState extends State<FinessePage> {
                 ),
               ],
             )*/
-          IconButton(
-            icon: Icon(Icons.share),
-            onPressed: () =>
-                Share.share('${fin.eventTitle} at ${fin.location}'),
-          ),
+          if (!_inEditMode && fin.isActive)
+            IconButton(
+              icon: Icon(Icons.share),
+              onPressed: () =>
+                  Share.share('${fin.eventTitle} at ${fin.location}'),
+            ),
         ],
       ),
       backgroundColor: primaryBackground,

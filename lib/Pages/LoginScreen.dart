@@ -12,16 +12,17 @@ class LoginScreen extends StatelessWidget {
       title: null,
       logo: 'images/logo.png',
       theme: LoginTheme(
-          primaryColor: primaryBackground,
-          accentColor: primaryBackground,
-          cardTheme: CardTheme(color: primaryHighlight),
-          buttonTheme: LoginButtonTheme(
-            splashColor: Colors.grey[800],
-          )),
-      emailValidator: /*(_) => null  ,// */ validateEmail,
-      passwordValidator: /*(_) => null  ,// */ validatePassword,
-      onLogin: /*(_) => null  ,// */ authUser,
-      onSignup: /*(_) => null  ,// */ createUser,
+        primaryColor: primaryBackground,
+        accentColor: primaryBackground,
+        cardTheme: CardTheme(color: primaryHighlight),
+        buttonTheme: LoginButtonTheme(
+          splashColor: Colors.grey[800],
+        ),
+      ),
+      emailValidator: validateEmail,
+      passwordValidator: validatePassword,
+      onLogin: authUser,
+      onSignup: createUser,
       onSubmitAnimationCompleted: () {
         Navigator.of(context).pushReplacement(MaterialPageRoute(
           builder: (context) => HomePage(),

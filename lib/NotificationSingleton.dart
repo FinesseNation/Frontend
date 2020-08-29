@@ -21,6 +21,7 @@ class NotificationSingleton extends ValueNotifier<List<NotificationEntry>> {
       int oldLength = notifications.length;
       notifications.removeWhere((notif) =>
           notif.finesse.eventId == newNotification.finesse.eventId &&
+              notif.type == NotificationType.comment &&
           notif.isUnread);
       if (notifications.length != oldLength) {
         newNotification.body = 'new comments';
@@ -28,14 +29,17 @@ class NotificationSingleton extends ValueNotifier<List<NotificationEntry>> {
       notifications.insert(0, newNotification);
     }
     notifyListeners();
-    print('notified listeners about ' + '${newNotification.title}');
+  }
+
+  void dismissAll() {
+    notifications.clear();
+    notifyListeners();
   }
 
   void markAllAsRead() {
-//    notifications.forEach((notification) {
-//      notification.isUnread = false;
-//    });
-    notifications.clear();
+    notifications.forEach((notification) {
+      notification.isUnread = false;
+    });
     notifyListeners();
   }
 }

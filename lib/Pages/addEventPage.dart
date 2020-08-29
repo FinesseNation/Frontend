@@ -281,7 +281,6 @@ class _AddEventState extends State<AddEvent> {
                         User.currentUser.upvoted.add(newId);
                         User.currentUser.subscriptions.add(newId);
                         if (User.currentUser.notifications) {
-                          print('subscribing to $newId');
                           firebaseMessaging.subscribeToTopic(newId);
                         }
                         await Navigator.pushAndRemoveUntil(

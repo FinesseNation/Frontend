@@ -2,6 +2,7 @@ import 'package:finesse_nation/Finesse.dart';
 import 'package:finesse_nation/Network.dart';
 import 'package:finesse_nation/NotificationEntry.dart';
 import 'package:finesse_nation/NotificationSingleton.dart';
+import 'package:finesse_nation/Pages/FinessePage.dart';
 import 'package:finesse_nation/Pages/LeaderboardPage.dart';
 import 'package:finesse_nation/Pages/LoginScreen.dart';
 import 'package:finesse_nation/Pages/NotificationsPage.dart';
@@ -15,13 +16,15 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unicorndial/unicorndial.dart';
 
+bool fcmIsSetup = false;
+
 /// The entrypoint for the app.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SharedPreferences _prefs = await SharedPreferences.getInstance();
   String _currentUser = _prefs.get('currentUser');
   if (_currentUser != null && _currentUser != 'anon') {
-    await updateCurrentUser(email: _currentUser);
+    updateCurrentUser(email: _currentUser);
   }
   runApp(_MyApp(_currentUser));
 }
@@ -58,50 +61,89 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  // https://github.com/FirebaseExtended/flutterfire/issues/2012#issuecomment-615479602
+  Map<String, dynamic> fixMessageTitleAndBody(Map<String, dynamic> message) {
+    if (!message.containsKey("notification")) {
+      message["notification"] = {};
+    }
+    if (!message["notification"].containsKey("title") &&
+        message["data"].containsKey("title")) {
+      message["notification"]["title"] = message["data"]["title"];
+    }
+    if (!message["notification"].containsKey("body") &&
+        message["data"].containsKey("body")) {
+      message["notification"]["body"] = message["data"]["body"];
+    }
+    return message;
+  }
+
+  Future<dynamic> handleNotification(Map<String, dynamic> message) async {
+    print('HANDLE NOTIFICATION');
+    print(message);
+    message = fixMessageTitleAndBody(message);
+    print(message);
+
+    String id = message['data']['id'];
+    NotificationType type = message['data']['type'] == 'post'
+        ? NotificationType.post
+        : NotificationType.comment;
+
+    Finesse fin;
+    fin = await getFinesse(id);
+
+    if (type == NotificationType.comment) {
+      fin.comments = await getComments(id);
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            FinessePage(
+              fin,
+              false,
+              scrollDown: type == NotificationType.comment,
+            ),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
-    print('setting up fcm');
-    if (!kIsWeb) {
-      firebaseMessaging.requestNotificationPermissions();
+    if (!fcmIsSetup) {
+      print('setting up fcm');
+      if (!kIsWeb) {
+        firebaseMessaging.requestNotificationPermissions();
+      }
+      firebaseMessaging.subscribeToTopic(ALL_TOPIC);
+      firebaseMessaging.configure(
+        onMessage: (Map<String, dynamic> message) async {
+          print('HANDLE NOTIFICATION');
+          print("onMessage: $message");
+
+          String author = message['data']['author'];
+//          if (author == User.currentUser.email) return;
+
+          String title = message['notification']['title'];
+          String body = message['notification']['body'];
+          String id = message['data']['id'];
+          NotificationType type = message['data']['type'] == 'post'
+              ? NotificationType.post
+              : NotificationType.comment;
+          // TODO: make finessepage fields futurebuilder?
+          Finesse fin = await getFinesse(id);
+          if (type == NotificationType.comment) {
+            fin.comments = await getComments(id);
+          }
+          NotificationSingleton.instance
+              .addNotification(NotificationEntry(title, body, fin, type));
+        },
+        onResume: handleNotification,
+        onLaunch: handleNotification,
+      );
+      fcmIsSetup = true;
     }
-    firebaseMessaging.subscribeToTopic(ALL_TOPIC);
-    firebaseMessaging.configure(
-      onMessage: (Map<String, dynamic> message) async {
-        print("onMessage: $message");
-
-        String author = message['data']['author'];
-        print(author);
-//        if (author == User.currentUser.email) return;
-
-        String title = message['notification']['title'];
-        String body = message['notification']['body'];
-        String id = message['data']['id'];
-        NotificationType type = message['data']['type'] == 'post'
-            ? NotificationType.post
-            : NotificationType.comment;
-        // TODO: make finessepage fields futurebuilder?
-        Finesse fin;
-        try {
-          fin = Finesse.finesseList
-              .singleWhere((finesse) => finesse.eventId == id);
-        } on StateError {
-          print('couldnt find fin');
-          fin = await getFinesse(id);
-        }
-        if (type == NotificationType.comment) {
-          fin.comments = await getComments(id);
-        }
-        NotificationSingleton.instance
-            .addNotification(NotificationEntry(title, body, fin, type));
-      },
-      onLaunch: (Map<String, dynamic> message) async {
-        print("onLaunch: $message");
-      },
-      onResume: (Map<String, dynamic> message) async {
-        print("onResume: $message");
-      },
-    );
   }
 
   @override
@@ -205,7 +247,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   key: Key("Filter"),
                   color: notifications.any((notif) => notif.isUnread)
-                      ? Colors.red
+                      ? Colors.amber
                       : Colors.white,
                   onPressed: () async {
                     await Navigator.push(
@@ -215,7 +257,6 @@ class _HomePageState extends State<HomePage> {
                       ),
                     );
                     NotificationSingleton.instance.markAllAsRead();
-//                    setState(() {});
                   },
                 );
               },
