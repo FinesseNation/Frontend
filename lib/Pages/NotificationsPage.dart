@@ -18,7 +18,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
       backgroundColor: primaryBackground,
       appBar: AppBar(
         title: Text('Notifications'),
-        centerTitle: true,
         actions: [
           IconButton(
             icon: Icon(

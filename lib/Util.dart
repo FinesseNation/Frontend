@@ -2,10 +2,12 @@ import 'dart:io';
 
 import 'package:finesse_nation/Finesse.dart';
 import 'package:finesse_nation/Network.dart';
+import 'package:finesse_nation/Pages/LoginScreen.dart';
 import 'package:finesse_nation/Styles.dart';
 import 'package:finesse_nation/User.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Utility functions used by multiple files.
 
@@ -127,4 +129,20 @@ Future<File> uploadImagePopup(BuildContext context) async {
   );
 
   return image;
+}
+
+/// Logs the user out.
+void logout(BuildContext context) {
+  notificationsSet(false, updateUser: false);
+  User.currentUser = null;
+  SharedPreferences.getInstance().then((prefs) {
+    prefs.remove('currentUser');
+  });
+  Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(
+        builder: (BuildContext context) =>
+            LoginScreen()),
+        (Route<dynamic> route) => false,
+  );
 }

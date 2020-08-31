@@ -13,6 +13,7 @@ import 'package:finesse_nation/widgets/FinesseList.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unicorndial/unicorndial.dart';
 
@@ -52,7 +53,9 @@ class _MyApp extends StatelessWidget {
 
 /// Displays the [FinesseList].
 class HomePage extends StatefulWidget {
-  HomePage({Key key}) : super(key: key);
+  final initialIndex;
+
+  HomePage({Key key, this.initialIndex: 0}) : super(key: key);
 
   @override
   _HomePageState createState() {
@@ -94,16 +97,15 @@ class _HomePageState extends State<HomePage> {
     if (type == NotificationType.comment) {
       fin.comments = await getComments(id);
     }
-
+    print('ABOUT TO PUSH');
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            FinessePage(
-              fin,
-              false,
-              scrollDown: type == NotificationType.comment,
-            ),
+        builder: (context) => FinessePage(
+          fin,
+          false,
+          scrollDown: type == NotificationType.comment,
+        ),
       ),
     );
   }
@@ -149,6 +151,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
+      initialIndex: widget.initialIndex,
       length: 2,
       child: Scaffold(
         drawer: Drawer(
@@ -229,14 +232,10 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
-          title: Hero(
-            tag: 'logo',
-            child: Image.asset(
-              'images/logo.png',
-              height: 35,
-            ),
+          title: Text(
+            'FINESSE',
+            style: GoogleFonts.comfortaa(),
           ),
-          centerTitle: true,
           actions: <Widget>[
             ValueListenableBuilder<List<NotificationEntry>>(
               valueListenable: NotificationSingleton.instance,

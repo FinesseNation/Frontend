@@ -3,9 +3,9 @@ import 'dart:io';
 
 import 'package:finesse_nation/Finesse.dart';
 import 'package:finesse_nation/Network.dart';
-import 'package:finesse_nation/Pages/LoginScreen.dart';
 import 'package:finesse_nation/Styles.dart';
 import 'package:finesse_nation/User.dart';
+import 'package:finesse_nation/Util.dart';
 import 'package:finesse_nation/main.dart';
 import 'package:finesse_nation/widgets/PopUpBox.dart';
 import 'package:finesse_nation/widgets/TimeEntry.dart';
@@ -16,7 +16,7 @@ import 'package:image_picker/image_picker.dart';
 
 /// Allows the user to add a new [Finesse].
 class AddEvent extends StatefulWidget {
-  final bool isOngoing;
+  bool isOngoing;
 
   AddEvent(this.isOngoing);
 
@@ -167,131 +167,146 @@ class _AddEventState extends State<AddEvent> {
       child: Scaffold(
         appBar: AppBar(
           title: Text('Share a Finesse'),
-          centerTitle: true,
           actions: [
             Builder(
-              builder: (context) =>
-                  IconButton(
-                    icon: Icon(Icons.send),
-                    onPressed: () async {
-                      if (User.currentUser == null) {
+              builder: (context) => IconButton(
+                icon: Icon(Icons.send),
+                onPressed: () async {
+                  if (User.currentUser == null) {
+                    Scaffold.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Sorry, you must be logged in to create a post.',
+                          style: TextStyle(
+                            color: secondaryHighlight,
+                          ),
+                        ),
+                        action: SnackBarAction(
+                          label: 'LOGIN',
+                          onPressed: () => logout(context),
+                        ),
+                      ),
+                    );
+                    return;
+                  }
+                  if (!_formKey.currentState.validate()) {
+                    setState(() {
+                      shouldValidate = true;
+                    });
+                  }
+                  if (_formKey.currentState.validate()) {
+                    Text eventName = Text(eventNameController.text);
+                    Text location = Text(locationController.text);
+                    Text description = Text(descriptionController.text);
+                    Text duration = Text(durationController.text);
+                    DateTime currTime = DateTime.now();
+
+                    String imageString;
+                    if (_image == null) {
+                      imageString = '';
+                    } else {
+                      imageString = base64Encode(_image.readAsBytesSync());
+                    }
+
+                    Finesse newFinesse;
+                    if (widget.isOngoing) {
+                      newFinesse = Finesse.finesseAdd(
+                        eventName.data,
+                        description.data,
+                        imageString,
+                        location.data,
+                        duration.data,
+                        _type,
+                        currTime,
+                      );
+                    } else {
+                      DateTime start = _startDate.add(
+                        Duration(
+                          hours: _startTime.hour,
+                          minutes: _startTime.minute,
+                        ),
+                      );
+                      DateTime end = _endDate?.add(
+                        Duration(
+                          hours: _endTime.hour,
+                          minutes: _endTime.minute,
+                        ),
+                      );
+                      if (end?.isBefore(start) ?? false) {
                         Scaffold.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              'Sorry, you must be logged in to create a post.',
+                              "The end date can't be before the start date",
                               style: TextStyle(
                                 color: secondaryHighlight,
                               ),
-                            ),
-                            action: SnackBarAction(
-                              label: 'LOGIN',
-                              onPressed: () {
-                                Navigator.pushAndRemoveUntil(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (BuildContext context) =>
-                                          LoginScreen()),
-                                      (Route<dynamic> route) => false,
-                                );
-                              },
                             ),
                           ),
                         );
                         return;
                       }
-                      if (!_formKey.currentState.validate()) {
-                        setState(() {
-                          shouldValidate = true;
-                        });
-                      }
-                      if (_formKey.currentState.validate()) {
+                      if (start
+                          .isBefore(DateTime.now().add(Duration(minutes: 5)))) {
                         Scaffold.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(
-                              'Sharing Finesse',
-                              style: TextStyle(
-                                color: secondaryHighlight,
+                              content: Text(
+                                'If the event has already began or if it starts in less than '
+                                'five minutes, please add it as ongoing instead',
+                                style: TextStyle(
+                                  color: secondaryHighlight,
+                                ),
                               ),
-                            ),
-                          ),
+                              action: SnackBarAction(
+                                label: 'CHANGE TYPE',
+                                onPressed: () {
+                                  setState(() {
+                                    widget.isOngoing = true;
+                                  });
+                                },
+                              )),
                         );
-                        Text eventName = Text(eventNameController.text);
-                        Text location = Text(locationController.text);
-                        Text description = Text(descriptionController.text);
-                        Text duration = Text(durationController.text);
-                        DateTime currTime = DateTime.now();
-
-                        String imageString;
-                        if (_image == null) {
-                          imageString = '';
-                        } else {
-                          imageString = base64Encode(_image.readAsBytesSync());
-                        }
-
-                        Finesse newFinesse;
-                        if (widget.isOngoing) {
-                          newFinesse = Finesse.finesseAdd(
-                            eventName.data,
-                            description.data,
-                            imageString,
-                            location.data,
-                            duration.data,
-                            _type,
-                            currTime,
-                          );
-                        } else {
-                          DateTime start = _startDate.add(
-                            Duration(
-                              hours: _startTime.hour,
-                              minutes: _startTime.minute,
-                            ),
-                          );
-                          DateTime end = _endDate?.add(
-                            Duration(
-                              hours: _endTime.hour,
-                              minutes: _endTime.minute,
-                            ),
-                          );
-                          if (end.isBefore(start)) {
-                            Scaffold.of(context).showSnackBar(
-                              SnackBar(
-                                content:
-                                Text(
-                                    "The end date can't be before the start date"),
-                              ),
-                            );
-                            return;
-                          }
-                          newFinesse = Finesse.future(
-                            eventName.data,
-                            description.data,
-                            imageString,
-                            location.data,
-                            _type,
-                            start,
-                            endTime: end,
-                            repetition: selectedRepetition,
-                          );
-                        }
-
-                        String res = await addFinesse(
-                            newFinesse, widget.isOngoing);
-                        // could exploit the fact that id is sequential-ish
-                        String newId = jsonDecode(res)['id'];
-                        User.currentUser.upvoted.add(newId);
-                        User.currentUser.subscriptions.add(newId);
-                        if (User.currentUser.notifications) {
-                          firebaseMessaging.subscribeToTopic(newId);
-                        }
-                        await Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(
-                              builder: (BuildContext context) => HomePage()),
-                              (Route<dynamic> route) => false,
-                        );
+                        return;
                       }
-                    },
-                  ),
+                      newFinesse = Finesse.future(
+                        eventName.data,
+                        description.data,
+                        imageString,
+                        location.data,
+                        _type,
+                        start,
+                        endTime: end,
+                        repetition: selectedRepetition,
+                      );
+                    }
+                    Scaffold.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Sharing Finesse',
+                          style: TextStyle(
+                            color: secondaryHighlight,
+                          ),
+                        ),
+                      ),
+                    );
+                    String res = await addFinesse(newFinesse, widget.isOngoing);
+                    // could exploit the fact that id is sequential-ish
+                    String newId = jsonDecode(res)['id'];
+                    User.currentUser.upvoted.add(newId);
+                    User.currentUser.subscriptions.add(newId);
+                    if (User.currentUser.notifications) {
+                      firebaseMessaging.subscribeToTopic(newId);
+                    }
+                    await Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                          builder: (BuildContext context) => HomePage(
+                                initialIndex: widget.isOngoing ? 0 : 1,
+                              )),
+                      (Route<dynamic> route) => false,
+                    );
+                  }
+                },
+              ),
             ),
           ],
         ),
@@ -308,7 +323,7 @@ class _AddEventState extends State<AddEvent> {
                 color: secondaryBackground,
                 child: Padding(
                   padding:
-                  const EdgeInsets.only(left: 10, right: 15, bottom: 10),
+                      const EdgeInsets.only(left: 10, right: 15, bottom: 10),
                   child: Column(
                     children: [
                       Row(
@@ -428,7 +443,7 @@ class _AddEventState extends State<AddEvent> {
                               child: TextFormField(
                                 key: Key('duration'),
                                 textCapitalization:
-                                TextCapitalization.sentences,
+                                    TextCapitalization.sentences,
                                 style: TextStyle(
                                   color: Colors.white,
                                 ),
@@ -496,7 +511,7 @@ class _AddEventState extends State<AddEvent> {
                                 height: 25,
                                 child: OutlineButton(
                                   borderSide:
-                                  BorderSide(color: secondaryHighlight),
+                                      BorderSide(color: secondaryHighlight),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(100),
                                   ),

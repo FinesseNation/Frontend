@@ -13,7 +13,6 @@ class LeaderboardPage extends StatelessWidget {
       backgroundColor: primaryBackground,
       appBar: AppBar(
         title: Text('Leaderboard'),
-        centerTitle: true,
       ),
       body: FutureBuilder(
         future: leaderboard,

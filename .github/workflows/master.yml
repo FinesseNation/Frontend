@@ -23,7 +23,7 @@ jobs:
           FINESSE_SERVER_KEY: ${{ secrets.FINESSE_SERVER_KEY }}
       - run: flutter pub get
       #      - run: flutter format lib/ test/ test_driver/
-      - run: flutter test #--coverage
+#      - run: flutter test #--coverage
 #       - run: flutter pub run tool/remove_coverage.dart -f coverage/lcov.info -r "lib/widgets/","lib/login/","lib/Pages/",".env.dart","main.dart"
 
 #       - name: Coveralls

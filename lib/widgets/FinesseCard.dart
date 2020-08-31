@@ -7,6 +7,7 @@ import 'package:finesse_nation/Util.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -87,23 +88,23 @@ class _FinesseCardState extends State<FinesseCard> {
                       child: Text(
                         fin.eventTitle,
                         key: Key("title"),
-                        style: TextStyle(
+                        style: GoogleFonts.comfortaa(textStyle: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w300,
                           color:
                               fin.isActive ? primaryHighlight : inactiveColor,
-                        ),
+                        )),
                       ),
                     ),
                     Text(
                       isFuture ? DateFormat('E, MMM d · h:m a').format(
                           fin.startTime) : fin.location + ' · ' +
                           timeago.format(fin.startTime),
-                      style: TextStyle(
+                      style: GoogleFonts.comfortaa(textStyle: TextStyle(
                         fontSize: 12,
                         color:
                             fin.isActive ? secondaryHighlight : inactiveColor,
-                      ),
+                      )),
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -111,12 +112,12 @@ class _FinesseCardState extends State<FinesseCard> {
                         Text(
                           "${fin.points} ${(fin.points == 1) ? "point" : "points"}\n"
                           "${fin.numComments} ${(fin.numComments == 1) ? "comment" : "comments"}",
-                          style: TextStyle(
+                          style: GoogleFonts.comfortaa(textStyle: TextStyle(
                             fontSize: 12,
                             color: fin.isActive
                                 ? secondaryHighlight
                                 : inactiveColor,
-                          ),
+                          )),
                         ),
                         Visibility(
                           visible: fin.isActive,
@@ -154,15 +155,7 @@ class _FinesseCardState extends State<FinesseCard> {
                                     ),
                                     action: SnackBarAction(
                                       label: 'LOGIN',
-                                      onPressed: () {
-                                        Navigator.pushAndRemoveUntil(
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: (BuildContext context) =>
-                                                  LoginScreen()),
-                                              (Route<dynamic> route) => false,
-                                        );
-                                      },
+                                      onPressed: () => logout(context),
                                     ),
                                   ),
                                 );

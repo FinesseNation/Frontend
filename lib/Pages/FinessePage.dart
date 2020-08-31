@@ -6,7 +6,6 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:finesse_nation/Comment.dart';
 import 'package:finesse_nation/Finesse.dart';
 import 'package:finesse_nation/Network.dart';
-import 'package:finesse_nation/Pages/LoginScreen.dart';
 import 'package:finesse_nation/Styles.dart';
 import 'package:finesse_nation/User.dart';
 import 'package:finesse_nation/Util.dart';
@@ -888,15 +887,7 @@ class _FinessePageState extends State<FinessePage> {
                         ),
                         action: SnackBarAction(
                           label: 'LOGIN',
-                          onPressed: () {
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (BuildContext context) =>
-                                      LoginScreen()),
-                                  (Route<dynamic> route) => false,
-                            );
-                          },
+                          onPressed: () => logout(context),
                         ),
                       ),
                     );
@@ -976,15 +967,7 @@ class _FinessePageState extends State<FinessePage> {
                         ),
                         action: SnackBarAction(
                           label: 'LOGIN',
-                          onPressed: () {
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (BuildContext context) =>
-                                      LoginScreen()),
-                                  (Route<dynamic> route) => false,
-                            );
-                          },
+                          onPressed: () => logout(context),
                         ),
                       ),
                     );
@@ -1020,15 +1003,7 @@ class _FinessePageState extends State<FinessePage> {
                       ),
                       action: SnackBarAction(
                         label: 'LOGIN',
-                        onPressed: () {
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                                builder: (BuildContext context) =>
-                                    LoginScreen()),
-                                (Route<dynamic> route) => false,
-                          );
-                        },
+                        onPressed: () => logout(context),
                       ),
                     ),
                   );
