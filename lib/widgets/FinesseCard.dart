@@ -1,6 +1,5 @@
 import 'package:finesse_nation/Finesse.dart';
 import 'package:finesse_nation/Pages/FinessePage.dart';
-import 'package:finesse_nation/Pages/LoginScreen.dart';
 import 'package:finesse_nation/Styles.dart';
 import 'package:finesse_nation/User.dart';
 import 'package:finesse_nation/Util.dart';
