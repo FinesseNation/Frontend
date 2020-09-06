@@ -87,7 +87,7 @@ Future<File> uploadImagePopup(BuildContext context) async {
           ),
           onPressed: () async {
             PickedFile pickedFile =
-            await picker.getImage(source: ImageSource.camera);
+                await picker.getImage(source: ImageSource.camera);
             if (pickedFile != null) {
               image = File(pickedFile.path);
               Navigator.of(context).pop();
@@ -102,7 +102,7 @@ Future<File> uploadImagePopup(BuildContext context) async {
           ),
           onPressed: () async {
             PickedFile pickedFile =
-            await picker.getImage(source: ImageSource.gallery);
+                await picker.getImage(source: ImageSource.gallery);
             if (pickedFile != null) {
               image = File(pickedFile.path);
               Navigator.of(context).pop();
@@ -140,9 +140,7 @@ void logout(BuildContext context) {
   });
   Navigator.pushAndRemoveUntil(
     context,
-    MaterialPageRoute(
-        builder: (BuildContext context) =>
-            LoginScreen()),
-        (Route<dynamic> route) => false,
+    MaterialPageRoute(builder: (BuildContext context) => LoginScreen()),
+    (Route<dynamic> route) => false,
   );
 }

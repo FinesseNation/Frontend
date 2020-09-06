@@ -13,7 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// The root domain for the Finesse Nation API.
 //const _DOMAIN = 'https://finesse-nation.herokuapp.com/api/';
-const _DOMAIN = 'http://10.153.166.173:8080/api/';
+const _DOMAIN = 'http://10.157.192.108:8080/api/';
 
 /// Deleting a Finesse.
 const _DELETE_URL = _DOMAIN + 'food/deleteEvent';
@@ -110,7 +110,7 @@ Future<List<Finesse>> fetchFinesses({bool isFuture: false}) async {
 
 Future<Finesse> getFinesse(String eventId) async {
   final response =
-  await http.get(_GET_URL + '/$eventId', headers: {'api_token': _token});
+      await http.get(_GET_URL + '/$eventId', headers: {'api_token': _token});
   if (response.statusCode == 200) {
     var data = json.decode(response.body);
     Finesse fin = Finesse.fromJson(data);
@@ -132,7 +132,7 @@ Future<List<dynamic>> getLeaderboard() async {
     int currentRank = data[0];
     data = data[1];
     List<User> leaderboard =
-    data.map<User>((json) => User.fromJson(json)).toList();
+        data.map<User>((json) => User.fromJson(json)).toList();
     return [currentRank, leaderboard];
   } else {
     throw Exception('Failed to get leaderboard');
@@ -249,8 +249,8 @@ Future<String> createUser(LoginData data) async {
 String validateEmail(String email) {
   RegExp validEmail =
       RegExp(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]"
-      r"{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]"
-      r"{0,253}[a-zA-Z0-9])?)*$");
+          r"{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]"
+          r"{0,253}[a-zA-Z0-9])?)*$");
 
   if (email.isEmpty ||
       !validEmail.hasMatch(email) ||
@@ -353,7 +353,7 @@ Future<List<Comment>> getComments(String eventId) async {
   if (response.statusCode == 200) {
     var data = json.decode(response.body);
     List<Comment> comments =
-    data.map<Comment>((json) => Comment.fromJson(json)).toList();
+        data.map<Comment>((json) => Comment.fromJson(json)).toList();
     return comments;
   } else {
     throw Exception("Error while getting comments");

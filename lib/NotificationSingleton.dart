@@ -21,7 +21,7 @@ class NotificationSingleton extends ValueNotifier<List<NotificationEntry>> {
       int oldLength = notifications.length;
       notifications.removeWhere((notif) =>
           notif.finesse.eventId == newNotification.finesse.eventId &&
-              notif.type == NotificationType.comment &&
+          notif.type == NotificationType.comment &&
           notif.isUnread);
       if (notifications.length != oldLength) {
         newNotification.body = 'new comments';

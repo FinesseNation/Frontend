@@ -70,16 +70,16 @@ class Finesse {
     String image,
     String location,
     String category,
-      DateTime startTime,
+    DateTime startTime,
     List<String> markedInactive,
     String school,
     String emailId,
     int points,
-      int numComments, {
-        String duration,
-        DateTime endTime,
-        Repetition repetition,
-      }) {
+    int numComments, {
+    String duration,
+    DateTime endTime,
+    Repetition repetition,
+  }) {
     this.eventId = eventId;
     this.eventTitle = title;
     this.description = description;
@@ -107,7 +107,7 @@ class Finesse {
     String location,
     String duration,
     String category,
-      DateTime startTime, {
+    DateTime startTime, {
     List<String> markedInactive: const <String>[],
     String school,
     String email,
@@ -132,20 +132,21 @@ class Finesse {
   }
 
   /// Creates a new future Finesse.
-  Finesse.future(String title,
-      String description,
-      String image,
-      String location,
-      String category,
-      DateTime startTime, {
-        List<String> markedInactive: const <String>[],
-        String school,
-        String emailId,
-        int points: 1,
-        int numComments: 0,
-        DateTime endTime,
-        Repetition repetition,
-      }) {
+  Finesse.future(
+    String title,
+    String description,
+    String image,
+    String location,
+    String category,
+    DateTime startTime, {
+    List<String> markedInactive: const <String>[],
+    String school,
+    String emailId,
+    int points: 1,
+    int numComments: 0,
+    DateTime endTime,
+    Repetition repetition,
+  }) {
     this.eventTitle = title;
     this.description = description;
     this.image = image;
@@ -182,9 +183,9 @@ class Finesse {
       endTime: DateTime.tryParse(json['endTime'] ?? '')?.toLocal(),
       repetition: json['repetition'] != null
           ? Repetition.values.singleWhere(
-            (rep) => json['repetition'] == rep.toString(),
-        orElse: () => Repetition.none,
-      )
+              (rep) => json['repetition'] == rep.toString(),
+              orElse: () => Repetition.none,
+            )
           : Repetition.none,
     );
     return fin;

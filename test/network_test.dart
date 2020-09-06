@@ -86,16 +86,7 @@ void main() {
   SharedPreferences.setMockInitialValues(
       {"typeFilter": false, "activeFilter": false});
   User.currentUser =
-      User(
-          'test@test.com',
-          'test123',
-          'test',
-          'test',
-          0,
-          true,
-          [],
-          [],
-          []);
+      User('test@test.com', 'test123', 'test', 'test', 0, true, [], [], []);
 
   ///Add a new finesse to the database and check that the database contains it
   test('Adding a new Finesse', () async {
@@ -324,16 +315,7 @@ void main() {
   /// Get the current user data for test1@test.com and verify
   test('Getting Current User Data', () async {
     User.currentUser =
-        User(
-            CURRENT_USER_EMAIL,
-            "none",
-            "none",
-            "none",
-            0,
-            false,
-            [],
-            [],
-            []);
+        User(CURRENT_USER_EMAIL, "none", "none", "none", 0, false, [], [], []);
     await updateCurrentUser();
     expect(User.currentUser.points, 0);
     expect(User.currentUser.email, CURRENT_USER_EMAIL);

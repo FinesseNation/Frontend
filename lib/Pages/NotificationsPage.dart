@@ -22,7 +22,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
           IconButton(
             icon: Icon(
               Icons.clear_all,
-              color: Colors.white,
+              color: primaryHighlight,
             ),
             onPressed: () {
               setState(() {

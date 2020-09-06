@@ -81,8 +81,8 @@ Widget toLeaderboardRow(User user, int rank) {
               Padding(
                 padding: const EdgeInsets.only(right: 15),
                 child: CircleAvatar(
-                  backgroundImage:
-                      NetworkImage('https://api.adorable.io/avatars/$rank/'),
+                  backgroundImage: NetworkImage(
+                      'https://api.adorable.io/avatars/50/${user.email}.png'),
                   radius: 25,
                 ),
               ),

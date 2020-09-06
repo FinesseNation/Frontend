@@ -11,26 +11,12 @@ void main() {
   SharedPreferences.setMockInitialValues(
       {"typeFilter": false, "activeFilter": false});
   User.currentUser =
-      User(
-          'test@test.com',
-          'test123',
-          'test',
-          'test',
-          0,
-          true,
-          [],
-          [],
-          []);
+      User('test@test.com', 'test123', 'test', 'test', 0, true, [], [], []);
 
   ///Basic username getter test
   test('Get UserName test', () {
     User testUser = User("this._email", "this._password", "UserName",
-        "this._school",
-        0,
-        false,
-        [],
-        [],
-        []);
+        "this._school", 0, false, [], [], []);
     expect(testUser.userName, "UserName");
   });
 

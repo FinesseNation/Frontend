@@ -9,6 +9,7 @@ import 'package:finesse_nation/Pages/NotificationsPage.dart';
 import 'package:finesse_nation/Pages/SettingsPage.dart';
 import 'package:finesse_nation/Pages/addEventPage.dart';
 import 'package:finesse_nation/Styles.dart';
+import 'package:finesse_nation/User.dart';
 import 'package:finesse_nation/widgets/FinesseList.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -39,12 +40,32 @@ class _MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     changeStatusColor(primaryBackground);
     changeNavigationColor(primaryBackground);
+    TextStyle font = GoogleFonts.comfortaa();
+    TextTheme Function([TextTheme]) fontTheme = GoogleFonts.comfortaaTextTheme;
+
     return MaterialApp(
-      title: 'Finesse Nation',
+      title: 'Finesse',
       theme: ThemeData(
         primaryColor: primaryBackground,
         canvasColor: secondaryBackground,
         accentColor: primaryHighlight,
+        appBarTheme: AppBarTheme(
+          iconTheme: IconThemeData(color: primaryHighlight),
+          textTheme: fontTheme(
+            TextTheme(
+              headline6: TextStyle(
+                color: primaryHighlight,
+                fontSize: 20,
+              ),
+            ),
+          ),
+        ),
+        textTheme: fontTheme(
+          Theme.of(context).textTheme,
+        ),
+        snackBarTheme: SnackBarThemeData(
+          contentTextStyle: font,
+        ),
       ),
       home: _currentUser != null ? HomePage() : LoginScreen(),
     );
@@ -159,9 +180,30 @@ class _HomePageState extends State<HomePage> {
             padding: EdgeInsets.zero,
             children: <Widget>[
               DrawerHeader(
-                child: Text('Drawer Header'),
+                child: Align(
+                  alignment: Alignment.bottomLeft,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8.0),
+                        child: CircleAvatar(
+                          backgroundImage: NetworkImage(User.currentUser != null
+                              ? 'https://api.adorable.io/avatars/50/${User.currentUser.email}.png'
+                              : 'https://i.imgur.com/hD1SzLR.jpg'),
+                          radius: 25,
+                        ),
+                      ),
+                      Text(
+                        User.currentUser?.userName ?? 'Not signed in',
+                        style: TextStyle(color: primaryHighlight, fontSize: 20),
+                      ),
+                    ],
+                  ),
+                ),
                 decoration: BoxDecoration(
-                  color: secondaryHighlight,
+                  color: primaryBackground,
                 ),
               ),
               ListTile(
@@ -232,10 +274,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
-          title: Text(
-            'FINESSE',
-            style: GoogleFonts.comfortaa(),
-          ),
+          title: Text('FINESSE'),
           actions: <Widget>[
             ValueListenableBuilder<List<NotificationEntry>>(
               valueListenable: NotificationSingleton.instance,
@@ -246,8 +285,8 @@ class _HomePageState extends State<HomePage> {
                   ),
                   key: Key("Filter"),
                   color: notifications.any((notif) => notif.isUnread)
-                      ? Colors.amber
-                      : Colors.white,
+                      ? primaryHighlight
+                      : secondaryHighlight,
                   onPressed: () async {
                     await Navigator.push(
                       context,

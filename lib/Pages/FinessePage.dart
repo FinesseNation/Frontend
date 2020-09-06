@@ -30,10 +30,10 @@ class FinessePage extends StatefulWidget {
 
   FinessePage(this.fin, this.isFuture, {voteStatus, scrollDown})
       : this.voteStatus = voteStatus ??
-      [
-        User.currentUser.upvoted.contains(fin.eventId),
-        User.currentUser.downvoted.contains(fin.eventId)
-      ],
+            [
+              User.currentUser.upvoted.contains(fin.eventId),
+              User.currentUser.downvoted.contains(fin.eventId)
+            ],
         this.scrollDown = scrollDown ?? false;
 
   @override
@@ -139,11 +139,10 @@ class _FinessePageState extends State<FinessePage> {
 
     if (scrollDown) {
       WidgetsBinding.instance.addPostFrameCallback(
-            (_) =>
-            Scrollable.ensureVisible(
-              bottomOfPage.currentContext,
-              duration: Duration(seconds: 1),
-            ),
+        (_) => Scrollable.ensureVisible(
+          bottomOfPage.currentContext,
+          duration: Duration(seconds: 1),
+        ),
       );
     }
   }
@@ -319,10 +318,9 @@ class _FinessePageState extends State<FinessePage> {
         await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                FullImage(
-                  fin,
-                ),
+            builder: (context) => FullImage(
+              fin,
+            ),
           ),
         );
         changeStatusColor(primaryBackground);
@@ -399,7 +397,7 @@ class _FinessePageState extends State<FinessePage> {
                 ),
               ),
               validator: (value) =>
-              value.isEmpty ? 'Please enter a location' : null,
+                  value.isEmpty ? 'Please enter a location' : null,
             ),
           ),
         ],
@@ -543,8 +541,8 @@ class _FinessePageState extends State<FinessePage> {
                 onPressed: (int index) {
                   setState(() {
                     for (int buttonIndex = 0;
-                    buttonIndex < activeStatus.length;
-                    buttonIndex++) {
+                        buttonIndex < activeStatus.length;
+                        buttonIndex++) {
                       if (buttonIndex == index) {
                         setState(() {
                           activeStatus[buttonIndex] = true;
@@ -647,9 +645,7 @@ class _FinessePageState extends State<FinessePage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                (fin.startTime.year == DateTime
-                    .now()
-                    .year)
+                (fin.startTime.year == DateTime.now().year)
                     ? DateFormat('EEEE, MMMM d').format(fin.startTime)
                     : DateFormat('EEEE, MMMM d, y').format(fin.startTime),
                 style: TextStyle(
@@ -701,9 +697,7 @@ class _FinessePageState extends State<FinessePage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  (fin.startTime.year == DateTime
-                      .now()
-                      .year)
+                  (fin.startTime.year == DateTime.now().year)
                       ? DateFormat('EEEE, MMMM d').format(fin.startTime)
                       : DateFormat('EEEE, MMMM d, y').format(fin.startTime),
                   style: TextStyle(
@@ -731,12 +725,10 @@ class _FinessePageState extends State<FinessePage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  ((fin.startTime.year == DateTime
-                      .now()
-                      .year)
-                      ? DateFormat('EEEE, MMMM d').format(fin.startTime)
-                      : DateFormat('EEEE, MMMM d, y')
-                      .format(fin.startTime)) +
+                  ((fin.startTime.year == DateTime.now().year)
+                          ? DateFormat('EEEE, MMMM d').format(fin.startTime)
+                          : DateFormat('EEEE, MMMM d, y')
+                              .format(fin.startTime)) +
                       ' · ' +
                       DateFormat('h:mm a').format(fin.startTime),
                   style: TextStyle(
@@ -745,11 +737,9 @@ class _FinessePageState extends State<FinessePage> {
                   ),
                 ),
                 Text(
-                  ((fin.endTime.year == DateTime
-                      .now()
-                      .year)
-                      ? DateFormat('EEEE, MMMM d').format(fin.endTime)
-                      : DateFormat('EEEE, MMMM d, y').format(fin.endTime)) +
+                  ((fin.endTime.year == DateTime.now().year)
+                          ? DateFormat('EEEE, MMMM d').format(fin.endTime)
+                          : DateFormat('EEEE, MMMM d, y').format(fin.endTime)) +
                       ' · ' +
                       DateFormat('h:mm a').format(fin.endTime),
                   style: TextStyle(
@@ -769,7 +759,7 @@ class _FinessePageState extends State<FinessePage> {
       padding: EdgeInsets.only(bottom: 5, top: 5),
       child: Row(
         crossAxisAlignment:
-        (false) ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+            (false) ? CrossAxisAlignment.start : CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
@@ -945,7 +935,7 @@ class _FinessePageState extends State<FinessePage> {
                   child: Icon(
                     Icons.account_circle,
                     color: getColor(User.currentUser?.email, fin.isActive) ??
-                        Colors.white,
+                        secondaryHighlight,
                     size: 45,
                   ),
                 ),
@@ -985,30 +975,30 @@ class _FinessePageState extends State<FinessePage> {
               onPressed: (_commentIsEmpty)
                   ? null
                   : () async {
-                if (User.currentUser != null) {
-                  FocusScopeNode currentFocus = FocusScope.of(context);
-                  if (!currentFocus.hasPrimaryFocus) {
-                    currentFocus.unfocus();
-                  }
-                  String comment = commentController.value.text;
-                  await postComment(comment);
-                } else {
-                  _scaffoldKey.currentState.showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Sorry, you must be logged in to comment on a post.',
-                        style: TextStyle(
-                          color: secondaryHighlight,
-                        ),
-                      ),
-                      action: SnackBarAction(
-                        label: 'LOGIN',
-                        onPressed: () => logout(context),
-                      ),
-                    ),
-                  );
-                }
-              }),
+                      if (User.currentUser != null) {
+                        FocusScopeNode currentFocus = FocusScope.of(context);
+                        if (!currentFocus.hasPrimaryFocus) {
+                          currentFocus.unfocus();
+                        }
+                        String comment = commentController.value.text;
+                        await postComment(comment);
+                      } else {
+                        _scaffoldKey.currentState.showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Sorry, you must be logged in to comment on a post.',
+                              style: TextStyle(
+                                color: secondaryHighlight,
+                              ),
+                            ),
+                            action: SnackBarAction(
+                              label: 'LOGIN',
+                              onPressed: () => logout(context),
+                            ),
+                          ),
+                        );
+                      }
+                    }),
         ],
       ),
     );
@@ -1063,7 +1053,7 @@ class _FinessePageState extends State<FinessePage> {
                         comment.comment,
                         style: TextStyle(
                           color:
-                          fin.isActive ? primaryHighlight : inactiveColor,
+                              fin.isActive ? primaryHighlight : inactiveColor,
                         ),
                       ),
                     ],
@@ -1086,7 +1076,7 @@ class _FinessePageState extends State<FinessePage> {
           fin.numComments = fin.comments.length;
         }
         List<Widget> children =
-        fin.comments.map((comment) => getCommentView(comment)).toList();
+            fin.comments.map((comment) => getCommentView(comment)).toList();
         Widget commentsHeader = Padding(
           padding: EdgeInsets.only(
             bottom: 10,
@@ -1176,9 +1166,9 @@ class _FinessePageState extends State<FinessePage> {
       key: _scaffoldKey,
       appBar: AppBar(
         automaticallyImplyLeading: !_inEditMode,
-        title: _inEditMode
-            ? Text('Editing \'${fin.eventTitle}\'')
-            : Text(fin.eventTitle),
+        title: Text(
+          _inEditMode ? 'Editing \'${fin.eventTitle}\'' : fin.eventTitle,
+        ),
         actions: <Widget>[
           if (fin.emailId == User.currentUser?.email)
             if (!_inEditMode)
@@ -1261,7 +1251,7 @@ class _FinessePageState extends State<FinessePage> {
                       ),
                       onPressed: () {
                         bool wasEdited = (_image != null ||
-                            (fin.image != '' && deletedImage == true)) ||
+                                (fin.image != '' && deletedImage == true)) ||
                             (titleController.text != fin.eventTitle) ||
                             (locationController.text != fin.location) ||
                             (descriptionController.text != fin.description) ||
@@ -1377,7 +1367,7 @@ class _FinessePageState extends State<FinessePage> {
                                   MaterialPageRoute(
                                       builder: (BuildContext context) =>
                                           HomePage()),
-                                      (Route<dynamic> route) => false,
+                                  (Route<dynamic> route) => false,
                                 );
                               },
                             ),
@@ -1421,7 +1411,7 @@ class _FinessePageState extends State<FinessePage> {
           child: Card(
             clipBehavior: Clip.hardEdge,
             shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             color: secondaryBackground,
             child: _inEditMode ? editView : readView,
           ),

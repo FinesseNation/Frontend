@@ -16,7 +16,7 @@ class PopUpBox {
             title: Text(
               title,
               style: TextStyle(
-                color: Colors.white,
+                color: primaryHighlight,
               ),
             ),
             backgroundColor: secondaryBackground,

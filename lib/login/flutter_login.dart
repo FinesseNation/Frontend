@@ -2,6 +2,7 @@
 library flutter_login;
 
 import 'dart:math';
+import 'package:finesse_nation/Styles.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/scheduler.dart' show timeDilation;
 import 'package:flutter/foundation.dart';
@@ -165,14 +166,14 @@ class __HeaderState extends State<_Header> {
         tag: widget.titleTag,
         largeFontSize: widget.loginTheme.beforeHeroFontSize,
         smallFontSize: widget.loginTheme.afterHeroFontSize,
-        style: theme.textTheme.headline3,
+        style: theme.textTheme.headline3.copyWith(color: primaryHighlight),
         viewState: ViewState.enlarged,
       );
     } else if (!DartHelper.isNullOrEmpty(widget.title)) {
       title = Text(
         widget.title,
         key: kTitleKey,
-        style: theme.textTheme.headline3,
+        style: theme.textTheme.headline3.copyWith(color: primaryHighlight),
       );
     } else {
       title = null;

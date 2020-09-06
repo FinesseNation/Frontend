@@ -52,7 +52,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       EdgeInsets.only(right: 15, bottom: 10, top: 10, left: 10),
                   child: Text(
                     'Notifications',
-                    style: TextStyle(color: Colors.white, fontSize: 20),
+                    style: TextStyle(color: primaryHighlight, fontSize: 20),
                   ),
                 ),
                 Expanded(
@@ -98,11 +98,13 @@ class _SettingsPageState extends State<SettingsPage> {
                       children: <Widget>[
                         Text(
                           'Account',
-                          style: TextStyle(color: Colors.white, fontSize: 20),
+                          style:
+                              TextStyle(color: primaryHighlight, fontSize: 20),
                         ),
                         Text(
-                          User.currentUser?.email ?? 'Not logged in',
-                          style: TextStyle(color: Colors.white, fontSize: 15),
+                          User.currentUser?.email ?? 'Not signed in',
+                          style: TextStyle(
+                              color: secondaryHighlight, fontSize: 14),
                         ),
                       ],
                     )),

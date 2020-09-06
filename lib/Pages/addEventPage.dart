@@ -7,7 +7,6 @@ import 'package:finesse_nation/Styles.dart';
 import 'package:finesse_nation/User.dart';
 import 'package:finesse_nation/Util.dart';
 import 'package:finesse_nation/main.dart';
-import 'package:finesse_nation/widgets/PopUpBox.dart';
 import 'package:finesse_nation/widgets/TimeEntry.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -16,7 +15,7 @@ import 'package:image_picker/image_picker.dart';
 
 /// Allows the user to add a new [Finesse].
 class AddEvent extends StatefulWidget {
-  bool isOngoing;
+  final bool isOngoing;
 
   AddEvent(this.isOngoing);
 
@@ -33,6 +32,8 @@ class _AddEventState extends State<AddEvent> {
   final descriptionController = TextEditingController();
   final durationController = TextEditingController();
   final picker = ImagePicker();
+
+  bool isOngoing;
 
   DateTime _startDate;
   DateTime _endDate;
@@ -61,7 +62,11 @@ class _AddEventState extends State<AddEvent> {
   @override
   void initState() {
     super.initState();
+
+    isOngoing = widget.isOngoing;
+
     shouldValidate = false;
+
     DateTime now = DateTime.now();
     _startDate = now.subtract(
       Duration(
@@ -78,81 +83,81 @@ class _AddEventState extends State<AddEvent> {
     selectedRepetition = Repetition.none;
   }
 
-  void _onImageButtonPressed(ImageSource source) async {
-    final pickedFile = await picker.getImage(source: source);
+//  void _onImageButtonPressed(ImageSource source) async {
+//    final pickedFile = await picker.getImage(source: source);
+//
+//    setState(() {
+//      _image = File(pickedFile.path);
+//    });
+//  }
 
-    setState(() {
-      _image = File(pickedFile.path);
-    });
-  }
-
-  Future<void> uploadImagePopup() async {
-    await PopUpBox.showPopupBox(
-      title: "Upload Image",
-      context: context,
-      button: FlatButton(
-        key: Key("UploadOK"),
-        onPressed: () {
-          Navigator.of(context, rootNavigator: true).pop();
-        },
-        child: Text(
-          "CANCEL",
-          style: TextStyle(
-            color: primaryHighlight,
-          ),
-        ),
-      ),
-      willDisplayWidget: Column(
-        children: [
-          FlatButton(
-            onPressed: () {
-              _onImageButtonPressed(ImageSource.gallery);
-              Navigator.of(context, rootNavigator: true).pop();
-            },
-            child: Row(
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(top: 15, right: 15, bottom: 15),
-                  child: const Icon(
-                    Icons.photo_library,
-                    color: secondaryHighlight,
-                  ),
-                ),
-                Text(
-                  'From Gallery',
-                  style: TextStyle(color: primaryHighlight, fontSize: 14),
-                ),
-              ],
-            ),
-          ),
-          FlatButton(
-            onPressed: () {
-              _onImageButtonPressed(ImageSource.camera);
-              Navigator.of(context, rootNavigator: true).pop();
-            },
-            child: Row(
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(top: 15, right: 15, bottom: 15),
-                  child: const Icon(
-                    Icons.camera_alt,
-                    color: secondaryHighlight,
-                  ),
-                ),
-                Text(
-                  'From Camera',
-                  style: TextStyle(
-                    color: primaryHighlight,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+//  Future<void> uploadImagePopup() async {
+//    await PopUpBox.showPopupBox(
+//      title: "Upload Image",
+//      context: context,
+//      button: FlatButton(
+//        key: Key("UploadOK"),
+//        onPressed: () {
+//          Navigator.of(context, rootNavigator: true).pop();
+//        },
+//        child: Text(
+//          "CANCEL",
+//          style: TextStyle(
+//            color: primaryHighlight,
+//          ),
+//        ),
+//      ),
+//      willDisplayWidget: Column(
+//        children: [
+//          FlatButton(
+//            onPressed: () {
+//              _onImageButtonPressed(ImageSource.gallery);
+//              Navigator.of(context, rootNavigator: true).pop();
+//            },
+//            child: Row(
+//              children: [
+//                Padding(
+//                  padding: EdgeInsets.only(top: 15, right: 15, bottom: 15),
+//                  child: const Icon(
+//                    Icons.photo_library,
+//                    color: secondaryHighlight,
+//                  ),
+//                ),
+//                Text(
+//                  'From Gallery',
+//                  style: TextStyle(color: primaryHighlight, fontSize: 14),
+//                ),
+//              ],
+//            ),
+//          ),
+//          FlatButton(
+//            onPressed: () {
+//              _onImageButtonPressed(ImageSource.camera);
+//              Navigator.of(context, rootNavigator: true).pop();
+//            },
+//            child: Row(
+//              children: [
+//                Padding(
+//                  padding: EdgeInsets.only(top: 15, right: 15, bottom: 15),
+//                  child: const Icon(
+//                    Icons.camera_alt,
+//                    color: secondaryHighlight,
+//                  ),
+//                ),
+//                Text(
+//                  'From Camera',
+//                  style: TextStyle(
+//                    color: primaryHighlight,
+//                    fontSize: 14,
+//                  ),
+//                ),
+//              ],
+//            ),
+//          ),
+//        ],
+//      ),
+//    );
+//  }
 
   @override
   Widget build(BuildContext context) {
@@ -209,7 +214,7 @@ class _AddEventState extends State<AddEvent> {
                     }
 
                     Finesse newFinesse;
-                    if (widget.isOngoing) {
+                    if (isOngoing) {
                       newFinesse = Finesse.finesseAdd(
                         eventName.data,
                         description.data,
@@ -245,22 +250,21 @@ class _AddEventState extends State<AddEvent> {
                         );
                         return;
                       }
-                      if (start
-                          .isBefore(DateTime.now().add(Duration(minutes: 5)))) {
+                      if (start.isBefore(
+                          DateTime.now().add(Duration(minutes: 15)))) {
                         Scaffold.of(context).showSnackBar(
                           SnackBar(
                               content: Text(
-                                'If the event has already began or if it starts in less than '
-                                'five minutes, please add it as ongoing instead',
+                                'Future events must start in 15 minutes or more.',
                                 style: TextStyle(
                                   color: secondaryHighlight,
                                 ),
                               ),
                               action: SnackBarAction(
-                                label: 'CHANGE TYPE',
+                                label: 'SWITCH TO ONGOING',
                                 onPressed: () {
                                   setState(() {
-                                    widget.isOngoing = true;
+                                    isOngoing = true;
                                   });
                                 },
                               )),
@@ -288,7 +292,7 @@ class _AddEventState extends State<AddEvent> {
                         ),
                       ),
                     );
-                    String res = await addFinesse(newFinesse, widget.isOngoing);
+                    String res = await addFinesse(newFinesse, isOngoing);
                     // could exploit the fact that id is sequential-ish
                     String newId = jsonDecode(res)['id'];
                     User.currentUser.upvoted.add(newId);
@@ -300,7 +304,7 @@ class _AddEventState extends State<AddEvent> {
                       context,
                       MaterialPageRoute(
                           builder: (BuildContext context) => HomePage(
-                                initialIndex: widget.isOngoing ? 0 : 1,
+                                initialIndex: isOngoing ? 0 : 1,
                               )),
                       (Route<dynamic> route) => false,
                     );
@@ -341,7 +345,7 @@ class _AddEventState extends State<AddEvent> {
                               key: Key('name'),
                               textCapitalization: TextCapitalization.sentences,
                               style: TextStyle(
-                                color: Colors.white,
+                                color: primaryHighlight,
                               ),
                               controller: eventNameController,
                               decoration: const InputDecoration(
@@ -375,7 +379,7 @@ class _AddEventState extends State<AddEvent> {
                               key: Key('location'),
                               textCapitalization: TextCapitalization.sentences,
                               style: TextStyle(
-                                color: Colors.white,
+                                color: primaryHighlight,
                               ),
                               controller: locationController,
                               decoration: const InputDecoration(
@@ -408,7 +412,7 @@ class _AddEventState extends State<AddEvent> {
                               key: Key('description'),
                               textCapitalization: TextCapitalization.sentences,
                               style: TextStyle(
-                                color: Colors.white,
+                                color: primaryHighlight,
                               ),
                               controller: descriptionController,
                               decoration: const InputDecoration(
@@ -425,12 +429,12 @@ class _AddEventState extends State<AddEvent> {
                         ],
                       ),
                       Row(
-                        crossAxisAlignment: widget.isOngoing
+                        crossAxisAlignment: isOngoing
                             ? CrossAxisAlignment.center
                             : CrossAxisAlignment.start,
                         children: [
                           Padding(
-                            padding: widget.isOngoing
+                            padding: isOngoing
                                 ? const EdgeInsets.only(right: 10)
                                 : const EdgeInsets.only(top: 12, right: 10),
                             child: Icon(
@@ -438,14 +442,14 @@ class _AddEventState extends State<AddEvent> {
                               color: secondaryHighlight,
                             ),
                           ),
-                          if (widget.isOngoing)
+                          if (isOngoing)
                             Expanded(
                               child: TextFormField(
                                 key: Key('duration'),
                                 textCapitalization:
                                     TextCapitalization.sentences,
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: primaryHighlight,
                                 ),
                                 controller: durationController,
                                 decoration: const InputDecoration(
@@ -502,7 +506,10 @@ class _AddEventState extends State<AddEvent> {
                                     height: 240,
                                   ),
                                   onTap: () async {
-                                    await uploadImagePopup();
+                                    File img = await uploadImagePopup(context);
+                                    setState(() {
+                                      if (img != null) _image = img;
+                                    });
                                   },
                                 ),
                               )
@@ -525,7 +532,10 @@ class _AddEventState extends State<AddEvent> {
                                   ),
                                   key: Key("Upload"),
                                   onPressed: () async {
-                                    await uploadImagePopup();
+                                    File img = await uploadImagePopup(context);
+                                    setState(() {
+                                      if (img != null) _image = img;
+                                    });
                                   },
                                 ),
                               ),

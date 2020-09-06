@@ -77,17 +77,17 @@ class _FinesseListState extends State<FinesseList>
       onRefresh: _onRefresh,
       child: finesses.isEmpty
           ? Center(
-        child: Text(
-          'No ${widget.isFuture ? 'scheduled' : 'ongoing'} events',
-          style: TextStyle(
-            color: secondaryHighlight,
-          ),
-        ),
-      )
+              child: Text(
+                'No ${widget.isFuture ? 'scheduled' : 'ongoing'} events',
+                style: TextStyle(
+                  color: secondaryHighlight,
+                ),
+              ),
+            )
           : ListView.builder(
-        itemCount: finesses.length,
-        itemBuilder: (_, i) => FinesseCard(finesses[i], widget.isFuture),
-      ),
+              itemCount: finesses.length,
+              itemBuilder: (_, i) => FinesseCard(finesses[i], widget.isFuture),
+            ),
     );
   }
 }

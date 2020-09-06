@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:finesse_nation/main.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
@@ -11,7 +10,6 @@ import '../constants.dart';
 import '../dart_helper.dart';
 import '../matrix.dart';
 import '../models/login_data.dart';
-import '../paddings.dart';
 import '../providers/auth.dart';
 import '../providers/login_messages.dart';
 import '../widget_helper.dart';
@@ -579,10 +577,14 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
       offset: .5,
       curve: _textButtonLoadingAnimationInterval,
       child: FlatButton(
-        child: Text(
-          messages.forgotPasswordButton,
-          style: theme.textTheme.bodyText2,
-          textAlign: TextAlign.left,
+        padding: EdgeInsets.zero,
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            'Forgot password?',
+            style: theme.textTheme.bodyText2.copyWith(fontSize: 13),
+            textAlign: TextAlign.left,
+          ),
         ),
         onPressed: buttonEnabled
             ? () {
@@ -633,25 +635,24 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
   Widget _buildSkipButton(ThemeData theme, LoginMessages messages, Auth auth) {
     return FadeIn(
       controller: _loadingController,
-      offset: 1,
+      offset: 0.5,
       curve: _textButtonLoadingAnimationInterval,
       fadeDirection: FadeDirection.topToBottom,
-      child: SizedBox(
-        height: 20,
-        child: FlatButton(
+      child: FlatButton(
+        padding: EdgeInsets.zero,
+        child: Align(
+          alignment: Alignment.centerRight,
           child: Text(
             'Skip for now',
-            style: theme.textTheme.bodyText2,
+            style: theme.textTheme.bodyText2.copyWith(fontSize: 13),
           ),
-          onPressed: () {
-            SharedPreferences.getInstance().then((prefs) {
-              prefs.setString('currentUser', 'anon');
-            });
-            return Navigator.of(context).pushReplacement(MaterialPageRoute(
-              builder: (context) => HomePage(),
-            ));
-          },
         ),
+        onPressed: () {
+          SharedPreferences.getInstance().then((prefs) {
+            prefs.setString('currentUser', 'anon');
+          });
+          widget?.onSubmitCompleted();
+        },
       ),
     );
   }
@@ -704,14 +705,26 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
             child: _buildConfirmPasswordField(textFieldWidth, messages, auth),
           ),
           Container(
-            padding: Paddings.fromRBL(cardPadding),
+            padding: EdgeInsets.symmetric(
+              horizontal: cardPadding,
+              vertical: cardPadding / 2,
+            ),
             width: cardWidth,
             child: Column(
               children: <Widget>[
-                _buildForgotPassword(theme, messages),
                 _buildSubmitButton(theme, messages, auth),
                 _buildSwitchAuthButton(theme, messages, auth),
-                _buildSkipButton(theme, messages, auth),
+                SizedBox(
+                  height: 20,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Expanded(child: _buildForgotPassword(theme, messages)),
+                      Expanded(child: _buildSkipButton(theme, messages, auth)),
+                    ],
+                  ),
+                )
               ],
             ),
           ),
