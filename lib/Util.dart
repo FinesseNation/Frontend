@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:finesse_nation/Finesse.dart';
 import 'package:finesse_nation/Network.dart';
+import 'package:finesse_nation/NotificationSingleton.dart';
 import 'package:finesse_nation/Pages/LoginScreen.dart';
 import 'package:finesse_nation/Styles.dart';
 import 'package:finesse_nation/User.dart';
@@ -134,6 +135,7 @@ Future<File> uploadImagePopup(BuildContext context) async {
 /// Logs the user out.
 void logout(BuildContext context) {
   notificationsSet(false, updateUser: false);
+  NotificationSingleton.instance.dismissAll();
   User.currentUser = null;
   SharedPreferences.getInstance().then((prefs) {
     prefs.remove('currentUser');

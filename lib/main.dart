@@ -190,7 +190,7 @@ class _HomePageState extends State<HomePage> {
                         padding: const EdgeInsets.only(bottom: 8.0),
                         child: CircleAvatar(
                           backgroundImage: NetworkImage(User.currentUser != null
-                              ? 'https://api.adorable.io/avatars/50/${User.currentUser.email}.png'
+                              ? 'https://picsum.photos/seed/${User.currentUser.email}/100'
                               : 'https://i.imgur.com/hD1SzLR.jpg'),
                           radius: 25,
                         ),

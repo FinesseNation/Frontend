@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:name="io.flutter.app.FlutterApplication"
-        android:label="Finesse Nation"
+        android:label="Finesse"
         android:icon="@mipmap/launcher_icon"
         android:theme="@style/LaunchTheme">
         <activity

@@ -802,11 +802,10 @@ class _FinessePageState extends State<FinessePage> {
         children: [
           Padding(
             padding: EdgeInsets.only(right: 10),
-            child: Icon(
-              Icons.account_circle,
-              color: fin.isActive
-                  ? getColor(fin.emailId, fin.isActive)
-                  : inactiveColor,
+            child: CircleAvatar(
+              backgroundImage:
+                  NetworkImage('https://picsum.photos/seed/${fin.emailId}/100'),
+              radius: 12,
             ),
           ),
           Flexible(
@@ -907,6 +906,15 @@ class _FinessePageState extends State<FinessePage> {
       padding: EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: CircleAvatar(
+              backgroundImage: NetworkImage(User.currentUser != null
+                  ? 'https://picsum.photos/seed/${User.currentUser.email}/100'
+                  : 'https://i.imgur.com/hD1SzLR.jpg'),
+              radius: 20,
+            ),
+          ),
           Expanded(
             child: TextFormField(
               key: bottomOfPage,
@@ -930,15 +938,6 @@ class _FinessePageState extends State<FinessePage> {
                 hintText: 'Add a comment...',
                 hintStyle: TextStyle(
                     color: fin.isActive ? secondaryHighlight : inactiveColor),
-                prefixIcon: Padding(
-                  padding: EdgeInsets.only(right: 8),
-                  child: Icon(
-                    Icons.account_circle,
-                    color: getColor(User.currentUser?.email, fin.isActive) ??
-                        secondaryHighlight,
-                    size: 45,
-                  ),
-                ),
               ),
               style: TextStyle(
                   color: fin.isActive ? primaryHighlight : inactiveColor),
@@ -1016,10 +1015,10 @@ class _FinessePageState extends State<FinessePage> {
               children: [
                 Padding(
                   padding: EdgeInsets.only(right: 8),
-                  child: Icon(
-                    Icons.account_circle,
-                    color: getColor(comment.emailId, fin.isActive),
-                    size: 45,
+                  child: CircleAvatar(
+                    backgroundImage: NetworkImage(
+                        'https://picsum.photos/seed/${comment.emailId}/100'),
+                    radius: 20,
                   ),
                 ),
                 Expanded(

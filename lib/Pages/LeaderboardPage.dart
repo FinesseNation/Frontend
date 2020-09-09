@@ -75,6 +75,9 @@ Widget toLeaderboardRow(User user, int rank) {
                   style: TextStyle(
                     color: secondaryHighlight,
                     fontSize: 20,
+                    fontWeight: (user.email == User.currentUser?.email)
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                   ),
                 ),
               ),
@@ -82,7 +85,7 @@ Widget toLeaderboardRow(User user, int rank) {
                 padding: const EdgeInsets.only(right: 15),
                 child: CircleAvatar(
                   backgroundImage: NetworkImage(
-                      'https://api.adorable.io/avatars/50/${user.email}.png'),
+                      'https://picsum.photos/seed/${user.email}/100'),
                   radius: 25,
                 ),
               ),

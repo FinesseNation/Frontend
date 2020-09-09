@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
@@ -605,7 +606,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
         key: Key('loginButton'),
         controller: _submitController,
         text: auth.isLogin ? messages.loginButton : messages.signupButton,
-        onPressed: _submit,
+        onPressed: !kIsWeb ? _submit : null,
       ),
     );
   }
