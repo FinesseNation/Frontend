@@ -12,7 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Contains functions and constants used to interact with the API.
 
 /// The root domain for the Finesse Nation API.
-const _DOMAIN = 'https://finesse-nation.herokuapp.com/api/';
+const _DOMAIN = 'https://finesse-app.herokuapp.com/api/';
 //const _DOMAIN = 'http://10.157.193.217:8080/api/';
 
 /// Deleting a Finesse.
