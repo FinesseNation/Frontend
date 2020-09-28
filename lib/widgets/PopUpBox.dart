@@ -16,10 +16,10 @@ class PopUpBox {
             title: Text(
               title,
               style: TextStyle(
-                color: Colors.white,
+                color: primaryHighlight,
               ),
             ),
-            backgroundColor: Styles.darkGrey,
+            backgroundColor: secondaryBackground,
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[

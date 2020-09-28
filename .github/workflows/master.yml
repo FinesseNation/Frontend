@@ -23,14 +23,14 @@ jobs:
           FINESSE_SERVER_KEY: ${{ secrets.FINESSE_SERVER_KEY }}
       - run: flutter pub get
       #      - run: flutter format lib/ test/ test_driver/
-      - run: flutter test --coverage
-      - run: flutter pub run tool/remove_coverage.dart -f coverage/lcov.info -r "lib/widgets/","lib/login/","lib/Pages/",".env.dart","main.dart"
+#      - run: flutter test #--coverage
+#       - run: flutter pub run tool/remove_coverage.dart -f coverage/lcov.info -r "lib/widgets/","lib/login/","lib/Pages/",".env.dart","main.dart"
 
-      - name: Coveralls
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: "coverage/lcov.info"
+#       - name: Coveralls
+#         uses: coverallsapp/github-action@master
+#         with:
+#           github-token: ${{ secrets.GITHUB_TOKEN }}
+#           path-to-lcov: "coverage/lcov.info"
 
 #  integration:
 #     name: Integration Tests
@@ -71,7 +71,7 @@ jobs:
           FINESSE_API_TOKEN: ${{ secrets.FINESSE_API_TOKEN }}
           FINESSE_SERVER_KEY: ${{ secrets.FINESSE_SERVER_KEY }}
       - run: flutter config --enable-web
-      - run: flutter build web -t ./lib/Pages/main.dart
+      - run: flutter build web
       - uses: JamesIves/github-pages-deploy-action@releases/v3
         with:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}

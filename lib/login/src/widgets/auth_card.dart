@@ -1,23 +1,25 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:transformer_page_view/transformer_page_view.dart';
+
 import '../constants.dart';
+import '../dart_helper.dart';
+import '../matrix.dart';
+import '../models/login_data.dart';
+import '../providers/auth.dart';
+import '../providers/login_messages.dart';
+import '../widget_helper.dart';
 import 'animated_button.dart';
 import 'animated_text.dart';
+import 'animated_text_form_field.dart';
 import 'custom_page_transformer.dart';
 import 'expandable_container.dart';
 import 'fade_in.dart';
-import 'animated_text_form_field.dart';
-import '../providers/auth.dart';
-import '../providers/login_messages.dart';
-import '../models/login_data.dart';
-import '../dart_helper.dart';
-import '../matrix.dart';
-import '../paddings.dart';
-import '../widget_helper.dart';
 
 class AuthCard extends StatefulWidget {
   AuthCard({
@@ -538,7 +540,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
           FocusScope.of(context).requestFocus(_confirmPasswordFocusNode);
         }
       },
-      validator: widget.passwordValidator,
+      validator: auth.isLogin ? (_) => null : widget.passwordValidator,
       onSaved: (value) => auth.password = value,
     );
   }
@@ -576,10 +578,14 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
       offset: .5,
       curve: _textButtonLoadingAnimationInterval,
       child: FlatButton(
-        child: Text(
-          messages.forgotPasswordButton,
-          style: theme.textTheme.body1,
-          textAlign: TextAlign.left,
+        padding: EdgeInsets.zero,
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            'Forgot password?',
+            style: theme.textTheme.bodyText2.copyWith(fontSize: 13),
+            textAlign: TextAlign.left,
+          ),
         ),
         onPressed: buttonEnabled
             ? () {
@@ -600,7 +606,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
         key: Key('loginButton'),
         controller: _submitController,
         text: auth.isLogin ? messages.loginButton : messages.signupButton,
-        onPressed: _submit,
+        onPressed: !kIsWeb ? _submit : null,
       ),
     );
   }
@@ -623,6 +629,31 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
         padding: EdgeInsets.symmetric(horizontal: 30.0, vertical: 4),
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         textColor: theme.primaryColor,
+      ),
+    );
+  }
+
+  Widget _buildSkipButton(ThemeData theme, LoginMessages messages, Auth auth) {
+    return FadeIn(
+      controller: _loadingController,
+      offset: 0.5,
+      curve: _textButtonLoadingAnimationInterval,
+      fadeDirection: FadeDirection.topToBottom,
+      child: FlatButton(
+        padding: EdgeInsets.zero,
+        child: Align(
+          alignment: Alignment.centerRight,
+          child: Text(
+            'Skip for now',
+            style: theme.textTheme.bodyText2.copyWith(fontSize: 13),
+          ),
+        ),
+        onPressed: () {
+          SharedPreferences.getInstance().then((prefs) {
+            prefs.setString('currentUser', 'anon');
+          });
+          widget?.onSubmitCompleted();
+        },
       ),
     );
   }
@@ -675,13 +706,26 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
             child: _buildConfirmPasswordField(textFieldWidth, messages, auth),
           ),
           Container(
-            padding: Paddings.fromRBL(cardPadding),
+            padding: EdgeInsets.symmetric(
+              horizontal: cardPadding,
+              vertical: cardPadding / 2,
+            ),
             width: cardWidth,
             child: Column(
               children: <Widget>[
-                _buildForgotPassword(theme, messages),
                 _buildSubmitButton(theme, messages, auth),
                 _buildSwitchAuthButton(theme, messages, auth),
+                SizedBox(
+                  height: 20,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Expanded(child: _buildForgotPassword(theme, messages)),
+                      Expanded(child: _buildSkipButton(theme, messages, auth)),
+                    ],
+                  ),
+                )
               ],
             ),
           ),
@@ -834,7 +878,7 @@ class _RecoverCardState extends State<_RecoverCard>
                   messages.recoverPasswordIntro,
                   key: kRecoverPasswordIntroKey,
                   textAlign: TextAlign.center,
-                  style: theme.textTheme.body1,
+                  style: theme.textTheme.bodyText2,
                 ),
                 SizedBox(height: 20),
                 _buildRecoverNameField(textFieldWidth, messages, auth),
@@ -843,7 +887,7 @@ class _RecoverCardState extends State<_RecoverCard>
                   messages.recoverPasswordDescription,
                   key: kRecoverPasswordDescriptionKey,
                   textAlign: TextAlign.center,
-                  style: theme.textTheme.body1,
+                  style: theme.textTheme.bodyText2,
                 ),
                 SizedBox(height: 26),
                 _buildRecoverButton(theme, messages),

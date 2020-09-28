@@ -1,70 +1,93 @@
 import 'package:finesse_nation/Finesse.dart';
 import 'package:finesse_nation/Network.dart';
+import 'package:finesse_nation/Styles.dart';
 import 'package:finesse_nation/widgets/FinesseCard.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 /// Returns a [ListView] containing a [Card] for each [Finesse].
 class FinesseList extends StatefulWidget {
-  FinesseList({Key key}) : super(key: key);
+  final bool isFuture;
+
+  FinesseList({bool isFuture, Key key})
+      : this.isFuture = isFuture ?? false,
+        super(key: key);
 
   @override
-  _FinesseListState createState() => _FinesseListState();
+  _FinesseListState createState() {
+    return _FinesseListState();
+  }
 }
 
-class _FinesseListState extends State<FinesseList> {
+class _FinesseListState extends State<FinesseList>
+    with AutomaticKeepAliveClientMixin<FinesseList> {
   Future<List<Finesse>> _finesses;
+  RefreshController _refreshController;
 
-  RefreshController _refreshController =
-      RefreshController(initialRefresh: false);
+  @override
+  bool get wantKeepAlive => true;
 
   void _onRefresh() async {
-    setState(() {
-      _finesses = Network.fetchFinesses();
-    });
-    if (_finesses != null) {
-      _refreshController.refreshCompleted();
-    }
+    _finesses = fetchFinesses(isFuture: widget.isFuture);
+    await Future.delayed(Duration(milliseconds: 500));
+    _refreshController.refreshCompleted();
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _finesses = fetchFinesses(isFuture: widget.isFuture);
+    _refreshController = RefreshController(initialRefresh: false);
   }
 
   Widget build(BuildContext context) {
+    super.build(context);
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.black,
-      ),
+      color: primaryBackground,
       child: FutureBuilder(
-        future: Network.fetchFinesses(),
+        initialData: Finesse.finesseList,
+        future: _finesses,
         builder: (context, snapshot) {
-          return snapshot.data != null
-              ? listViewWidget(snapshot.data, context)
-              : Center(child: CircularProgressIndicator());
+          if (snapshot.data != null &&
+              snapshot.connectionState == ConnectionState.done) {
+            Finesse.finesseList = widget.isFuture
+                ? snapshot.data.toList()
+                : snapshot.data.reversed.toList();
+
+            return listViewWidget(Finesse.finesseList);
+          }
+          return Center(child: CircularProgressIndicator());
         },
       ),
     );
   }
 
-  Widget listViewWidget(List<Finesse> _finesses, BuildContext context) {
-    return Container(
-      color: Colors.black,
-      child: Center(
-        key: Key("refresher"),
-        child: SmartRefresher(
-          enablePullDown: true,
-          enablePullUp: false,
-          header: WaterDropHeader(),
-          controller: _refreshController,
-          onRefresh: _onRefresh,
-          child: ListView.builder(
-              key: Key("listview"),
-              itemCount: _finesses.length * 2,
-              itemBuilder: (context, i) {
-                _finesses = _finesses.reversed.toList();
-                if (i.isOdd) return Divider();
-                final index = i ~/ 2;
-                return buildFinesseCard(_finesses[index], context);
-              }),
-        ),
+  Widget listViewWidget(List<Finesse> finesses) {
+    return SmartRefresher(
+      enablePullDown: true,
+      enablePullUp: false,
+      header: ClassicHeader(
+        idleText: 'Pull down to refresh...',
+        releaseText: 'Release to refresh...',
       ),
+      controller: _refreshController,
+      onRefresh: _onRefresh,
+      child: finesses.isEmpty
+          ? Center(
+              child: Text(
+                'No ${widget.isFuture ? 'scheduled' : 'ongoing'} events',
+                style: TextStyle(
+                  color: secondaryHighlight,
+                ),
+              ),
+            )
+          : ListView.builder(
+              itemCount: finesses.length,
+              itemBuilder: (_, i) => FinesseCard(finesses[i], widget.isFuture),
+            ),
     );
   }
 }

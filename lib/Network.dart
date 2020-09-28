@@ -1,365 +1,361 @@
 import 'dart:convert';
+
+import 'package:finesse_nation/.env.dart';
+import 'package:finesse_nation/Comment.dart';
 import 'package:finesse_nation/Finesse.dart';
 import 'package:finesse_nation/User.dart';
-import 'package:finesse_nation/Pages/SettingsPage.dart';
+import 'package:finesse_nation/login/flutter_login.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:finesse_nation/.env.dart';
-import 'package:finesse_nation/login/flutter_login.dart';
-import 'package:finesse_nation/Comment.dart';
 
-/// Contains functions used to interact with the API.
-class Network {
-  /// The root domain for the Finesse Nation API.
-  static const DOMAIN = 'https://finesse-nation.herokuapp.com/api/';
+/// Contains functions and constants used to interact with the API.
 
-  /// Deleting a Finesse.
-  static const DELETE_URL = DOMAIN + 'food/deleteEvent';
+/// The root domain for the Finesse Nation API.
+const _DOMAIN = 'https://finesse-app.herokuapp.com/api/';
+//const _DOMAIN = 'http://10.157.193.217:8080/api/';
 
-  /// Adding a Finesse.
-  static const ADD_URL = DOMAIN + 'food/addEvent';
+/// Deleting a Finesse.
+const _DELETE_URL = _DOMAIN + 'food/deleteEvent';
 
-  /// Getting the Finesses.
-  static const GET_URL = DOMAIN + 'food/getEvents';
+/// Adding an ongoing Finesse.
+const _ADD_URL = _DOMAIN + 'food/addEvent';
 
-  /// Adding a comment.
-  static const ADD_COMMENT_URL = DOMAIN + 'comment';
+/// Creating, reading, updating, and deleting future Finesses.
+const _FUTURE_URL = _DOMAIN + 'future/';
 
-  /// Getting a comment.
-  static const GET_COMMENT_URL = DOMAIN + 'comment/';
+/// Getting the Finesses.
+const _GET_URL = _DOMAIN + 'food/getEvents';
 
-  /// Updating a Finesse.
-  static const UPDATE_URL = DOMAIN + 'food/updateEvent';
+/// Getting the leaderboard.
+const _GET_LEADERBOARD_URL = _DOMAIN + 'user/getLeaderboard?currentEmail=';
 
-  /// Logging in with an existing account.
-  static const LOGIN_URL = DOMAIN + 'user/login';
+/// Adding a comment.
+const _ADD_COMMENT_URL = _DOMAIN + 'comment';
 
-  /// Creating a new account.
-  static const SIGNUP_URL = DOMAIN + 'user/signup';
+/// Getting a comment.
+const _GET_COMMENT_URL = _DOMAIN + 'comment/';
 
-  /// Resetting a password.
-  static const PASSWORD_RESET_URL = DOMAIN + 'user/generatePasswordResetLink';
+/// Updating a Finesse.
+const _UPDATE_URL = _DOMAIN + 'food/updateEvent';
 
-  /// Toggling a user's notifications.
-  static const NOTIFICATION_TOGGLE_URL = DOMAIN + 'user/changeNotifications';
+/// Logging in with an existing account.
+const _LOGIN_URL = _DOMAIN + 'user/login';
 
-  /// Getting a specific user's information.
-  static const GET_CURRENT_USER_URL = DOMAIN + 'user/getCurrentUser';
+/// Creating a new account.
+const _SIGNUP_URL = _DOMAIN + 'user/signup';
 
-  /// Sending a notification.
-  static const SEND_NOTIFICATION_URL = 'https://fcm.googleapis.com/fcm/send';
+/// Resetting a password.
+const _PASSWORD_RESET_URL = _DOMAIN + 'user/generatePasswordResetLink';
 
-  /// Getting vote count for a Finesse.
-  static const GET_EVENT_VOTING_URL = DOMAIN + 'vote/eventPoints?eventId=';
+/// Toggling a user's notifications.
+const _NOTIFICATION_TOGGLE_URL = _DOMAIN + 'user/changeNotifications';
 
-  /// Getting a user's vote status for a particular Finesse.
-  static const GET_USER_VOTE_ON_EVENT_URL = DOMAIN + 'vote/info?';
+/// Getting a specific user's information.
+const _GET_CURRENT_USER_URL = _DOMAIN + 'user/getCurrentUser';
 
-  /// Add a vote to a Finesse.
-  static const POST_EVENT_VOTING_URL = DOMAIN + 'vote';
+/// Interacting with Firebase Cloud Messaging.
+final firebaseMessaging = FirebaseMessaging();
 
-  /// The topic used to send notifications about new Finesses.
-  static const ALL_TOPIC = 'new_finesse';
+/// Updating the [currentUser]'s voted posts.
+const _SET_VOTES_URL = _DOMAIN + 'user/setVotes';
 
-  /// The authentication key for all API calls.
-  static final token = environment['FINESSE_API_TOKEN'];
+/// The topic used to send notifications about new Finesses.
+const ALL_TOPIC = 'newpost';
 
-  /// The server key for Firebase Cloud Messaging.
-  static final serverKey = environment['FINESSE_SERVER_KEY'];
+/// The authentication key for all API calls.
+final _token = environment['FINESSE_API_TOKEN'];
 
-  /// Send a POST request containing [data] to the [url].
-  static Future<http.Response> postData(var url, var data) async {
-    return await http.post(url,
+/// Send a POST request containing [data] to the [url].
+Future<http.Response> _postData(var url, var data) async {
+  return await http.post(url,
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'api_token': _token
+      },
+      body: json.encode(data));
+}
+
+/// Adds [newFinesse].
+Future<String> addFinesse(Finesse newFinesse, bool isOngoing) async {
+  String url = isOngoing ? _ADD_URL : _FUTURE_URL;
+  Map bodyMap = newFinesse.toMap();
+  http.Response response = await _postData(url, bodyMap);
+  final int statusCode = response.statusCode;
+  if (statusCode != 200 && statusCode != 201) {
+    throw Exception("Error while posting data");
+  }
+  return response.body;
+}
+
+/// Gets Finesses.
+Future<List<Finesse>> fetchFinesses({bool isFuture: false}) async {
+  final response = await http.get(
+    isFuture ? _FUTURE_URL : _GET_URL,
+    headers: {
+      'api_token': _token,
+    },
+  );
+
+  if (response.statusCode == 200) {
+    var data = json.decode(response.body);
+    List<Finesse> responseJson =
+        data.map<Finesse>((json) => Finesse.fromJson(json)).toList();
+//    responseJson = await applyFilters(responseJson);
+    return responseJson;
+  } else {
+    throw Exception('Failed to load finesses');
+  }
+}
+
+Future<Finesse> getFinesse(String eventId) async {
+  final response =
+      await http.get(_GET_URL + '/$eventId', headers: {'api_token': _token});
+  if (response.statusCode == 200) {
+    var data = json.decode(response.body);
+    Finesse fin = Finesse.fromJson(data);
+    return fin;
+  } else {
+    throw Exception('Failed to get finesse $eventId');
+  }
+}
+
+Future<List<dynamic>> getLeaderboard() async {
+  if (User.currentUser != null) {
+    updateCurrentUser();
+  }
+  String email = User.currentUser?.email ?? '';
+  final response = await http
+      .get(_GET_LEADERBOARD_URL + email, headers: {'api_token': _token});
+  if (response.statusCode == 200) {
+    var data = json.decode(response.body);
+    int currentRank = data[0];
+    data = data[1];
+    List<User> leaderboard =
+        data.map<User>((json) => User.fromJson(json)).toList();
+    return [currentRank, leaderboard];
+  } else {
+    throw Exception('Failed to get leaderboard');
+  }
+}
+
+/// Filters the current Finesses by status/type
+Future<List<Finesse>> applyFilters(responseJson) async {
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  final bool activeFilter = prefs.getBool('activeFilter') ?? true;
+  final bool typeFilter = prefs.getBool('typeFilter') ?? true;
+  List<Finesse> filteredFinesses = List<Finesse>.from(responseJson);
+
+  if (activeFilter == false) {
+    filteredFinesses.removeWhere((fin) =>
+        !fin.isActive || fin.markedInactive.contains(User.currentUser.email));
+  }
+  if (typeFilter == false) {
+    filteredFinesses.removeWhere((fin) => fin.category == "Other");
+  }
+  return filteredFinesses;
+}
+
+/// Removes [newFinesse].
+Future<void> removeFinesse(Finesse newFinesse) async {
+  var jsonObject = {"eventId": newFinesse.eventId};
+  http.Response response = await _postData(_DELETE_URL, jsonObject);
+
+  if (response.statusCode != 200) {
+    throw new Exception("Error while removing finesse");
+  }
+}
+
+/// Updates [newFinesse].
+Future<void> updateFinesse(Finesse newFinesse, {bool isFuture = false}) async {
+  String eventId = newFinesse.eventId;
+  var jsonObject = {"eventId": eventId};
+  var bodyMap = newFinesse.toMap();
+  bodyMap.addAll(jsonObject);
+  http.Response response;
+  if (isFuture) {
+    response = await http.put(_FUTURE_URL + eventId,
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
-          'api_token': token
+          'api_token': _token
         },
-        body: json.encode(data));
+        body: json.encode(bodyMap));
+  } else {
+    response = await _postData(isFuture ? _FUTURE_URL : _UPDATE_URL, bodyMap);
   }
 
-  /// Adds [newFinesse].
-  static Future<void> addFinesse(Finesse newFinesse,
-      {var url = ADD_URL}) async {
-    Map bodyMap = newFinesse.toMap();
-    http.Response response = await postData(url, bodyMap);
-
-    final int statusCode = response.statusCode;
-    if (statusCode != 200 && statusCode != 201) {
-      throw Exception("Error while posting data");
-    }
+  if (response.statusCode >= 400) {
+    throw new Exception("Error while updating finesse");
   }
+}
 
-  /// Gets Finesses.
-  static Future<List<Finesse>> fetchFinesses() async {
-    final response = await http.get(GET_URL, headers: {'api_token': token});
+/// Attempts to login using the credentials in [data].
+///
+/// Returns an error message on failure, null on success.
+Future<String> authUser(LoginData data) async {
+  Map bodyMap = data.toMap();
+  http.Response response = await _postData(_LOGIN_URL, bodyMap);
 
-    if (response.statusCode == 200) {
-      var data = json.decode(response.body);
-      List<Finesse> responseJson =
-          data.map<Finesse>((json) => Finesse.fromJson(json)).toList();
-      responseJson = await applyFilters(responseJson);
-      return responseJson;
-    } else {
-      throw Exception('Failed to load finesses');
-    }
+  var status = response.statusCode;
+  if (status == 400) {
+    return 'Username or password is incorrect.';
   }
+  await updateCurrentUser(email: data.email);
+  return null;
+}
 
-  /// Filters the current Finesses by status/type
-  static Future<List<Finesse>> applyFilters(responseJson) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final bool activeFilter = prefs.getBool('activeFilter') ?? true;
-    final bool typeFilter = prefs.getBool('typeFilter') ?? true;
-    List<Finesse> filteredFinesses = List<Finesse>.from(responseJson);
-
-    if (activeFilter == false) {
-      filteredFinesses.removeWhere((fin) => fin.isActive.length > 2);
-      filteredFinesses
-          .removeWhere((fin) => fin.isActive.contains(User.currentUser.email));
-      filteredFinesses.removeWhere((fin) => fin.isActive.contains(fin.emailId));
-    }
-    if (typeFilter == false) {
-      filteredFinesses.removeWhere((value) => value.category == "Other");
-    }
-    return filteredFinesses;
-  }
-
-  /// Removes [newFinesse].
-  static Future<void> removeFinesse(Finesse newFinesse) async {
-    var jsonObject = {"eventId": newFinesse.eventId};
-    http.Response response = await postData(DELETE_URL, jsonObject);
-
-    if (response.statusCode != 200) {
-      throw new Exception("Error while removing finesse");
-    }
-  }
-
-  /// Updates [newFinesse].
-  static Future<void> updateFinesse(Finesse newFinesse) async {
-    var jsonObject = {"eventId": newFinesse.eventId};
-    var bodyMap = newFinesse.toMap();
-    bodyMap.addAll(jsonObject);
-    http.Response response = await postData(UPDATE_URL, bodyMap);
-
-    if (response.statusCode != 200) {
-      throw new Exception("Error while updating finesse");
-    }
-  }
-
-  /// Sends a message containing [title] and [body] to [topic].
-  static Future<http.Response> sendToAll(String title, String body,
-      {String topic: ALL_TOPIC}) {
-    final content = {
-      'notification': {
-        'body': '$body',
-        'title': '$title',
-      },
-      'priority': 'high',
-      'data': {
-        'click_action': 'FLUTTER_NOTIFICATION_CLICK',
-        'status': 'done',
-      },
-      'to': '/topics/$topic',
-    };
-    return http.post(
-      SEND_NOTIFICATION_URL,
-      body: json.encode(content),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'key=$serverKey',
-      },
-    );
-  }
-
-  /// Attempts to login using the credentials in [data].
-  ///
-  /// Returns an error message on failure, null on success.
-  static Future<String> authUser(LoginData data) async {
-    Map bodyMap = data.toMap();
-    http.Response response = await postData(LOGIN_URL, bodyMap);
-
-    var status = response.statusCode;
-    if (status == 400) {
-      return 'Username or password is incorrect.';
-    }
-    await Network.updateCurrentUser(email: data.email);
-    return null;
-  }
-
-  /// Attempts to reset the password associated with [email].
-  ///
-  /// Returns an error message on failure, null on success.
-  static Future<String> recoverPassword(String email) async {
-    email = email.trim();
-    var emailCheck = validateEmail(email);
-    const VALID_STATUS = null;
-    if (emailCheck == VALID_STATUS) {
-      var payload = {"emailId": email};
-      http.Response response = await postData(PASSWORD_RESET_URL, payload);
-      if (response.statusCode == 200) {
-        return null;
-      } else {
-        return "Password Reset request failed";
-      }
-    } else {
-      return emailCheck;
-    }
-  }
-
-  /// Attempts to sign up using the credentials in [data].
-  ///
-  /// Returns an error message on failure, null on success.
-  static Future<String> createUser(LoginData data) async {
-    String email = data.email;
-    email = email.trim();
-    String password = data.password;
-    var payload = {
-      "emailId": email,
-      "password": password,
-    };
-    http.Response response = await postData(SIGNUP_URL, payload);
-
-    var status = response.statusCode, respBody = json.decode(response.body);
-    if (status == 400) {
-      return respBody['msg'];
-    }
-    await Network.updateCurrentUser(email: data.email);
-    return null;
-  }
-
-  /// Validates [email].
-  static String validateEmail(String email) {
-    if (email.isEmpty) {
-      return 'Email can\'t be empty';
-    }
-    bool emailValid =
-        RegExp(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]"
-                r"{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]"
-                r"{0,253}[a-zA-Z0-9])?)*$")
-            .hasMatch(email);
-    if (emailValid) {
-      return null;
-    }
-
-    return "Invalid email address";
-  }
-
-  /// Validates [password].
-  static String validatePassword(String password) {
-    return password.length < 6
-        ? 'Password must be at least 6 characters'
-        : null;
-  }
-
-  /// Changes the current user's notification preferences to [toggle].
-  static Future<void> changeNotifications(toggle) async {
-    var payload = {"emailId": User.currentUser.email, 'notifications': toggle};
-    http.Response response = await postData(NOTIFICATION_TOGGLE_URL, payload);
-    if (response.statusCode == 200) {
-      User.currentUser.notifications = toggle;
-    } else {
-      throw Exception('Notification change request failed');
-    }
-  }
-
-  /// Populates the current user fields using [email].
-  static Future<void> updateCurrentUser({String email}) async {
-    email = email ?? User.currentUser.email;
+/// Attempts to reset the password associated with [email].
+///
+/// Returns an error message on failure, null on success.
+Future<String> recoverPassword(String email) async {
+  email = email.trim();
+  var emailCheck = validateEmail(email);
+  const _VALID_STATUS = null;
+  if (emailCheck == _VALID_STATUS) {
     var payload = {"emailId": email};
-    http.Response response = await postData(GET_CURRENT_USER_URL, payload);
-
+    http.Response response = await _postData(_PASSWORD_RESET_URL, payload);
     if (response.statusCode == 200) {
-      var data = json.decode(response.body);
-      User.currentUser = User.fromJson(data);
-      await Notifications.notificationsSet(User.currentUser.notifications);
+      return null;
     } else {
-      throw Exception('Failed to get current user');
+      return "Password Reset request failed";
     }
+  } else {
+    return emailCheck;
+  }
+}
+
+/// Attempts to sign up using the credentials in [data].
+///
+/// Returns an error message on failure, null on success.
+Future<String> createUser(LoginData data) async {
+  String email = data.email;
+  email = email.trim();
+  String password = data.password;
+  var payload = {
+    "emailId": email,
+    "password": password,
+  };
+  http.Response response = await _postData(_SIGNUP_URL, payload);
+
+  var status = response.statusCode, respBody = json.decode(response.body);
+  if (status == 400) {
+    return respBody['msg'];
+  }
+  await updateCurrentUser(email: data.email);
+  return null;
+}
+
+/// Validates [email].
+String validateEmail(String email) {
+  RegExp validEmail =
+      RegExp(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]"
+          r"{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]"
+          r"{0,253}[a-zA-Z0-9])?)*$");
+
+  if (email.isEmpty ||
+      !validEmail.hasMatch(email) ||
+      !email.endsWith('@illinois.edu')) {
+    return 'Please enter a valid illinois.edu email address';
   }
 
-  /// Gets the votes for a particular Finesse using [eventId].
-  static Future<int> fetchVotes(eventId) async {
-    final response = await http
-        .get(GET_EVENT_VOTING_URL + eventId, headers: {'api_token': token});
-    if (response.statusCode == 200) {
-      var data = json.decode(response.body);
-      int votes = data["upVote"] - data["downVote"];
-      return votes;
-    } else {
-      throw Exception("Failed to load votes");
-    }
-  }
+  return null;
+}
 
-  /// Gets a user's vote status for a Finesse using the user's [emailId]
-  /// and the Finesse's [eventId].
-  static Future<int> fetchUserVoteOnEvent(eventId, emailId) async {
-    final response = await http.get(
-        GET_USER_VOTE_ON_EVENT_URL +
-            "eventId=" +
-            eventId +
-            "&emailId=" +
-            emailId,
-        headers: {'api_token': token});
-    if (response.statusCode == 200) {
-      var data = json.decode(response.body);
-      String vote = data["status"];
-      if (vote == "UPVOTE") {
-        return 1;
-      } else if (vote == "DOWNVOTE") {
-        return -1;
-      } else {
-        return 0;
+/// Validates [password].
+String validatePassword(String password) {
+  return password.length < 6 ? 'Password must be at least 6 characters' : null;
+}
+
+/// Changes the current user's notification preferences to [toggle].
+Future<void> changeNotifications(bool toggle) async {
+  var payload = {"emailId": User.currentUser.email, 'notifications': toggle};
+  http.Response response = await _postData(_NOTIFICATION_TOGGLE_URL, payload);
+  if (response.statusCode == 200) {
+    User.currentUser.notifications = toggle;
+  } else {
+    throw Exception('Notification change request failed');
+  }
+}
+
+Future<void> setVotes() async {
+  var payload = {
+    "emailId": User.currentUser.email,
+    'upvoted': User.currentUser.upvoted,
+    'downvoted': User.currentUser.downvoted,
+  };
+  http.Response response = await _postData(_SET_VOTES_URL, payload);
+  if (response.statusCode != 200) {
+    throw Exception('set votes request failed');
+  }
+}
+
+/// Sets the notification preferences for the current user.
+Future<void> notificationsSet(toggle, {updateUser: true}) async {
+  if (toggle) {
+    if (User.currentUser != null) {
+      for (String topic in User.currentUser.subscriptions) {
+        firebaseMessaging.subscribeToTopic(topic);
       }
-    } else {
-      throw Exception("Failed to load user vote");
     }
+    firebaseMessaging.subscribeToTopic(ALL_TOPIC);
+  } else {
+    firebaseMessaging.deleteInstanceID();
   }
-
-  /// Adds [vote] to a Finesse using the user's [emailId] and
-  /// the Finesses's [eventId].
-  static Future<http.Response> postVote(
-      String eventId, String emailId, int vote) async {
-    Map bodyMap = {};
-    bodyMap["eventId"] = eventId;
-    bodyMap["emailId"] = emailId;
-    bodyMap["vote"] = vote;
-
-    http.Response response = await postData(POST_EVENT_VOTING_URL, bodyMap);
-
-    final int statusCode = response.statusCode;
-    if (statusCode != 200) {
-      throw Exception("Error while voting");
-    }
-    return response;
+  if (User.currentUser != null && updateUser) {
+    changeNotifications(toggle);
   }
+}
 
-  /// Adds [comment] to the Finesse with the given [eventId].
-  static Future<http.Response> addComment(
-      Comment comment, String eventId) async {
-    Map bodyMap = comment.toMap();
-    bodyMap['eventId'] = eventId;
-    http.Response response = await postData(ADD_COMMENT_URL, bodyMap);
+/// Populates the current user fields using [email].
+Future<void> updateCurrentUser({String email}) async {
+  email = email ?? User.currentUser.email;
+  var payload = {"emailId": email};
+  http.Response response = await _postData(_GET_CURRENT_USER_URL, payload);
 
-    final int statusCode = response.statusCode;
-    if (statusCode != 200) {
-      throw Exception(
-          "Error while adding comment, status = ${response.statusCode},"
-          " ${response.body}}");
-    }
-    return response;
+  if (response.statusCode == 200) {
+    var data = json.decode(response.body);
+    User.currentUser = User.fromJson(data);
+    await notificationsSet(User.currentUser.notifications, updateUser: false);
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setString('currentUser', email);
+    });
+//    if (User.currentUser.notifications) {
+//      for (String topic in User.currentUser.subscriptions) {
+//        firebaseMessaging.subscribeToTopic(topic);
+//      }
+//    }
+  } else {
+    throw Exception('Failed to get current user');
   }
+}
 
-  /// Gets the comments for a Finesse given its [eventId].
-  static Future<List<Comment>> getComments(String eventId) async {
-    final response = await http
-        .get(GET_COMMENT_URL + eventId, headers: {'api_token': token});
+/// Adds [comment] to the Finesse with the given [eventId].
+Future<http.Response> addComment(Comment comment, String eventId) async {
+  Map bodyMap = comment.toMap();
+  bodyMap['eventId'] = eventId;
 
-    if (response.statusCode == 200) {
-      var data = json.decode(response.body);
-      List<Comment> comments =
-          data.map<Comment>((json) => Comment.fromJson(json)).toList();
-      return comments;
-    } else {
-      throw Exception("Error while getting comments");
-    }
+  http.Response response = await _postData(_ADD_COMMENT_URL, bodyMap);
+
+  final int statusCode = response.statusCode;
+  if (statusCode != 200) {
+    throw Exception(
+        "Error while adding comment, status = ${response.statusCode},"
+        " ${response.body}}");
+  }
+  return response;
+}
+
+/// Gets the comments for a Finesse given its [eventId].
+Future<List<Comment>> getComments(String eventId) async {
+  final response = await http
+      .get(_GET_COMMENT_URL + eventId, headers: {'api_token': _token});
+
+  if (response.statusCode == 200) {
+    var data = json.decode(response.body);
+    List<Comment> comments =
+        data.map<Comment>((json) => Comment.fromJson(json)).toList();
+    return comments;
+  } else {
+    throw Exception("Error while getting comments");
   }
 }

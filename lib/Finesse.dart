@@ -1,6 +1,10 @@
-import 'dart:typed_data';
 import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:finesse_nation/Comment.dart';
 import 'package:finesse_nation/User.dart';
+
+enum Repetition { none, daily, weekly, monthly, yearly }
 
 /// An event involving free food/items.
 class Finesse {
@@ -25,11 +29,17 @@ class Finesse {
   /// The category of this Finesse (Food/Other).
   String category;
 
-  /// The time this Finesse was posted.
-  DateTime postedTime;
+  /// The start time of this Finesse.
+  DateTime startTime;
+
+  /// The end time of this Finesse.
+  DateTime endTime;
+
+  /// The repetition of this Finesse.
+  Repetition repetition;
 
   /// The list of emailIds of [User]s who have marked this Finesse as inactive.
-  List isActive;
+  List<String> markedInactive;
 
   /// The base64-encoded image of this Finesse.
   Uint8List convertedImage;
@@ -40,19 +50,36 @@ class Finesse {
   /// The school of the [User] who posted this Finesse.
   String school;
 
+  /// The number of points for this Finesse.
+  int points;
+
+  /// The number of comments for this Finesse.
+  int numComments;
+
+  /// The comments on this Finesse.
+  List<Comment> comments;
+
+  /// The current list of Finesses.
+  static List<Finesse> finesseList = [];
+
   /// Creates a Finesse.
   Finesse(
-      var eventId,
-      var title,
-      var description,
-      var image,
-      var location,
-      var duration,
-      var category,
-      var postedTime,
-      var isActive,
-      var school,
-      var emailId) {
+    String eventId,
+    String title,
+    String description,
+    String image,
+    String location,
+    String category,
+    DateTime startTime,
+    List<String> markedInactive,
+    String school,
+    String emailId,
+    int points,
+    int numComments, {
+    String duration,
+    DateTime endTime,
+    Repetition repetition,
+  }) {
     this.eventId = eventId;
     this.eventTitle = title;
     this.description = description;
@@ -60,45 +87,81 @@ class Finesse {
     this.location = location;
     this.duration = duration;
     this.category = category;
-    this.postedTime = postedTime;
+    this.startTime = startTime;
     this.convertedImage = image == null ? null : base64.decode(image);
-    this.isActive = isActive;
+    this.markedInactive = markedInactive;
     this.school = school;
     this.emailId = emailId;
+    this.points = points;
+    this.numComments = numComments;
+    this.comments = [];
+    this.endTime = endTime;
+    this.repetition = repetition;
   }
 
-  /// Creates a Finesse with an empty event id.
+  /// Creates a new ongoing Finesse.
   static Finesse finesseAdd(
-      title, description, image, location, duration, category, timePosted,
-      {List isActive, String school, String email}) {
+    String title,
+    String description,
+    String image,
+    String location,
+    String duration,
+    String category,
+    DateTime startTime, {
+    List<String> markedInactive: const <String>[],
+    String school,
+    String email,
+    int points: 1,
+    int numComments: 0,
+  }) {
     return Finesse(
-        null,
-        title,
-        description,
-        image,
-        location,
-        duration,
-        category,
-        timePosted,
-        isActive,
-        User.currentUser?.school ?? 'test',
-        User.currentUser?.email ?? 'test');
+      null,
+      title,
+      description,
+      image,
+      location,
+      category,
+      startTime,
+      markedInactive,
+      User.currentUser?.school ?? 'test',
+      User.currentUser?.email ?? 'test',
+      points,
+      numComments,
+      duration: duration,
+    );
   }
 
-  /// Attempts to convert the [time] from a [String] to a [DateTime].
-  ///
-  /// Returns the converted time on success, the current time on fail.
-  static DateTime parse(String time) {
-    if (time != null) {
-      try {
-        String timeStr = time.toString();
-        DateTime res = DateTime.parse(timeStr);
-        return res;
-      } catch (Exception) {
-        return DateTime.now();
-      }
-    }
-    return DateTime.now();
+  /// Creates a new future Finesse.
+  Finesse.future(
+    String title,
+    String description,
+    String image,
+    String location,
+    String category,
+    DateTime startTime, {
+    List<String> markedInactive: const <String>[],
+    String school,
+    String emailId,
+    int points: 1,
+    int numComments: 0,
+    DateTime endTime,
+    Repetition repetition,
+  }) {
+    this.eventTitle = title;
+    this.description = description;
+    this.image = image;
+    this.location = location;
+    this.category = category;
+    this.startTime = startTime;
+    this.endTime = endTime;
+    this.repetition = repetition;
+    this.convertedImage = image == null ? null : base64.decode(image);
+    this.markedInactive = markedInactive;
+    this.school = User.currentUser?.school ?? 'test';
+    this.emailId = User.currentUser?.email ?? 'test';
+    this.points = points;
+    this.numComments = numComments;
+    this.comments = [];
   }
 
   /// Creates a Finesse from [json].
@@ -109,15 +172,33 @@ class Finesse {
       json['description'] ?? "",
       json['image'] ?? "",
       json['location'] ?? "",
-      json['duration'] ?? "",
       json['category'] ?? "",
-      parse(json['postedTime']) ?? DateTime.now(),
-      json['isActive'] ?? [],
+      DateTime.tryParse(json['startTime'])?.toLocal(),
+      List<String>.from(json['isActive']) ?? [],
       json['school'] ?? "",
       json['emailId'] ?? "",
+      json['points'] ?? 0,
+      json['numComments'] ?? 0,
+      duration: json['duration'] ?? "",
+      endTime: DateTime.tryParse(json['endTime'] ?? '')?.toLocal(),
+      repetition: json['repetition'] != null
+          ? Repetition.values.singleWhere(
+              (rep) => json['repetition'] == rep.toString(),
+              orElse: () => Repetition.none,
+            )
+          : Repetition.none,
     );
     return fin;
   }
+
+  bool get isActive =>
+      markedInactive.length < 3 && !markedInactive.contains(emailId);
+
+  /// Increases this Finesse's points.
+  int upvote() => ++points;
+
+  /// Decreases this Finesse's points.
+  int downvote() => --points;
 
   /// Returns a [Map] containing this Finesse's fields.
   Map toMap() {
@@ -128,10 +209,14 @@ class Finesse {
     map["location"] = location;
     map["duration"] = duration;
     map["category"] = category;
-    map['postedTime'] = postedTime.toString();
-    map['isActive'] = isActive;
+    map['startTime'] = startTime.toUtc().toIso8601String();
+    map['endTime'] = endTime?.toUtc()?.toIso8601String();
+    map['repetition'] = repetition?.toString();
+    map['isActive'] = markedInactive;
     map['school'] = school;
     map['emailId'] = emailId;
+    map['points'] = points;
+    map['numComments'] = numComments;
     return map;
   }
 }
