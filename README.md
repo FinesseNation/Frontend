@@ -4,7 +4,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/Periphery428/Finesse-Nation-Frontend/badge.png?branch=master)](https://coveralls.io/github/Periphery428/Finesse-Nation-Frontend?branch=master)
 
 Never miss out on events or giveaways again!
-Try now for free! https://finesse-app.herokuapp.com/?fbclid=IwAR0sn6sLnnI7NGVVrMZY6QGen0V1xFoS8uVxXYRI_E0OyzVBXrQ57rjn5XI
+Try now for free! http://finesse-app.herokuapp.com/
 
 If you have any questions create a Github issue.
 
